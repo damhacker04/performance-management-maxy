@@ -9,6 +9,12 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// TEMPORARY: trigger seeder once on Railway. Remove after first use.
+Route::get('/__seed-users-once-9k3m2', function () {
+    \Artisan::call('db:seed', ['--class' => 'UserSeeder', '--force' => true]);
+    return 'Seeded. Users count: ' . \App\Models\User::count();
+});
+
 // Routes untuk Leader
 Route::middleware(['auth'])->group(function () {
 
