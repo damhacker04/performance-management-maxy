@@ -1,2 +1,14 @@
 [phases.setup]
-nixPkgs = ["php84", "php84Packages.composer"]
+nixPkgs = ["php84", "php84Packages.composer", "nodejs_22"]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction",
+    "npm ci"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "php artisan migrate --force && php artisan db:seed --class=UserSeeder --force && php -S 0.0.0.0:$PORT -t public"

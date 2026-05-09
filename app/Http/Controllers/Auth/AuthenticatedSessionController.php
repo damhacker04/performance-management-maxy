@@ -28,7 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = Auth::user();
+
+        $target = match ($user->role) {
+            'leader', 'c_level' => route('monthly-targets.index', absolute: false),
+            default              => route('daily-tasks.create',    absolute: false),
+        };
+
+        return redirect()->intended($target);
     }
 
     /**

@@ -1,17 +1,208 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+@php
+    $user = auth()->user();
+@endphp
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
+<div class="page">
+    <!-- Hero greeting -->
+    <div class="hero-greeting">
+        <img src="{{ asset('images/m-logo.png') }}" class="watermark" alt="" />
+        <div class="hl-label">Hari ini · {{ now()->format('d M Y') }}</div>
+        <div class="hl-display">Halo, {{ explode(' ', $user->name)[0] }}</div>
+        @if ($user->role === 'staff')
+            <div class="hl-sub">Catat laporan tugas harianmu dan pantau progressmu.</div>
+        @elseif ($user->role === 'leader')
+            <div class="hl-sub">Pantau target dan kinerja tim {{ ucfirst(str_replace('_', ' ', $user->department)) }}.</div>
+        @else
+            <div class="hl-sub">Selamat datang, pantau KPI seluruh organisasi.</div>
+        @endif
+    </div>
+
+    @if ($user->role === 'staff')
+        @php
+            $todayEntries = \App\Models\DailyTaskEntry::where('user_id', $user->id)
+                ->whereDate('task_date', today())
+                ->with('monthlyTarget')
+                ->orderByDesc('created_at')
+                ->get();
+            $done  = $todayEntries->where('status', 'selesai')->count();
+            $total = $todayEntries->count();
+            $pct   = $total > 0 ? round(($done / $total) * 100) : 0;
+        @endphp
+
+        <!-- KPI grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Laporan hari ini</span>
+                    <span class="chip {{ $pct === 100 ? 'chip-success' : 'chip-warning' }}">
+                        {{ $pct === 100 ? 'Selesai' : 'Berjalan' }}
+                    </span>
                 </div>
+                <div class="kc-value">{{ $done }}<span class="kc-sub"> / {{ $total }}</span></div>
+                <div class="progress-bar"><i class="navy" style="width:{{ $pct }}%"></i></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Total laporan</span>
+                    <span class="chip chip-info">Bulan ini</span>
+                </div>
+                @php $monthTotal = \App\Models\DailyTaskEntry::where('user_id', $user->id)->whereMonth('task_date', now()->month)->whereYear('task_date', now()->year)->count(); @endphp
+                <div class="kc-value">{{ $monthTotal }}<span class="kc-sub"> tugas</span></div>
+                <div class="progress-bar"><i style="width:{{ min($monthTotal * 5, 100) }}%"></i></div>
             </div>
         </div>
-    </div>
+
+        <!-- Today's task list -->
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">Tugas hari ini</span>
+                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">{{ $done }}/{{ $total }} selesai</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @forelse ($todayEntries as $entry)
+                    @php
+                        $statusMap  = ['selesai'=>'success','dalam_proses'=>'warning','terhambat'=>'danger'];
+                        $sChip      = $statusMap[$entry->status] ?? 'neutral';
+                        $sLabel     = ['selesai'=>'Selesai','dalam_proses'=>'Dalam Proses','terhambat'=>'Terhambat'][$entry->status] ?? $entry->status;
+                    @endphp
+                    <div class="m-row">
+                        <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" aria-hidden="true">
+                            @if($entry->status === 'selesai')
+                                <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>
+                            @endif
+                        </span>
+                        <div class="row-body">
+                            <div class="row-title">{{ $entry->task_description }}</div>
+                            <div class="row-meta">
+                                <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
+                                @if($entry->monthlyTarget)
+                                    <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
+                                @endif
+                                <span>· {{ $entry->duration_minutes }}m</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">Belum ada tugas hari ini. Tambahkan laporan pertamamu.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-block">
+            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah laporan harian
+        </a>
+
+    @elseif ($user->role === 'leader')
+        @php
+            $targets     = \App\Models\MonthlyTarget::where('user_id', $user->id)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
+            $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
+            $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
+        @endphp
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Target bulan ini</span>
+                    <span class="chip chip-info">{{ now()->format('M Y') }}</span>
+                </div>
+                <div class="kc-value">{{ $targets->count() }}<span class="kc-sub"> target</span></div>
+                <div class="progress-bar"><i style="width:{{ min($targets->count() * 25, 100) }}%"></i></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Staff laporan</span>
+                    <span class="chip {{ $reported >= $totalStaff ? 'chip-success' : 'chip-warning' }}">
+                        {{ $reported >= $totalStaff ? 'Lengkap' : 'Kurang' }}
+                    </span>
+                </div>
+                <div class="kc-value">{{ $reported }}<span class="kc-sub"> / {{ $totalStaff }}</span></div>
+                <div class="progress-bar"><i class="success" style="width:{{ $totalStaff > 0 ? round($reported/$totalStaff*100) : 0 }}%"></i></div>
+            </div>
+        </div>
+
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">Target aktif</span>
+                <a href="{{ route('monthly-targets.index') }}" class="more-link">Lihat semua</a>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @forelse ($targets->take(3) as $target)
+                    <div class="m-row">
+                        <div class="row-body">
+                            <div class="row-title">{{ $target->title }}</div>
+                            <div class="row-meta">
+                                <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}">{{ ucfirst(str_replace('_',' ', $target->department)) }}</span>
+                                <span>· {{ $target->daily_task_entries_count }} laporan</span>
+                            </div>
+                        </div>
+                        <svg class="lucide sm" style="color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </div>
+                @empty
+                    <div class="empty-state">Belum ada target bulan ini.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <a href="{{ route('monthly-targets.create') }}" class="btn btn-primary btn-block">
+            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah target baru
+        </a>
+
+    @else
+        {{-- C-Level --}}
+        @php
+            $depts       = ['sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product & IT','operational'=>'Operational'];
+            $deptColors  = ['sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571','operational'=>'#E89B2A'];
+            $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
+            $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
+        @endphp
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Target aktif</span>
+                    <span class="chip chip-info">{{ now()->format('M Y') }}</span>
+                </div>
+                <div class="kc-value">{{ $totalTargets }}<span class="kc-sub"> target</span></div>
+                <div class="progress-bar"><i style="width:{{ min($totalTargets * 10, 100) }}%"></i></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kc-header">
+                    <span class="kc-title">Laporan hari ini</span>
+                    <span class="chip chip-success">All dept</span>
+                </div>
+                <div class="kc-value">{{ $totalEntries }}<span class="kc-sub"> laporan</span></div>
+                <div class="progress-bar"><i class="success" style="width:{{ min($totalEntries * 5, 100) }}%"></i></div>
+            </div>
+        </div>
+
+        <div class="m-card">
+            <div class="overline-label" style="margin-bottom:16px;">Per departemen — hari ini</div>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                @foreach ($depts as $key => $label)
+                    @php
+                        $count      = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $key))->whereDate('task_date', today())->count();
+                        $staffCount = \App\Models\User::where('department', $key)->where('role', 'staff')->count();
+                        $pct        = $staffCount > 0 ? min(round($count / $staffCount * 100), 100) : 0;
+                    @endphp
+                    <div class="dept-row">
+                        <div class="dept-row-header">
+                            <div class="dn">
+                                <span class="dept-dot" style="background:{{ $deptColors[$key] }};"></span>
+                                {{ $label }}
+                            </div>
+                            <div class="dd">
+                                <span style="font-size:12px;color:var(--fg-3);">{{ $count }}/{{ $staffCount }}</span>
+                                <span style="font-size:13px;font-weight:600;color:var(--fg-2);">{{ $pct }}%</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $deptColors[$key] }};"></i></div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+</div>
 </x-app-layout>
