@@ -51,9 +51,13 @@
                 @php
                     [$rStart, $rEnd] = $weekRanges[$wt->week_number] ?? [1, 7];
                 @endphp
+                @php
+                    $entryCount = $wt->dailyTaskEntries()->count();
+                @endphp
                 <div class="m-card" style="padding:14px 16px;">
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                        <div style="flex:1;min-width:0;">
+                        <a href="{{ route('weekly-targets.show', $wt) }}"
+                           style="flex:1;min-width:0;text-decoration:none;color:inherit;display:block;">
                             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
                                 <span class="chip chip-neutral">Minggu {{ $wt->week_number }}</span>
                                 <span style="font-size:11px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $months[$wt->month] }}</span>
@@ -71,13 +75,19 @@
                                     {{ $wt->description }}
                                 </p>
                             @endif
-                        </div>
+                            <div style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--maxy-navy);font-weight:600;">
+                                <svg class="lucide" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                {{ $entryCount }} laporan staff
+                                <span style="color:var(--fg-4);font-weight:400;">· tap untuk detail →</span>
+                            </div>
+                        </a>
                         <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                             <a href="{{ route('weekly-targets.edit', $wt) }}" class="icon-btn" title="Edit">
                                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </a>
                             <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
-                                  onsubmit="return confirm('Hapus target mingguan ini?');" style="margin:0;">
+                                  onsubmit="return confirm('Hapus target mingguan ini?\n\nSemua laporan staff ({{ $entryCount }} task) yang terkait dengan target ini juga akan ikut terhapus dan tidak bisa dikembalikan.');"
+                                  style="margin:0;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="icon-btn" title="Hapus" style="color:var(--danger);">
                                     <svg class="lucide sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>

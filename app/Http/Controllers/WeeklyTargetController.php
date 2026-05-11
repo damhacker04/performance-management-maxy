@@ -28,12 +28,7 @@ class WeeklyTargetController extends Controller
     {
         $this->authorizeMonthly($monthlyTarget);
 
-        // Nomor minggu yang sudah dipakai supaya tidak duplikat
-        $usedWeeks = $monthlyTarget->weeklyTargets()
-            ->pluck('week_number')
-            ->all();
-
-        return view('weekly-targets.create', compact('monthlyTarget', 'usedWeeks'));
+        return view('weekly-targets.create', compact('monthlyTarget'));
     }
 
     public function store(Request $request, MonthlyTarget $monthlyTarget)
@@ -43,20 +38,11 @@ class WeeklyTargetController extends Controller
         $validated = $request->validate([
             'title'         => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'week_number'   => [
-                'required',
-                'integer',
-                'min:1',
-                'max:5',
-                Rule::unique('weekly_targets')->where(fn($q) =>
-                    $q->where('monthly_target_id', $monthlyTarget->id)
-                ),
-            ],
+            'week_number'   => 'required|integer|min:1|max:5',
             'target_type'   => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'  => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'   => 'nullable|required_if:target_type,quantitative|string|max:50',
         ], [
-            'week_number.unique'         => 'Minggu ini sudah memiliki target. Pilih nomor minggu lain.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
         ]);
@@ -78,19 +64,43 @@ class WeeklyTargetController extends Controller
             ->with('success', 'Target mingguan berhasil disimpan.');
     }
 
+    /**
+     * Drill-down: detail weekly target + semua daily task staff yang terkait.
+     */
+    public function show(WeeklyTarget $weeklyTarget)
+    {
+        $this->authorizeWeekly($weeklyTarget);
+
+        $weeklyTarget->load('monthlyTarget');
+
+        $dailyTasks = $weeklyTarget->dailyTaskEntries()
+            ->with('user')
+            ->orderByDesc('task_date')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Summary per status
+        $summary = [
+            'total'        => $dailyTasks->count(),
+            'selesai'      => $dailyTasks->where('status', 'selesai')->count(),
+            'dalam_proses' => $dailyTasks->where('status', 'dalam_proses')->count(),
+            'terhambat'    => $dailyTasks->where('status', 'terhambat')->count(),
+            'belum_mulai'  => $dailyTasks->where('status', 'belum_mulai')->count(),
+        ];
+
+        // Group by staff supaya leader bisa lihat kontribusi per orang
+        $byStaff = $dailyTasks->groupBy('user_id');
+
+        return view('weekly-targets.show', compact('weeklyTarget', 'dailyTasks', 'summary', 'byStaff'));
+    }
+
     public function edit(WeeklyTarget $weeklyTarget)
     {
         $this->authorizeWeekly($weeklyTarget);
 
         $monthlyTarget = $weeklyTarget->monthlyTarget;
 
-        // Nomor minggu yang sudah dipakai (kecuali milik record ini sendiri)
-        $usedWeeks = $monthlyTarget->weeklyTargets()
-            ->where('id', '!=', $weeklyTarget->id)
-            ->pluck('week_number')
-            ->all();
-
-        return view('weekly-targets.edit', compact('weeklyTarget', 'monthlyTarget', 'usedWeeks'));
+        return view('weekly-targets.edit', compact('weeklyTarget', 'monthlyTarget'));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)
@@ -100,20 +110,11 @@ class WeeklyTargetController extends Controller
         $validated = $request->validate([
             'title'         => 'required|string|max:255',
             'description'   => 'nullable|string',
-            'week_number'   => [
-                'required',
-                'integer',
-                'min:1',
-                'max:5',
-                Rule::unique('weekly_targets')
-                    ->ignore($weeklyTarget->id)
-                    ->where(fn($q) => $q->where('monthly_target_id', $weeklyTarget->monthly_target_id)),
-            ],
+            'week_number'   => 'required|integer|min:1|max:5',
             'target_type'   => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'  => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'   => 'nullable|required_if:target_type,quantitative|string|max:50',
         ], [
-            'week_number.unique'         => 'Minggu ini sudah memiliki target. Pilih nomor minggu lain.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
         ]);

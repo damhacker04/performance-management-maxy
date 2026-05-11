@@ -40,6 +40,17 @@ class WeeklyTarget extends Model
         5 => [29, 31],
     ];
 
+    /**
+     * Cascade: ketika weekly target dihapus, daily task staff yang terkait
+     * ikut dihapus juga. Lebih bersih daripada nyangkut sebagai orphan.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (WeeklyTarget $wt) {
+            $wt->dailyTaskEntries()->delete();
+        });
+    }
+
     public function monthlyTarget()
     {
         return $this->belongsTo(MonthlyTarget::class);

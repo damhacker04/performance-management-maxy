@@ -5,8 +5,64 @@
         <a href="{{ route('daily-tasks.index') }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
-        <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Laporan Harian</h1>
+        <div style="flex:1;min-width:0;">
+            <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.2;">Laporan Harian</h1>
+            <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ now()->isoFormat('dddd, D MMMM YYYY') }}</p>
+        </div>
     </div>
+
+    {{-- Section: Lanjutkan dari hari sebelumnya (cuma muncul kalau ada task belum selesai) --}}
+    @if(!$continueFrom && $continuableTasks->isNotEmpty())
+        @php
+            $statusMap = [
+                'belum_mulai' => 'neutral',
+                'dalam_proses' => 'warning',
+                'terhambat' => 'danger',
+            ];
+        @endphp
+        <div class="m-card" style="padding:0;background:linear-gradient(to bottom,#FFF8E8,#fff);border:1px solid #FBB041;">
+            <div class="section-head" style="border-bottom:1px solid rgba(251,176,65,.25);">
+                <span class="overline-label" style="color:#8B5A00;display:flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9M3 12V3m0 9h9"/></svg>
+                    Lanjutkan task sebelumnya
+                </span>
+                <span style="font-size:11px;color:#A06A00;font-weight:600;">{{ $continuableTasks->count() }} belum selesai</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @foreach($continuableTasks as $task)
+                    @php $sChip = $statusMap[$task->status] ?? 'neutral'; @endphp
+                    <a href="{{ route('daily-tasks.create', ['continue_from' => $task->id]) }}"
+                       class="m-row"
+                       style="text-decoration:none;color:inherit;">
+                        <div class="row-body">
+                            <div class="row-title" style="font-size:13px;">
+                                {{ Str::limit($task->task_description, 48) }}
+                            </div>
+                            <div class="row-meta">
+                                <span class="chip chip-{{ $sChip }}">{{ $task->status_label }}</span>
+                                <span>· <strong style="color:var(--maxy-navy);">{{ $task->percent_done }}%</strong></span>
+                                @if($task->weeklyTarget)
+                                    <span>· M{{ $task->weeklyTarget->week_number }} {{ Str::limit($task->weeklyTarget->title, 16) }}</span>
+                                @endif
+                                <span>· {{ \Carbon\Carbon::parse($task->task_date)->isoFormat('D MMM') }}</span>
+                            </div>
+                        </div>
+                        <svg class="lucide sm" style="color:#A06A00;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+            <div style="padding:0 16px 12px;font-size:11px;color:#8B5A00;font-style:italic;">
+                Pilih salah satu untuk mengisi form dengan data hari sebelumnya, lalu update progress hari ini.
+            </div>
+        </div>
+
+        {{-- Divider visual antara opsi "lanjutkan" dan "buat baru" --}}
+        <div style="display:flex;align-items:center;gap:10px;color:var(--fg-4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:4px 0;">
+            <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+            atau buat laporan baru
+            <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+        </div>
+    @endif
 
     @if($weeklyTargets->isEmpty())
         <div class="m-card">
@@ -22,6 +78,23 @@
                   style="display:flex;flex-direction:column;gap:16px;">
                 @csrf
 
+                {{-- Banner ketika user pilih "lanjutkan dari kemarin" --}}
+                @if($continueFrom)
+                    <div style="background:#E8F0FE;border:1px solid var(--maxy-navy);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start;">
+                        <svg class="lucide sm" style="color:var(--maxy-navy);flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9M3 12V3m0 9h9"/></svg>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:10px;color:var(--maxy-navy);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Melanjutkan task</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-top:2px;line-height:1.4;">{{ Str::limit($continueFrom->task_description, 80) }}</div>
+                            <div style="font-size:11px;color:var(--fg-3);margin-top:3px;">
+                                {{ \Carbon\Carbon::parse($continueFrom->task_date)->isoFormat('D MMM') }} · {{ $continueFrom->status_label }} · {{ $continueFrom->percent_done }}%
+                            </div>
+                        </div>
+                        <a href="{{ route('daily-tasks.create') }}"
+                           style="font-size:11px;color:var(--fg-3);text-decoration:underline;flex-shrink:0;align-self:center;"
+                           title="Buat laporan baru dari kosong">Batal</a>
+                    </div>
+                @endif
+
                 <!-- Weekly Target -->
                 <div class="field">
                     <label for="weekly_target_id">Target Mingguan <span style="color:var(--danger);">*</span></label>
@@ -29,9 +102,12 @@
                         <select id="weekly_target_id" name="weekly_target_id"
                                 class="m-select {{ $errors->has('weekly_target_id') ? 'err' : '' }}" required>
                             <option value="">Pilih target mingguan...</option>
-                            @php $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des']; @endphp
+                            @php
+                                $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+                                $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id);
+                            @endphp
                             @foreach($weeklyTargets as $wt)
-                                <option value="{{ $wt->id }}" {{ old('weekly_target_id') == $wt->id ? 'selected' : '' }}>
+                                <option value="{{ $wt->id }}" {{ $defaultWeekly == $wt->id ? 'selected' : '' }}>
                                     [M{{ $wt->week_number }} {{ $monthShort[$wt->month] }}] {{ $wt->title }}
                                 </option>
                             @endforeach
@@ -54,10 +130,19 @@
                 <!-- Deskripsi -->
                 <div class="field">
                     <label for="task_description">Deskripsi Tugas <span style="color:var(--danger);">*</span></label>
+                    @php
+                        $defaultDesc = old(
+                            'task_description',
+                            $continueFrom ? 'Lanjut: ' . Str::limit($continueFrom->task_description, 120) : ''
+                        );
+                    @endphp
                     <textarea id="task_description" name="task_description"
                               class="m-textarea {{ $errors->has('task_description') ? 'err' : '' }}"
-                              placeholder="Apa yang kamu kerjakan hari ini?" required>{{ old('task_description') }}</textarea>
+                              placeholder="Apa yang kamu kerjakan hari ini?" required>{{ $defaultDesc }}</textarea>
                     @error('task_description')<span class="err">{{ $message }}</span>@enderror
+                    @if($continueFrom)
+                        <span style="font-size:11px;color:#8B5A00;margin-top:4px;">💡 Edit deskripsi untuk menjelaskan progres hari ini.</span>
+                    @endif
                 </div>
 
                 <!-- Prioritas & Durasi -->
@@ -67,10 +152,11 @@
                         <div class="select-wrap">
                             <select id="priority" name="priority"
                                     class="m-select {{ $errors->has('priority') ? 'err' : '' }}" required>
-                                <option value="critical" {{ old('priority') === 'critical' ? 'selected' : '' }}>🔴 Critical</option>
-                                <option value="high"     {{ old('priority') === 'high'     ? 'selected' : '' }}>🟠 High</option>
-                                <option value="medium"   {{ old('priority','medium') === 'medium' ? 'selected' : '' }}>🟡 Medium</option>
-                                <option value="low"      {{ old('priority') === 'low'      ? 'selected' : '' }}>🔵 Low</option>
+                                @php $defaultPriority = old('priority', $continueFrom?->priority ?? 'medium'); @endphp
+                                <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Critical</option>
+                                <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 High</option>
+                                <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Medium</option>
+                                <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Low</option>
                             </select>
                         </div>
                         @error('priority')<span class="err">{{ $message }}</span>@enderror
@@ -95,27 +181,32 @@
                 </div>
 
                 <!-- Status & % Done -->
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div id="status_percent_wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="field">
                         <label for="status">Status <span style="color:var(--danger);">*</span></label>
                         <div class="select-wrap">
                             <select id="status" name="status"
                                     class="m-select {{ $errors->has('status') ? 'err' : '' }}" required>
-                                <option value="belum_mulai"  {{ old('status','belum_mulai') === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
-                                <option value="dalam_proses" {{ old('status') === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
-                                <option value="terhambat"    {{ old('status') === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
-                                <option value="selesai"      {{ old('status') === 'selesai'      ? 'selected' : '' }}>Selesai</option>
+                                @php
+                                    // Kalau lanjutan, default status pakai status sebelumnya (biasanya dalam_proses).
+                                    $defaultStatus = old('status', $continueFrom?->status ?? 'belum_mulai');
+                                @endphp
+                                <option value="belum_mulai"  {{ $defaultStatus === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
+                                <option value="dalam_proses" {{ $defaultStatus === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
+                                <option value="terhambat"    {{ $defaultStatus === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
+                                <option value="selesai"      {{ $defaultStatus === 'selesai'      ? 'selected' : '' }}>Selesai</option>
                             </select>
                         </div>
                         @error('status')<span class="err">{{ $message }}</span>@enderror
                     </div>
-                    <div class="field">
+                    <div class="field" id="percent_done_wrap">
+                        @php $defaultPercent = old('percent_done', $continueFrom?->percent_done ?? 0); @endphp
                         <label for="percent_done">
                             % Selesai
-                            <span id="percent_value" style="color:var(--maxy-navy);font-weight:700;">{{ old('percent_done', 0) }}%</span>
+                            <span id="percent_value" style="color:var(--maxy-navy);font-weight:700;">{{ $defaultPercent }}%</span>
                         </label>
                         <input id="percent_done" type="range" name="percent_done"
-                               value="{{ old('percent_done', 0) }}"
+                               value="{{ $defaultPercent }}"
                                min="0" max="100" step="5"
                                style="width:100%;accent-color:var(--maxy-navy);" />
                         @error('percent_done')<span class="err">{{ $message }}</span>@enderror
@@ -144,6 +235,8 @@
                         const reqLabel    = document.getElementById('notes_label_required');
                         const percentEl   = document.getElementById('percent_done');
                         const percentDisp = document.getElementById('percent_value');
+                        const percentWrap = document.getElementById('percent_done_wrap');
+                        const gridWrap    = document.getElementById('status_percent_wrap');
 
                         function syncNotesRequired() {
                             const isBlocked = statusEl.value === 'terhambat';
@@ -162,15 +255,24 @@
                             percentDisp.textContent = percentEl.value + '%';
                         }
 
+                        function syncPercentVisibility() {
+                            // Slider hanya muncul jika status butuh progress partial
+                            const showSlider = ['dalam_proses', 'terhambat'].includes(statusEl.value);
+                            percentWrap.style.display = showSlider ? '' : 'none';
+                            gridWrap.style.gridTemplateColumns = showSlider ? '1fr 1fr' : '1fr';
+                        }
+
                         statusEl.addEventListener('change', () => {
                             syncNotesRequired();
                             syncPercentByStatus();
+                            syncPercentVisibility();
                         });
                         percentEl.addEventListener('input', () => {
                             percentDisp.textContent = percentEl.value + '%';
                         });
 
                         syncNotesRequired();
+                        syncPercentVisibility();
                     })();
                 </script>
 

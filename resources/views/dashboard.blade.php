@@ -139,7 +139,9 @@
                                         title="Tandai selesai" aria-label="Tandai tugas selesai"></button>
                             </form>
                         @endif
-                        <div class="row-body">
+                        <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                           class="row-body"
+                           style="text-decoration:none;color:inherit;cursor:pointer;">
                             <div class="row-title">
                                 {{ $entry->task_description }}
                                 @if($entry->is_overdue)
@@ -161,7 +163,7 @@
                                     <span>· {{ $entry->percent_done }}%</span>
                                 @endif
                             </div>
-                        </div>
+                        </a>
                     </div>
                 @empty
                     <div class="empty-state">Belum ada tugas hari ini. Tambahkan laporan pertamamu.</div>
@@ -185,6 +187,13 @@
             $targets     = \App\Models\MonthlyTarget::where('user_id', $user->id)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
             $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
             $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
+
+            // Laporan tim hari ini — semua entry dari staff dept ini, hari ini
+            $teamEntriesToday = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
+                ->whereHas('user', fn($q) => $q->where('department', $user->department))
+                ->whereDate('task_date', today())
+                ->orderByDesc('created_at')
+                ->get();
         @endphp
 
         <div class="kpi-grid">
@@ -215,7 +224,9 @@
             </div>
             <div style="padding:0 16px 8px;">
                 @forelse ($targets->take(3) as $target)
-                    <div class="m-row">
+                    <a href="{{ route('weekly-targets.index', $target->id) }}"
+                       class="m-row"
+                       style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-body">
                             <div class="row-title">{{ $target->title }}</div>
                             <div class="row-meta">
@@ -223,10 +234,59 @@
                                 <span>· {{ $target->daily_task_entries_count }} laporan</span>
                             </div>
                         </div>
-                        <svg class="lucide sm" style="color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-                    </div>
+                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
                 @empty
                     <div class="empty-state">Belum ada target bulan ini.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Laporan tim hari ini -->
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">Laporan tim hari ini</span>
+                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">{{ $teamEntriesToday->count() }} laporan</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @forelse ($teamEntriesToday as $entry)
+                    @php
+                        $statusMap = [
+                            'belum_mulai' => 'neutral',
+                            'dalam_proses' => 'warning',
+                            'terhambat' => 'danger',
+                            'selesai' => 'success',
+                        ];
+                        $sChip = $statusMap[$entry->status] ?? 'neutral';
+                    @endphp
+                    <div class="m-row">
+                        <div class="row-body">
+                            <div class="row-title">
+                                {{ Str::limit($entry->task_description, 44) }}
+                                @if($entry->is_overdue)
+                                    <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                                @endif
+                            </div>
+                            <div class="row-meta">
+                                <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
+                                <span>· <strong style="color:var(--fg-2);">{{ explode(' ', $entry->user->name)[0] }}</strong></span>
+                                @if($entry->weeklyTarget)
+                                    <span>· <span style="color:var(--maxy-navy);font-weight:600;">M{{ $entry->weeklyTarget->week_number }}</span> {{ Str::limit($entry->weeklyTarget->title, 20) }}</span>
+                                @endif
+                                @if($entry->percent_done > 0 && $entry->status !== 'selesai')
+                                    <span>· {{ $entry->percent_done }}%</span>
+                                @endif
+                                <span>· {{ $entry->duration_label }}</span>
+                            </div>
+                            @if($entry->notes)
+                                <div style="font-size:11px;color:var(--fg-3);margin-top:4px;font-style:italic;">
+                                    "{{ Str::limit($entry->notes, 80) }}"
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">Belum ada laporan dari tim hari ini.</div>
                 @endforelse
             </div>
         </div>

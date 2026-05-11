@@ -38,7 +38,9 @@
                             <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>
                         @endif
                     </span>
-                    <div class="row-body">
+                    <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                       class="row-body"
+                       style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-title">
                             {{ $entry->task_description }}
                             @if($entry->is_overdue)
@@ -55,7 +57,7 @@
                             <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
                             <span>· {{ $entry->duration_label }}</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
             @endforeach
         </div>

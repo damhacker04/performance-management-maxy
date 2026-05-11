@@ -96,4 +96,16 @@ class DailyTaskEntry extends Model
     {
         return self::PRIORITIES[$this->priority] ?? $this->priority;
     }
+
+    /**
+     * Apakah entry ini masih bisa di-edit?
+     * Aturan: belum selesai DAN masih hari ini.
+     * (Auth check ditangani terpisah di controller.)
+     */
+    public function canBeEdited(): bool
+    {
+        if ($this->status === 'selesai') return false;
+        if (!$this->task_date) return false;
+        return $this->task_date->isToday();
+    }
 }

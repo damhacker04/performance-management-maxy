@@ -30,7 +30,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('monthly-targets/{monthlyTarget}/weekly-targets',
             [WeeklyTargetController::class, 'store'])->name('weekly-targets.store');
 
-        // Shallow untuk edit/update/destroy (tidak perlu monthly id)
+        // Shallow untuk show/edit/update/destroy (tidak perlu monthly id)
+        Route::get('weekly-targets/{weeklyTarget}',
+            [WeeklyTargetController::class, 'show'])->name('weekly-targets.show');
         Route::get('weekly-targets/{weeklyTarget}/edit',
             [WeeklyTargetController::class, 'edit'])->name('weekly-targets.edit');
         Route::patch('weekly-targets/{weeklyTarget}',
@@ -46,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
     // Daily Task — hanya Staff
     Route::middleware(['role:staff'])->group(function () {
         Route::resource('daily-tasks', DailyTaskEntryController::class)
-            ->only(['index', 'create', 'store']);
+            ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
             ->name('daily-tasks.complete');
     });

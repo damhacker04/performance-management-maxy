@@ -14,40 +14,52 @@ return new class extends Migration {
 
         Schema::table('daily_task_entries', function (Blueprint $table) {
             // Link ke weekly target (nullable agar tidak break data lama)
-            $table->foreignId('weekly_target_id')
-                ->nullable()
-                ->after('monthly_target_id')
-                ->constrained('weekly_targets')
-                ->nullOnDelete();
+            if (!Schema::hasColumn('daily_task_entries', 'weekly_target_id')) {
+                $table->foreignId('weekly_target_id')
+                    ->nullable()
+                    ->after('monthly_target_id')
+                    ->constrained('weekly_targets')
+                    ->nullOnDelete();
+            }
 
             // Priority: critical / high / medium / low
-            $table->enum('priority', ['critical', 'high', 'medium', 'low'])
-                ->default('medium')
-                ->after('task_description');
+            if (!Schema::hasColumn('daily_task_entries', 'priority')) {
+                $table->enum('priority', ['critical', 'high', 'medium', 'low'])
+                    ->default('medium')
+                    ->after('task_description');
+            }
 
             // Durasi aktual (yang diisi staff saat update). Estimasi tetap di duration_minutes.
-            $table->integer('actual_duration_minutes')
-                ->nullable()
-                ->after('duration_minutes');
+            if (!Schema::hasColumn('daily_task_entries', 'actual_duration_minutes')) {
+                $table->integer('actual_duration_minutes')
+                    ->nullable()
+                    ->after('duration_minutes');
+            }
 
             // Progress 0-100
-            $table->unsignedTinyInteger('percent_done')
-                ->default(0)
-                ->after('status');
+            if (!Schema::hasColumn('daily_task_entries', 'percent_done')) {
+                $table->unsignedTinyInteger('percent_done')
+                    ->default(0)
+                    ->after('status');
+            }
         });
 
-        // Update enum status untuk menambah 'belum_mulai'
-        // Pakai raw SQL karena Laravel/MySQL enum modifications tricky
-        DB::statement("ALTER TABLE daily_task_entries MODIFY COLUMN status
-            ENUM('belum_mulai', 'dalam_proses', 'terhambat', 'selesai')
-            NOT NULL DEFAULT 'belum_mulai'");
+        // Update enum status untuk menambah 'belum_mulai'.
+        // SQLite tidak punya ENUM/MODIFY — di SQLite cukup biarkan kolom string,
+        // validasi enum sudah dihandle di level Laravel (Rule::in STATUSES).
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE daily_task_entries MODIFY COLUMN status
+                ENUM('belum_mulai', 'dalam_proses', 'terhambat', 'selesai')
+                NOT NULL DEFAULT 'belum_mulai'");
+        }
     }
 
     public function down(): void
     {
-        // Kembalikan enum status ke original
-        DB::statement("ALTER TABLE daily_task_entries MODIFY COLUMN status
-            ENUM('selesai', 'dalam_proses', 'terhambat') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE daily_task_entries MODIFY COLUMN status
+                ENUM('selesai', 'dalam_proses', 'terhambat') NOT NULL");
+        }
 
         Schema::table('daily_task_entries', function (Blueprint $table) {
             $table->dropForeign(['weekly_target_id']);

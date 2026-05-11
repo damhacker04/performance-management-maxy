@@ -33,10 +33,8 @@
                         <option value="">Pilih minggu...</option>
                         @foreach($weekRanges as $num => [$start, $end])
                             <option value="{{ $num }}"
-                                    {{ old('week_number') == $num ? 'selected' : '' }}
-                                    {{ in_array($num, $usedWeeks) ? 'disabled' : '' }}>
+                                    {{ old('week_number') == $num ? 'selected' : '' }}>
                                 Minggu {{ $num }} ({{ $start }}–{{ $end }} {{ $months[$monthlyTarget->month] }})
-                                {{ in_array($num, $usedWeeks) ? ' — sudah dipakai' : '' }}
                             </option>
                         @endforeach
                     </select>

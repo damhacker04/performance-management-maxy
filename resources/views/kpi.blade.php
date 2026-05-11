@@ -114,10 +114,11 @@
     <!-- Laporan terbaru per dept -->
     @foreach ($deptData as $key => $dept)
         @php
-            $recentEntries = \App\Models\DailyTaskEntry::with(['user','monthlyTarget'])
+            $recentEntries = \App\Models\DailyTaskEntry::with(['user','monthlyTarget','weeklyTarget'])
                 ->whereHas('user', fn($q) => $q->where('department', $key))
                 ->orderByDesc('task_date')->orderByDesc('created_at')
                 ->take(3)->get();
+            $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
         @endphp
         @if ($recentEntries->isNotEmpty())
             <div class="m-card" style="padding:0;">
@@ -137,9 +138,14 @@
                         @endphp
                         <div class="m-row">
                             <div class="row-body">
-                                <div class="row-title">{{ Str::limit($entry->task_description, 40) }}</div>
+                                <div class="row-title">{{ Str::limit($entry->task_description, 44) }}</div>
                                 <div class="row-meta">
                                     <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
+                                    @if($entry->weeklyTarget)
+                                        <span>· <span style="color:var(--maxy-navy);font-weight:600;">M{{ $entry->weeklyTarget->week_number }}</span> {{ Str::limit($entry->weeklyTarget->title, 22) }}</span>
+                                    @elseif($entry->monthlyTarget)
+                                        <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
+                                    @endif
                                     <span>· {{ $entry->user->name }}</span>
                                     <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
                                 </div>
