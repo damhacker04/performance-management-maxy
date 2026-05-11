@@ -18,11 +18,23 @@ Artisan::command('db:clean-dummy', function () {
         return;
     }
 
-    DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+    $isMysql = DB::getDriverName() === 'mysql';
+
+    if ($isMysql) {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+    } else {
+        DB::statement('PRAGMA foreign_keys = OFF;');
+    }
+
     DB::table('daily_task_entries')->truncate();
     DB::table('weekly_targets')->truncate();
     DB::table('monthly_targets')->truncate();
-    DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+    if ($isMysql) {
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    } else {
+        DB::statement('PRAGMA foreign_keys = ON;');
+    }
 
     $this->newLine();
     $this->info('✅  Data berhasil dibersihkan:');
