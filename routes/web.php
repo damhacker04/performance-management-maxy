@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MonthlyTargetController;
+use App\Http\Controllers\WeeklyTargetController;
 use App\Http\Controllers\DailyTaskEntryController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,9 +18,26 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Monthly Target & KPI — hanya Leader & C-Level
+    // Monthly Target & Weekly Target & KPI — hanya Leader & C-Level
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
+
+        // Weekly Targets — nested under monthly untuk index/create/store
+        Route::get('monthly-targets/{monthlyTarget}/weekly-targets',
+            [WeeklyTargetController::class, 'index'])->name('weekly-targets.index');
+        Route::get('monthly-targets/{monthlyTarget}/weekly-targets/create',
+            [WeeklyTargetController::class, 'create'])->name('weekly-targets.create');
+        Route::post('monthly-targets/{monthlyTarget}/weekly-targets',
+            [WeeklyTargetController::class, 'store'])->name('weekly-targets.store');
+
+        // Shallow untuk edit/update/destroy (tidak perlu monthly id)
+        Route::get('weekly-targets/{weeklyTarget}/edit',
+            [WeeklyTargetController::class, 'edit'])->name('weekly-targets.edit');
+        Route::patch('weekly-targets/{weeklyTarget}',
+            [WeeklyTargetController::class, 'update'])->name('weekly-targets.update');
+        Route::delete('weekly-targets/{weeklyTarget}',
+            [WeeklyTargetController::class, 'destroy'])->name('weekly-targets.destroy');
+
         Route::get('/kpi', function () {
             return view('kpi');
         })->name('kpi');

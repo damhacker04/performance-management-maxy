@@ -11,7 +11,7 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        $targets = MonthlyTarget::with('user')
+        $targets = MonthlyTarget::with(['user', 'weeklyTargets'])
             ->when($user->role === 'leader', fn($q) => $q->where('user_id', $user->id))
             ->orderByDesc('year')
             ->orderByDesc('month')

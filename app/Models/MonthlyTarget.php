@@ -29,4 +29,10 @@ class MonthlyTarget extends Model
     {
         return $this->hasMany(DailyTaskEntry::class);
     }
+
+    // Relasi ke Weekly Targets (breakdown bulanan)
+    public function weeklyTargets()
+    {
+        return $this->hasMany(WeeklyTarget::class)->orderBy('week_number');
+    }
 }
