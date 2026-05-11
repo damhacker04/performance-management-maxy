@@ -19,7 +19,7 @@
 <div class="page">
     <!-- Back & header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ url()->previous() }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ route('daily-tasks.index') }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
