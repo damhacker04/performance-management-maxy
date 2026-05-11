@@ -40,14 +40,14 @@
                     @error('monthly_target_id')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
-                <!-- Tanggal -->
+                <!-- Tanggal (locked ke hari ini) -->
                 <div class="field">
-                    <label for="task_date">Tanggal Tugas <span style="color:var(--danger);">*</span></label>
-                    <input id="task_date" type="date" name="task_date"
-                           value="{{ old('task_date', now()->toDateString()) }}"
-                           max="{{ now()->toDateString() }}"
-                           class="m-input {{ $errors->has('task_date') ? 'err' : '' }}" required />
-                    @error('task_date')<span class="err">{{ $message }}</span>@enderror
+                    <label>Tanggal Tugas <span style="color:var(--fg-4);font-weight:400;">(otomatis hari ini)</span></label>
+                    <input type="text"
+                           value="{{ now()->isoFormat('dddd, D MMMM YYYY') }}"
+                           class="m-input"
+                           readonly
+                           style="background:var(--bg-2);color:var(--fg-3);cursor:not-allowed;" />
                 </div>
 
                 <!-- Deskripsi -->
@@ -62,11 +62,21 @@
                 <!-- Durasi & Status -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="field">
-                        <label for="duration_minutes">Durasi (menit) <span style="color:var(--danger);">*</span></label>
-                        <input id="duration_minutes" type="number" name="duration_minutes"
-                               value="{{ old('duration_minutes', 60) }}"
-                               min="1" max="1440"
-                               class="m-input {{ $errors->has('duration_minutes') ? 'err' : '' }}" required />
+                        <label for="duration_value">Durasi <span style="color:var(--danger);">*</span></label>
+                        <div style="display:grid;grid-template-columns:1fr 90px;gap:8px;">
+                            <input id="duration_value" type="number" name="duration_value"
+                                   value="{{ old('duration_value', 60) }}"
+                                   min="1" max="1440"
+                                   placeholder="0"
+                                   class="m-input {{ $errors->has('duration_value') || $errors->has('duration_minutes') ? 'err' : '' }}" required />
+                            <div class="select-wrap">
+                                <select id="duration_unit" name="duration_unit" class="m-select" required>
+                                    <option value="menit" {{ old('duration_unit','menit') === 'menit' ? 'selected' : '' }}>Menit</option>
+                                    <option value="jam"   {{ old('duration_unit') === 'jam'           ? 'selected' : '' }}>Jam</option>
+                                </select>
+                            </div>
+                        </div>
+                        @error('duration_value')<span class="err">{{ $message }}</span>@enderror
                         @error('duration_minutes')<span class="err">{{ $message }}</span>@enderror
                     </div>
                     <div class="field">
@@ -85,13 +95,39 @@
 
                 <!-- Catatan -->
                 <div class="field">
-                    <label for="notes">Catatan <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
+                    <label for="notes">
+                        Catatan
+                        <span id="notes_label_optional" style="color:var(--fg-4);font-weight:400;">(opsional)</span>
+                        <span id="notes_label_required" style="color:var(--danger);display:none;">* (wajib jika Terhambat)</span>
+                    </label>
                     <textarea id="notes" name="notes"
-                              class="m-textarea"
+                              class="m-textarea {{ $errors->has('notes') ? 'err' : '' }}"
                               style="min-height:72px;"
                               placeholder="Ada hambatan? Catatan tambahan?">{{ old('notes') }}</textarea>
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
                 </div>
+
+                <script>
+                    (function () {
+                        const statusEl   = document.getElementById('status');
+                        const notesEl    = document.getElementById('notes');
+                        const optLabel   = document.getElementById('notes_label_optional');
+                        const reqLabel   = document.getElementById('notes_label_required');
+
+                        function syncNotesRequired() {
+                            const isBlocked = statusEl.value === 'terhambat';
+                            notesEl.required = isBlocked;
+                            optLabel.style.display = isBlocked ? 'none' : '';
+                            reqLabel.style.display = isBlocked ? '' : 'none';
+                            notesEl.placeholder = isBlocked
+                                ? 'Wajib diisi: jelaskan hambatan yang dialami…'
+                                : 'Ada hambatan? Catatan tambahan?';
+                        }
+
+                        statusEl.addEventListener('change', syncNotesRequired);
+                        syncNotesRequired();
+                    })();
+                </script>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">
                     Kirim Laporan

@@ -28,6 +28,12 @@
             $done  = $todayEntries->where('status', 'selesai')->count();
             $total = $todayEntries->count();
             $pct   = $total > 0 ? round(($done / $total) * 100) : 0;
+
+            $activeTargets = \App\Models\MonthlyTarget::where('department', $user->department)
+                ->where('month', now()->month)
+                ->where('year', now()->year)
+                ->orderByDesc('created_at')
+                ->get();
         @endphp
 
         <!-- KPI grid -->
@@ -53,6 +59,31 @@
             </div>
         </div>
 
+        <!-- Target bulan ini -->
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">Target bulan ini</span>
+                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">{{ now()->format('M Y') }}</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @forelse ($activeTargets as $target)
+                    <div class="m-row">
+                        <div class="row-body">
+                            <div class="row-title">{{ $target->title }}</div>
+                            <div class="row-meta">
+                                <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}">{{ ucfirst(str_replace('_',' ', $target->department)) }}</span>
+                                @if($target->description)
+                                    <span>· {{ Str::limit($target->description, 40) }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">Leader belum membuat target untuk bulan ini.</div>
+                @endforelse
+            </div>
+        </div>
+
         <!-- Today's task list -->
         <div class="m-card" style="padding:0;">
             <div class="section-head">
@@ -65,13 +96,26 @@
                         $statusMap  = ['selesai'=>'success','dalam_proses'=>'warning','terhambat'=>'danger'];
                         $sChip      = $statusMap[$entry->status] ?? 'neutral';
                         $sLabel     = ['selesai'=>'Selesai','dalam_proses'=>'Dalam Proses','terhambat'=>'Terhambat'][$entry->status] ?? $entry->status;
+                        $durLabel   = $entry->duration_minutes >= 60 && $entry->duration_minutes % 60 === 0
+                            ? ($entry->duration_minutes / 60) . 'j'
+                            : $entry->duration_minutes . 'm';
                     @endphp
                     <div class="m-row">
-                        <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" aria-hidden="true">
-                            @if($entry->status === 'selesai')
+                        @if($entry->status === 'selesai')
+                            <span class="m-checkbox done" aria-hidden="true">
                                 <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>
-                            @endif
-                        </span>
+                            </span>
+                        @else
+                            <form method="POST" action="{{ route('daily-tasks.complete', $entry->id) }}"
+                                  style="display:inline;margin:0;padding:0;flex-shrink:0;"
+                                  onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="m-checkbox"
+                                        style="padding:0;font:inherit;color:inherit;"
+                                        title="Tandai selesai" aria-label="Tandai tugas selesai"></button>
+                            </form>
+                        @endif
                         <div class="row-body">
                             <div class="row-title">{{ $entry->task_description }}</div>
                             <div class="row-meta">
@@ -79,7 +123,7 @@
                                 @if($entry->monthlyTarget)
                                     <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
                                 @endif
-                                <span>· {{ $entry->duration_minutes }}m</span>
+                                <span>· {{ $durLabel }}</span>
                             </div>
                         </div>
                     </div>
@@ -88,6 +132,12 @@
                 @endforelse
             </div>
         </div>
+
+        @if(session('success'))
+            <div class="m-card" style="background:#E8F7EE;border:1px solid #16A571;color:#0F7A50;padding:12px 16px;font-size:13px;font-weight:600;">
+                {{ session('success') }}
+            </div>
+        @endif
 
         <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-block">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>

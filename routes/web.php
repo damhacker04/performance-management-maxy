@@ -9,12 +9,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// TEMPORARY: trigger seeder once on Railway. Remove after first use.
-Route::get('/__seed-users-once-9k3m2', function () {
-    \Artisan::call('db:seed', ['--class' => 'UserSeeder', '--force' => true]);
-    return 'Seeded. Users count: ' . \App\Models\User::count();
-});
-
 // Routes untuk Leader
 Route::middleware(['auth'])->group(function () {
 
@@ -35,6 +29,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:staff'])->group(function () {
         Route::resource('daily-tasks', DailyTaskEntryController::class)
             ->only(['index', 'create', 'store']);
+        Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
+            ->name('daily-tasks.complete');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
