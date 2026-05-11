@@ -24,9 +24,13 @@
         <div class="m-card" style="padding:4px 16px;">
             @foreach($entries as $entry)
                 @php
-                    $statusMap = ['selesai'=>'success','dalam_proses'=>'warning','terhambat'=>'danger'];
+                    $statusMap = [
+                        'belum_mulai' => 'neutral',
+                        'dalam_proses' => 'warning',
+                        'terhambat' => 'danger',
+                        'selesai' => 'success',
+                    ];
                     $sChip  = $statusMap[$entry->status] ?? 'neutral';
-                    $sLabel = ['selesai'=>'Selesai','dalam_proses'=>'Dalam Proses','terhambat'=>'Terhambat'][$entry->status] ?? $entry->status;
                 @endphp
                 <div class="m-row">
                     <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" aria-hidden="true">
@@ -35,14 +39,21 @@
                         @endif
                     </span>
                     <div class="row-body">
-                        <div class="row-title">{{ $entry->task_description }}</div>
+                        <div class="row-title">
+                            {{ $entry->task_description }}
+                            @if($entry->is_overdue)
+                                <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                            @endif
+                        </div>
                         <div class="row-meta">
-                            <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
-                            @if($entry->monthlyTarget)
+                            <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
+                            @if($entry->weeklyTarget)
+                                <span>· {{ Str::limit($entry->weeklyTarget->title, 22) }}</span>
+                            @elseif($entry->monthlyTarget)
                                 <span>· {{ Str::limit($entry->monthlyTarget->title, 22) }}</span>
                             @endif
                             <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
-                            <span>· {{ $entry->duration_minutes }}m</span>
+                            <span>· {{ $entry->duration_label }}</span>
                         </div>
                     </div>
                 </div>

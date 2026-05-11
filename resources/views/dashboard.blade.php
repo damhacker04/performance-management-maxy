@@ -22,17 +22,28 @@
         @php
             $todayEntries = \App\Models\DailyTaskEntry::where('user_id', $user->id)
                 ->whereDate('task_date', today())
-                ->with('monthlyTarget')
+                ->with(['monthlyTarget', 'weeklyTarget'])
                 ->orderByDesc('created_at')
                 ->get();
             $done  = $todayEntries->where('status', 'selesai')->count();
             $total = $todayEntries->count();
             $pct   = $total > 0 ? round(($done / $total) * 100) : 0;
 
-            $activeTargets = \App\Models\MonthlyTarget::where('department', $user->department)
+            // Tentukan minggu aktif berdasarkan tanggal hari ini
+            $today = now()->day;
+            $currentWeek = match(true) {
+                $today <= 7  => 1,
+                $today <= 14 => 2,
+                $today <= 21 => 3,
+                $today <= 28 => 4,
+                default      => 5,
+            };
+
+            $activeWeeklyTargets = \App\Models\WeeklyTarget::with('monthlyTarget')
+                ->whereHas('monthlyTarget', fn($q) => $q->where('department', $user->department))
                 ->where('month', now()->month)
                 ->where('year', now()->year)
-                ->orderByDesc('created_at')
+                ->where('week_number', $currentWeek)
                 ->get();
         @endphp
 
@@ -59,27 +70,31 @@
             </div>
         </div>
 
-        <!-- Target bulan ini -->
+        <!-- Target Minggu Ini -->
         <div class="m-card" style="padding:0;">
             <div class="section-head">
-                <span class="overline-label">Target bulan ini</span>
-                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">{{ now()->format('M Y') }}</span>
+                <span class="overline-label">Target minggu ini</span>
+                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">Minggu {{ $currentWeek }} · {{ now()->format('M Y') }}</span>
             </div>
             <div style="padding:0 16px 8px;">
-                @forelse ($activeTargets as $target)
+                @forelse ($activeWeeklyTargets as $wt)
                     <div class="m-row">
                         <div class="row-body">
-                            <div class="row-title">{{ $target->title }}</div>
+                            <div class="row-title">{{ $wt->title }}</div>
                             <div class="row-meta">
-                                <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}">{{ ucfirst(str_replace('_',' ', $target->department)) }}</span>
-                                @if($target->description)
-                                    <span>· {{ Str::limit($target->description, 40) }}</span>
+                                @if($wt->target_type === 'quantitative')
+                                    <span class="chip chip-info">{{ $wt->target_label }}</span>
+                                @else
+                                    <span class="chip chip-neutral">Kualitatif</span>
+                                @endif
+                                @if($wt->monthlyTarget)
+                                    <span>· {{ Str::limit($wt->monthlyTarget->title, 32) }}</span>
                                 @endif
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="empty-state">Leader belum membuat target untuk bulan ini.</div>
+                    <div class="empty-state">Belum ada target untuk minggu ke-{{ $currentWeek }}.</div>
                 @endforelse
             </div>
         </div>
@@ -93,12 +108,20 @@
             <div style="padding:0 16px 8px;">
                 @forelse ($todayEntries as $entry)
                     @php
-                        $statusMap  = ['selesai'=>'success','dalam_proses'=>'warning','terhambat'=>'danger'];
-                        $sChip      = $statusMap[$entry->status] ?? 'neutral';
-                        $sLabel     = ['selesai'=>'Selesai','dalam_proses'=>'Dalam Proses','terhambat'=>'Terhambat'][$entry->status] ?? $entry->status;
-                        $durLabel   = $entry->duration_minutes >= 60 && $entry->duration_minutes % 60 === 0
-                            ? ($entry->duration_minutes / 60) . 'j'
-                            : $entry->duration_minutes . 'm';
+                        $statusMap = [
+                            'belum_mulai' => 'neutral',
+                            'dalam_proses' => 'warning',
+                            'terhambat' => 'danger',
+                            'selesai' => 'success',
+                        ];
+                        $sChip   = $statusMap[$entry->status] ?? 'neutral';
+                        $sLabel  = $entry->status_label;
+                        $priorityChip = [
+                            'critical' => 'danger',
+                            'high'     => 'warning',
+                            'medium'   => 'info',
+                            'low'      => 'neutral',
+                        ][$entry->priority] ?? 'neutral';
                     @endphp
                     <div class="m-row">
                         @if($entry->status === 'selesai')
@@ -117,13 +140,26 @@
                             </form>
                         @endif
                         <div class="row-body">
-                            <div class="row-title">{{ $entry->task_description }}</div>
+                            <div class="row-title">
+                                {{ $entry->task_description }}
+                                @if($entry->is_overdue)
+                                    <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                                @endif
+                            </div>
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
-                                @if($entry->monthlyTarget)
+                                @if($entry->priority !== 'medium')
+                                    <span class="chip chip-{{ $priorityChip }}">{{ $entry->priority_label }}</span>
+                                @endif
+                                @if($entry->weeklyTarget)
+                                    <span>· {{ Str::limit($entry->weeklyTarget->title, 24) }}</span>
+                                @elseif($entry->monthlyTarget)
                                     <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
                                 @endif
-                                <span>· {{ $durLabel }}</span>
+                                <span>· {{ $entry->duration_label }}</span>
+                                @if($entry->percent_done > 0 && $entry->status !== 'selesai')
+                                    <span>· {{ $entry->percent_done }}%</span>
+                                @endif
                             </div>
                         </div>
                     </div>
