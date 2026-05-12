@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MonthlyTargetController;
 use App\Http\Controllers\WeeklyTargetController;
 use App\Http\Controllers\DailyTaskEntryController;
+use App\Http\Controllers\StaffTargetController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -45,12 +46,16 @@ Route::middleware(['auth'])->group(function () {
         })->name('kpi');
     });
 
-    // Daily Task — hanya Staff
+    // Daily Task & Target View — hanya Staff
     Route::middleware(['role:staff'])->group(function () {
         Route::resource('daily-tasks', DailyTaskEntryController::class)
             ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
             ->name('daily-tasks.complete');
+
+        // Target view untuk staff (read-only: lihat target bulanan & mingguan dept-nya)
+        Route::get('/my-targets', [StaffTargetController::class, 'index'])->name('staff-targets.index');
+        Route::get('/my-targets/{monthlyTarget}', [StaffTargetController::class, 'show'])->name('staff-targets.show');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

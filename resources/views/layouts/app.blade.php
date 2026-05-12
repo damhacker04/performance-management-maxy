@@ -20,11 +20,12 @@
     $isCLevel = $user->role === 'c_level';
 
     // Null-safe active tab detection
-    $onDashboard = request()->routeIs('dashboard');
-    $onTasks     = request()->routeIs('daily-tasks.*');
-    $onTargets   = request()->routeIs('monthly-targets.*');
-    $onKpi       = request()->routeIs('kpi');
-    $onProfile   = request()->routeIs('profile.*');
+    $onDashboard  = request()->routeIs('dashboard');
+    $onTasks      = request()->routeIs('daily-tasks.*');
+    $onTargets    = request()->routeIs('monthly-targets.*');
+    $onMyTargets  = request()->routeIs('staff-targets.*');
+    $onKpi        = request()->routeIs('kpi');
+    $onProfile    = request()->routeIs('profile.*');
 @endphp
 
 <div class="app-shell">
@@ -78,6 +79,14 @@
         </a>
 
         @if ($isStaff)
+            {{-- Target (staff — read-only view dept target) --}}
+            <a href="{{ route('staff-targets.index') }}" class="tab {{ $onMyTargets ? 'active' : '' }}">
+                <span class="glyph">
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                </span>
+                Target
+            </a>
+
             {{-- Tugas (staff) --}}
             <a href="{{ route('daily-tasks.index') }}" class="tab {{ $onTasks ? 'active' : '' }}">
                 <span class="glyph">

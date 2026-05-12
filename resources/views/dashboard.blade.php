@@ -74,11 +74,16 @@
         <div class="m-card" style="padding:0;">
             <div class="section-head">
                 <span class="overline-label">Target minggu ini</span>
-                <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">Minggu {{ $currentWeek }} · {{ now()->format('M Y') }}</span>
+                <a href="{{ route('staff-targets.index') }}"
+                   style="font-size:12px;font-weight:600;color:var(--maxy-navy);text-decoration:none;">
+                    Minggu {{ $currentWeek }} · {{ now()->format('M Y') }}
+                </a>
             </div>
             <div style="padding:0 16px 8px;">
                 @forelse ($activeWeeklyTargets as $wt)
-                    <div class="m-row">
+                    <a href="{{ $wt->monthlyTarget ? route('staff-targets.show', $wt->monthlyTarget->id) : route('staff-targets.index') }}"
+                       class="m-row"
+                       style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-body">
                             <div class="row-title">{{ $wt->title }}</div>
                             <div class="row-meta">
@@ -88,11 +93,12 @@
                                     <span class="chip chip-neutral">Kualitatif</span>
                                 @endif
                                 @if($wt->monthlyTarget)
-                                    <span>· {{ Str::limit($wt->monthlyTarget->title, 32) }}</span>
+                                    <span>· {{ Str::limit($wt->monthlyTarget->title, 28) }}</span>
                                 @endif
                             </div>
                         </div>
-                    </div>
+                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
                 @empty
                     <div class="empty-state">Belum ada target untuk minggu ke-{{ $currentWeek }}.</div>
                 @endforelse

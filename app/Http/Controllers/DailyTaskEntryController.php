@@ -71,7 +71,12 @@ class DailyTaskEntryController extends Controller
                 ->first();
         }
 
-        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom'));
+        // Pre-select weekly target jika datang dari halaman staff-targets
+        $preSelectedWeeklyId = $request->filled('weekly_target_id')
+            ? (int) $request->weekly_target_id
+            : null;
+
+        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom', 'preSelectedWeeklyId'));
     }
 
     /**

@@ -104,7 +104,7 @@
                             <option value="">Pilih target mingguan...</option>
                             @php
                                 $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-                                $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id);
+                                $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id ?? $preSelectedWeeklyId);
                             @endphp
                             @foreach($weeklyTargets as $wt)
                                 <option value="{{ $wt->id }}" {{ $defaultWeekly == $wt->id ? 'selected' : '' }}>
