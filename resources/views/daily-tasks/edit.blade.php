@@ -14,13 +14,27 @@
         </div>
     </div>
 
-    {{-- Info banner: kondisi edit --}}
-    <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#8B5A00;">
-        <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-        <div>
-            <strong>Mode edit</strong> — kamu masih bisa update laporan ini sampai akhir hari atau sampai kamu tandai selesai. Setelahnya, laporan akan jadi history.
+    {{-- Banner info: complete_mode — diarahkan dari tombol tandai selesai --}}
+    @if(session('complete_mode'))
+        <div style="background:#E8F5E9;border:1px solid #4CAF50;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#2E7D32;">
+            <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+                <strong>Tandai Selesai</strong> — Pilih status "Selesai" dan isi catatan penyelesaian,
+                lalu klik Simpan. Catatan wajib diisi sesuai aturan evaluasi KPI.
+            </div>
         </div>
-    </div>
+    @endif
+
+    {{-- Banner info: kondisi edit --}}
+    @if(!session('complete_mode'))
+        <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#8B5A00;">
+            <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            <div>
+                <strong>Mode edit</strong> — Kamu bisa update status dan catatan task ini selama belum ditandai
+                selesai. Task yang sudah selesai bersifat final dan tidak bisa diubah.
+            </div>
+        </div>
+    @endif
 
     <div class="m-card">
         <form method="POST" action="{{ route('daily-tasks.update', $dailyTask) }}"
@@ -30,22 +44,25 @@
 
             <!-- Weekly Target -->
             <div class="field">
-                <label for="weekly_target_id">Target Mingguan <span style="color:var(--danger);">*</span></label>
+                <label for="weekly_target_id">Target Mingguan</label>
                 <div class="select-wrap">
                     <select id="weekly_target_id" name="weekly_target_id"
-                            class="m-select {{ $errors->has('weekly_target_id') ? 'err' : '' }}" required>
-                        <option value="">Pilih target mingguan...</option>
+                            class="m-select {{ $errors->has('weekly_target_id') ? 'err' : '' }}">
                         @php
                             $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
                             $selectedWeekly = old('weekly_target_id', $dailyTask->weekly_target_id);
                         @endphp
+                        <option value="" {{ empty($selectedWeekly) ? 'selected' : '' }}>
+                            🗂️ Other (task tambahan)
+                        </option>
                         @foreach($weeklyTargets as $wt)
-                            <option value="{{ $wt->id }}" {{ $selectedWeekly == $wt->id ? 'selected' : '' }}>
+                            <option value="{{ $wt->id }}" {{ (int)$selectedWeekly === $wt->id ? 'selected' : '' }}>
                                 [M{{ $wt->week_number }} {{ $monthShort[$wt->month] }}] {{ $wt->title }}
                             </option>
                         @endforeach
                     </select>
                 </div>
+                <small style="color:var(--fg-4);font-size:11px;">"Other" untuk task mendadak dari CEO/CTO.</small>
                 @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
             </div>
 
@@ -108,96 +125,40 @@
                 </div>
             </div>
 
-            <!-- Status & % Done -->
-            <div id="status_percent_wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="field">
-                    <label for="status">Status <span style="color:var(--danger);">*</span></label>
-                    <div class="select-wrap">
-                        <select id="status" name="status"
-                                class="m-select {{ $errors->has('status') ? 'err' : '' }}" required>
-                            @php $defaultStatus = old('status', $dailyTask->status); @endphp
-                            <option value="belum_mulai"  {{ $defaultStatus === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
-                            <option value="dalam_proses" {{ $defaultStatus === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
-                            <option value="terhambat"    {{ $defaultStatus === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
-                            <option value="selesai"      {{ $defaultStatus === 'selesai'      ? 'selected' : '' }}>Selesai</option>
-                        </select>
-                    </div>
-                    @error('status')<span class="err">{{ $message }}</span>@enderror
+            <!-- Status -->
+            <div class="field">
+                <label for="status">Status <span style="color:var(--danger);">*</span></label>
+                <div class="select-wrap">
+                    <select id="status" name="status"
+                            class="m-select {{ $errors->has('status') ? 'err' : '' }}" required>
+                        @php
+                            // complete_mode: pre-select 'selesai' agar staff tinggal isi catatan
+                            $defaultStatus = old('status', session('complete_mode') ? 'selesai' : $dailyTask->status);
+                        @endphp
+                        <option value="belum_mulai"  {{ $defaultStatus === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
+                        <option value="dalam_proses" {{ $defaultStatus === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
+                        <option value="terhambat"    {{ $defaultStatus === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
+                        <option value="selesai"      {{ $defaultStatus === 'selesai'      ? 'selected' : '' }}>Selesai</option>
+                    </select>
                 </div>
-                <div class="field" id="percent_done_wrap">
-                    @php $defaultPercent = old('percent_done', $dailyTask->percent_done); @endphp
-                    <label for="percent_done">
-                        % Selesai
-                        <span id="percent_value" style="color:var(--maxy-navy);font-weight:700;">{{ $defaultPercent }}%</span>
-                    </label>
-                    <input id="percent_done" type="range" name="percent_done"
-                           value="{{ $defaultPercent }}"
-                           min="0" max="100" step="5"
-                           style="width:100%;accent-color:var(--maxy-navy);" />
-                    @error('percent_done')<span class="err">{{ $message }}</span>@enderror
-                </div>
+                @error('status')<span class="err">{{ $message }}</span>@enderror
             </div>
 
-            <!-- Catatan -->
+            <!-- Catatan / Progress narrative — WAJIB untuk semua status -->
             <div class="field">
                 <label for="notes">
-                    Catatan
-                    <span id="notes_label_optional" style="color:var(--fg-4);font-weight:400;">(opsional)</span>
-                    <span id="notes_label_required" style="color:var(--danger);display:none;">* (wajib jika Terhambat)</span>
+                    Catatan / Progress
+                    <span style="color:var(--danger);">*</span>
                 </label>
                 <textarea id="notes" name="notes"
                           class="m-textarea {{ $errors->has('notes') ? 'err' : '' }}"
-                          style="min-height:72px;"
-                          placeholder="Ada hambatan? Catatan tambahan?">{{ old('notes', $dailyTask->notes) }}</textarea>
+                          style="min-height:96px;"
+                          placeholder="Jelaskan apa yang sudah dikerjakan / progres / hambatan…"
+                          minlength="5"
+                          required>{{ old('notes', $dailyTask->notes) }}</textarea>
+                <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                 @error('notes')<span class="err">{{ $message }}</span>@enderror
             </div>
-
-            <script>
-                (function () {
-                    const statusEl    = document.getElementById('status');
-                    const notesEl     = document.getElementById('notes');
-                    const optLabel    = document.getElementById('notes_label_optional');
-                    const reqLabel    = document.getElementById('notes_label_required');
-                    const percentEl   = document.getElementById('percent_done');
-                    const percentDisp = document.getElementById('percent_value');
-                    const percentWrap = document.getElementById('percent_done_wrap');
-                    const gridWrap    = document.getElementById('status_percent_wrap');
-
-                    function syncNotesRequired() {
-                        const isBlocked = statusEl.value === 'terhambat';
-                        notesEl.required = isBlocked;
-                        optLabel.style.display = isBlocked ? 'none' : '';
-                        reqLabel.style.display = isBlocked ? '' : 'none';
-                        notesEl.placeholder = isBlocked
-                            ? 'Wajib diisi: jelaskan hambatan yang dialami…'
-                            : 'Ada hambatan? Catatan tambahan?';
-                    }
-
-                    function syncPercentByStatus() {
-                        if (statusEl.value === 'belum_mulai') percentEl.value = 0;
-                        if (statusEl.value === 'selesai')     percentEl.value = 100;
-                        percentDisp.textContent = percentEl.value + '%';
-                    }
-
-                    function syncPercentVisibility() {
-                        const showSlider = ['dalam_proses', 'terhambat'].includes(statusEl.value);
-                        percentWrap.style.display = showSlider ? '' : 'none';
-                        gridWrap.style.gridTemplateColumns = showSlider ? '1fr 1fr' : '1fr';
-                    }
-
-                    statusEl.addEventListener('change', () => {
-                        syncNotesRequired();
-                        syncPercentByStatus();
-                        syncPercentVisibility();
-                    });
-                    percentEl.addEventListener('input', () => {
-                        percentDisp.textContent = percentEl.value + '%';
-                    });
-
-                    syncNotesRequired();
-                    syncPercentVisibility();
-                })();
-            </script>
 
             <div style="display:flex;gap:10px;">
                 <a href="{{ route('daily-tasks.show', $dailyTask) }}"

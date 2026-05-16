@@ -18,7 +18,7 @@
 <div class="page">
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('weekly-targets.index', $weeklyTarget->monthlyTarget) }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ route('weekly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
@@ -28,7 +28,11 @@
             </div>
             <h1 style="font-size:17px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.3;">{{ $weeklyTarget->title }}</h1>
             <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">
-                ↳ {{ $weeklyTarget->monthlyTarget->title }}
+                @if($weeklyTarget->monthlyTarget)
+                    ↳ {{ $weeklyTarget->monthlyTarget->title }}
+                @else
+                    <span style="color:#B45309;font-weight:600;">🗂️ Other</span> — tidak terikat target bulanan
+                @endif
             </p>
         </div>
         <a href="{{ route('weekly-targets.edit', $weeklyTarget) }}" class="icon-btn" title="Edit">
@@ -131,9 +135,6 @@
                                     <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
                                     <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
                                     <span>· {{ $entry->duration_label }}</span>
-                                    @if($entry->percent_done > 0 && $entry->status !== 'selesai')
-                                        <span>· {{ $entry->percent_done }}%</span>
-                                    @endif
                                 </div>
                                 @if($entry->notes)
                                     <div style="font-size:11px;color:var(--fg-3);margin-top:4px;font-style:italic;background:var(--bg-2);padding:6px 8px;border-radius:6px;border-left:2px solid var(--fg-4);">

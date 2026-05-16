@@ -5,6 +5,7 @@ use App\Http\Controllers\MonthlyTargetController;
 use App\Http\Controllers\WeeklyTargetController;
 use App\Http\Controllers\DailyTaskEntryController;
 use App\Http\Controllers\StaffTargetController;
+use App\Http\Controllers\LeaderTargetController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -19,41 +20,34 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Monthly Target & Weekly Target & KPI — hanya Leader & C-Level
+    // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
+    // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
 
-        // Weekly Targets — nested under monthly untuk index/create/store
-        Route::get('monthly-targets/{monthlyTarget}/weekly-targets',
-            [WeeklyTargetController::class, 'index'])->name('weekly-targets.index');
-        Route::get('monthly-targets/{monthlyTarget}/weekly-targets/create',
-            [WeeklyTargetController::class, 'create'])->name('weekly-targets.create');
-        Route::post('monthly-targets/{monthlyTarget}/weekly-targets',
-            [WeeklyTargetController::class, 'store'])->name('weekly-targets.store');
+        // Weekly Target — standalone resource (BUKAN nested).
+        // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.
+        Route::resource('weekly-targets', WeeklyTargetController::class);
 
-        // Shallow untuk show/edit/update/destroy (tidak perlu monthly id)
-        Route::get('weekly-targets/{weeklyTarget}',
-            [WeeklyTargetController::class, 'show'])->name('weekly-targets.show');
-        Route::get('weekly-targets/{weeklyTarget}/edit',
-            [WeeklyTargetController::class, 'edit'])->name('weekly-targets.edit');
-        Route::patch('weekly-targets/{weeklyTarget}',
-            [WeeklyTargetController::class, 'update'])->name('weekly-targets.update');
-        Route::delete('weekly-targets/{weeklyTarget}',
-            [WeeklyTargetController::class, 'destroy'])->name('weekly-targets.destroy');
+        // Leader Target — read-only view: target yang dibuat C-Level untuk dept leader.
+        // Sesuai notul 12 Mei 2026: leader juga punya target dari C-Level & input daily task.
+        Route::get('/leader-targets', [LeaderTargetController::class, 'index'])->name('leader-targets.index');
+        Route::get('/leader-targets/{monthlyTarget}', [LeaderTargetController::class, 'show'])->name('leader-targets.show');
 
         Route::get('/kpi', function () {
             return view('kpi');
         })->name('kpi');
     });
 
-    // Daily Task & Target View — hanya Staff
-    Route::middleware(['role:staff'])->group(function () {
-        Route::resource('daily-tasks', DailyTaskEntryController::class)
-            ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-        Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
-            ->name('daily-tasks.complete');
+    // Daily Task — Staff, Leader, dan C-Level semua bisa input laporan harian
+    // (Leader & C-Level juga punya aktivitas harian yang perlu dilaporkan)
+    Route::resource('daily-tasks', DailyTaskEntryController::class)
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+    Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
+        ->name('daily-tasks.complete');
 
-        // Target view untuk staff (read-only: lihat target bulanan & mingguan dept-nya)
+    // Target view khusus Staff (read-only: lihat target bulanan & mingguan dept-nya)
+    Route::middleware(['role:staff'])->group(function () {
         Route::get('/my-targets', [StaffTargetController::class, 'index'])->name('staff-targets.index');
         Route::get('/my-targets/{monthlyTarget}', [StaffTargetController::class, 'show'])->name('staff-targets.show');
     });

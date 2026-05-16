@@ -39,8 +39,15 @@
                 default      => 5,
             };
 
+            // Include "Other" weekly targets (monthly_target_id null) yang dibuat oleh user dept ini
             $activeWeeklyTargets = \App\Models\WeeklyTarget::with('monthlyTarget')
-                ->whereHas('monthlyTarget', fn($q) => $q->where('department', $user->department))
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('monthlyTarget', fn($mq) => $mq->where('department', $user->department))
+                      ->orWhere(function ($oq) use ($user) {
+                          $oq->whereNull('monthly_target_id')
+                             ->whereHas('user', fn($uq) => $uq->where('department', $user->department));
+                      });
+                })
                 ->where('month', now()->month)
                 ->where('year', now()->year)
                 ->where('week_number', $currentWeek)
@@ -165,9 +172,6 @@
                                     <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
                                 @endif
                                 <span>· {{ $entry->duration_label }}</span>
-                                @if($entry->percent_done > 0 && $entry->status !== 'selesai')
-                                    <span>· {{ $entry->percent_done }}%</span>
-                                @endif
                             </div>
                         </a>
                     </div>
@@ -230,7 +234,7 @@
             </div>
             <div style="padding:0 16px 8px;">
                 @forelse ($targets->take(3) as $target)
-                    <a href="{{ route('weekly-targets.index', $target->id) }}"
+                    <a href="{{ route('monthly-targets.edit', $target->id) }}"
                        class="m-row"
                        style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-body">
@@ -279,9 +283,6 @@
                                 @if($entry->weeklyTarget)
                                     <span>· <span style="color:var(--maxy-navy);font-weight:600;">M{{ $entry->weeklyTarget->week_number }}</span> {{ Str::limit($entry->weeklyTarget->title, 20) }}</span>
                                 @endif
-                                @if($entry->percent_done > 0 && $entry->status !== 'selesai')
-                                    <span>· {{ $entry->percent_done }}%</span>
-                                @endif
                                 <span>· {{ $entry->duration_label }}</span>
                             </div>
                             @if($entry->notes)
@@ -305,8 +306,14 @@
     @else
         {{-- C-Level --}}
         @php
-            $depts       = ['sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product & IT','operational'=>'Operational'];
-            $deptColors  = ['sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571','operational'=>'#E89B2A'];
+            $depts = [
+                'sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product / IT','operational'=>'Operational',
+                'hr'=>'HR','finance'=>'Finance','ga'=>'General Affairs','creative'=>'Creative','customer_support'=>'Customer Support',
+            ];
+            $deptColors = [
+                'sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571','operational'=>'#E89B2A',
+                'hr'=>'#6D28D9','finance'=>'#0D9488','ga'=>'#B45309','creative'=>'#DB2777','customer_support'=>'#1D4ED8',
+            ];
             $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
             $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
         @endphp

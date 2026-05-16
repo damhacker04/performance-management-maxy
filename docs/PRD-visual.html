@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD — Maxy Academy Performance Management</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:   #232E66;
+    --navy-light: #2e3d88;
+    --amber:  #FBB041;
+    --amber-light: #FFF3D6;
+    --success: #16A571;
+    --success-bg: #E8F7EE;
+    --danger:  #EF4444;
+    --danger-bg: #FEE2E2;
+    --warning: #F59E0B;
+    --warning-bg: #FEF3C7;
+    --info:    #3B82F6;
+    --info-bg: #EFF6FF;
+    --neutral-bg: #F8F9FC;
+    --bg:      #F1F3F9;
+    --card:    #FFFFFF;
+    --fg:      #1A1E35;
+    --fg2:     #4B5280;
+    --fg3:     #8B90B0;
+    --border:  #E2E5F0;
+    --radius:  14px;
+    --shadow:  0 2px 12px rgba(35,46,102,.08);
+    --shadow-lg: 0 8px 32px rgba(35,46,102,.12);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar TOC ── */
+  .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--navy);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0 0 24px;
+  }
+  .sidebar-logo {
+    background: var(--navy-light);
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo .brand { font-size: 13px; font-weight: 800; color: var(--amber); letter-spacing: .04em; text-transform: uppercase; }
+  .sidebar-logo .sub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 3px; }
+  .sidebar-logo .version { display: inline-block; background: var(--amber); color: var(--navy); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
+
+  .toc { padding: 16px 0; }
+  .toc-section { padding: 6px 20px 2px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.3); margin-top: 10px; }
+  .toc a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 20px; font-size: 12px; color: rgba(255,255,255,.65);
+    text-decoration: none; transition: all .15s;
+  }
+  .toc a:hover, .toc a.active { background: rgba(255,255,255,.08); color: #fff; }
+  .toc a .icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+
+  /* ── Main Content ── */
+  .main { flex: 1; min-width: 0; padding: 0 0 80px; }
+
+  /* ── Hero ── */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 60%, #3d4fa0 100%);
+    padding: 52px 48px 44px;
+    color: white;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(251,176,65,.2); border: 1px solid rgba(251,176,65,.4); color: var(--amber); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; letter-spacing: .05em; text-transform: uppercase; }
+  .hero h1 { font-size: 30px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+  .hero h1 span { color: var(--amber); }
+  .hero p { font-size: 15px; color: rgba(255,255,255,.7); max-width: 540px; }
+  .hero-meta { display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap; }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .hero-meta-item .label { font-size: 10px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .08em; }
+  .hero-meta-item .value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); }
+
+  /* ── Sections ── */
+  .section { padding: 40px 48px; border-bottom: 1px solid var(--border); }
+  .section:last-child { border-bottom: none; }
+  .section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 28px; }
+  .section-icon { width: 42px; height: 42px; border-radius: 12px; background: var(--amber-light); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .section-title { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1.2; }
+  .section-subtitle { font-size: 13px; color: var(--fg3); margin-top: 4px; }
+  .section-num { font-size: 11px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+
+  /* ── Components ── */
+  h2 { font-size: 19px; font-weight: 700; color: var(--navy); margin: 32px 0 14px; }
+  h3 { font-size: 15px; font-weight: 700; color: var(--navy); margin: 24px 0 10px; }
+  p { color: var(--fg2); margin-bottom: 12px; }
+
+  /* Cards */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 20px; }
+  .card-grid { display: grid; gap: 16px; }
+  .card-grid.col-2 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid.col-3 { grid-template-columns: repeat(3, 1fr); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .badge-done    { background: var(--success-bg); color: #0F7A50; }
+  .badge-progress { background: var(--info-bg); color: #1D4ED8; }
+  .badge-planned { background: var(--neutral-bg); color: var(--fg3); border: 1px solid var(--border); }
+  .badge-blocker { background: var(--danger-bg); color: #B91C1C; }
+  .badge-pending { background: var(--warning-bg); color: #92400E; }
+  .badge-navy { background: var(--navy); color: white; }
+  .badge-amber { background: var(--amber); color: var(--navy); }
+
+  /* Tables */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { background: var(--navy); color: white; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; }
+  .tbl th:first-child { border-radius: 10px 0 0 0; }
+  .tbl th:last-child { border-radius: 0 10px 0 0; }
+  .tbl td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--fg2); vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:nth-child(even) td { background: var(--neutral-bg); }
+  .tbl-wrap { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+  /* Role Cards */
+  .role-card { border-radius: var(--radius); border: 2px solid var(--border); padding: 24px; background: var(--card); }
+  .role-card.clevel { border-color: var(--navy); }
+  .role-card.leader { border-color: var(--info); }
+  .role-card.staff  { border-color: var(--success); }
+  .role-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 14px; }
+  .role-icon.clevel { background: rgba(35,46,102,.1); }
+  .role-icon.leader { background: var(--info-bg); }
+  .role-icon.staff  { background: var(--success-bg); }
+  .role-name { font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 4px; }
+  .role-sub { font-size: 12px; color: var(--fg3); margin-bottom: 14px; }
+  .role-rows { display: flex; flex-direction: column; gap: 8px; }
+  .role-row { display: flex; gap: 8px; }
+  .role-row .lbl { font-size: 11px; font-weight: 700; color: var(--fg3); text-transform: uppercase; letter-spacing: .06em; min-width: 80px; flex-shrink: 0; padding-top: 1px; }
+  .role-row .val { font-size: 13px; color: var(--fg2); }
+
+  /* Flow Steps */
+  .flow { display: flex; flex-direction: column; gap: 0; }
+  .flow-step {
+    display: flex; gap: 16px; position: relative;
+  }
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 20px; top: 44px;
+    width: 2px; height: calc(100% - 16px);
+    background: var(--border);
+  }
+  .flow-step:last-child::before { display: none; }
+  .flow-num {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: var(--navy); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; z-index: 1;
+    margin-top: 2px;
+  }
+  .flow-num.done { background: var(--success); }
+  .flow-num.branch { background: var(--amber); color: var(--navy); }
+  .flow-content { flex: 1; padding-bottom: 28px; }
+  .flow-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .flow-desc { font-size: 13px; color: var(--fg2); line-height: 1.5; }
+  .flow-note { font-size: 11px; color: var(--fg3); background: var(--neutral-bg); border-radius: 8px; padding: 6px 10px; margin-top: 8px; border-left: 3px solid var(--amber); }
+  .flow-options { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .flow-option { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; background: var(--neutral-bg); border-radius: 8px; padding: 8px 12px; }
+  .flow-option .opt-label { font-weight: 700; font-size: 11px; color: var(--navy); background: var(--amber-light); border-radius: 4px; padding: 2px 6px; white-space: nowrap; flex-shrink: 0; }
+  .flow-option .opt-text { color: var(--fg2); }
+
+  /* Field Preview */
+  .field-list { display: flex; flex-direction: column; gap: 8px; }
+  .field-item { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .field-num { width: 24px; height: 24px; border-radius: 50%; background: var(--navy); color: white; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .field-info { flex: 1; }
+  .field-label { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .field-desc { font-size: 12px; color: var(--fg3); margin-top: 2px; }
+  .field-required { font-size: 10px; font-weight: 700; color: var(--danger); background: var(--danger-bg); padding: 2px 6px; border-radius: 4px; float: right; }
+  .field-optional { font-size: 10px; font-weight: 700; color: var(--fg3); background: var(--neutral-bg); padding: 2px 6px; border-radius: 4px; float: right; }
+
+  /* Info Boxes */
+  .info-box { border-radius: 12px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+  .info-box.amber { background: var(--amber-light); border: 1px solid var(--amber); }
+  .info-box.navy  { background: rgba(35,46,102,.07); border: 1px solid rgba(35,46,102,.2); }
+  .info-box.success { background: var(--success-bg); border: 1px solid var(--success); }
+  .info-box.danger { background: var(--danger-bg); border: 1px solid var(--danger); }
+  .info-box .ib-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .info-box .ib-text { font-size: 13px; color: var(--fg2); line-height: 1.5; }
+  .info-box .ib-text strong { color: var(--fg); }
+
+  /* Roadmap */
+  .roadmap-group { margin-bottom: 24px; }
+  .roadmap-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+  .roadmap-label span { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .roadmap-items { display: flex; flex-direction: column; gap: 8px; }
+  .roadmap-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .roadmap-item .ri-num { font-size: 11px; font-weight: 800; color: var(--fg3); min-width: 20px; }
+  .roadmap-item .ri-text { flex: 1; font-size: 13px; color: var(--fg); font-weight: 500; }
+  .roadmap-item .ri-note { font-size: 11px; color: var(--fg3); }
+
+  /* Architecture */
+  .arch-box {
+    border-radius: var(--radius); padding: 20px; position: relative; margin-bottom: 0;
+  }
+  .arch-layer { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 8px; }
+  .arch-layer-label { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--fg3); margin-bottom: 8px; }
+  .arch-layer-items { display: flex; gap: 8px; flex-wrap: wrap; }
+  .arch-chip { background: var(--neutral-bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--fg); }
+  .arch-chip.navy { background: var(--navy); color: white; border-color: var(--navy); }
+  .arch-chip.amber { background: var(--amber); color: var(--navy); border-color: var(--amber); }
+  .arch-chip.green { background: var(--success-bg); color: #0F7A50; border-color: var(--success); }
+  .arch-arrow { text-align: center; color: var(--fg3); font-size: 20px; margin: 4px 0; line-height: 1; }
+
+  /* ERD Visual */
+  .erd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .erd-table { background: var(--card); border: 2px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .erd-table.primary { border-color: var(--navy); }
+  .erd-table-head { background: var(--navy); color: white; padding: 10px 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .erd-table.leader .erd-table-head { background: var(--info); }
+  .erd-table.staff  .erd-table-head { background: var(--success); }
+  .erd-table.planned .erd-table-head { background: var(--warning); }
+  .erd-table-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .erd-field { font-size: 11px; color: var(--fg2); display: flex; align-items: center; gap: 6px; }
+  .erd-field .ek { font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px; }
+  .erd-field .pk { background: var(--amber); color: var(--navy); }
+  .erd-field .fk { background: var(--info-bg); color: var(--info); }
+  .erd-field .nu { background: var(--neutral-bg); color: var(--fg3); border: 1px solid var(--border); font-size: 9px; }
+
+  /* Open Questions */
+  .oq-item { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; display: flex; gap: 12px; margin-bottom: 10px; }
+  .oq-num { width: 28px; height: 28px; border-radius: 50%; background: var(--warning-bg); border: 2px solid var(--warning); color: #92400E; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .oq-body { flex: 1; }
+  .oq-q { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+  .oq-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .oq-pic { font-size: 11px; color: var(--fg3); background: var(--neutral-bg); border-radius: 6px; padding: 2px 8px; }
+  .oq-impact { font-size: 11px; color: var(--info); background: var(--info-bg); border-radius: 6px; padding: 2px 8px; }
+
+  /* Print */
+  @media print {
+    .sidebar { display: none; }
+    .hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section { padding: 20px 24px; }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .hero { padding: 32px 24px; }
+    .section { padding: 28px 24px; }
+    .card-grid.col-3 { grid-template-columns: 1fr; }
+    .card-grid.col-2 { grid-template-columns: 1fr; }
+    .erd-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .erd-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+<!-- ════════════════════════════ SIDEBAR ════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">Maxy Academy</div>
+    <div class="sub">Performance Management System</div>
+    <div class="version">PRD v2.0</div>
+  </div>
+  <div class="toc">
+    <div class="toc-section">Overview</div>
+    <a href="#ringkasan"><span class="icon">📋</span> Ringkasan</a>
+    <a href="#masalah"><span class="icon">⚠️</span> Latar Belakang</a>
+    <a href="#personas"><span class="icon">👥</span> User Personas</a>
+    <a href="#scope"><span class="icon">🎯</span> MVP Scope</a>
+
+    <div class="toc-section">Desain Sistem</div>
+    <a href="#arsitektur"><span class="icon">🏗️</span> Arsitektur</a>
+    <a href="#data"><span class="icon">🗄️</span> Model Data</a>
+    <a href="#usecase"><span class="icon">📐</span> Use Case</a>
+
+    <div class="toc-section">User Flow</div>
+    <a href="#flow-staff"><span class="icon">👷</span> Staff</a>
+    <a href="#flow-leader"><span class="icon">👔</span> Leader</a>
+    <a href="#flow-clevel"><span class="icon">🏢</span> C-Level</a>
+    <a href="#flow-other"><span class="icon">🗂️</span> Skenario Other</a>
+
+    <div class="toc-section">Requirement</div>
+    <a href="#fitur"><span class="icon">✅</span> Fitur</a>
+    <a href="#roadmap"><span class="icon">🗺️</span> Roadmap</a>
+    <a href="#oq"><span class="icon">❓</span> Open Questions</a>
+  </div>
+</nav>
+
+<!-- ════════════════════════════ MAIN ════════════════════════════ -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">📄 Product Requirements Document</div>
+  <h1>Maxy Academy<br><span>Performance Management</span></h1>
+  <p>Sistem internal untuk tracking KPI dan laporan harian tim — menggantikan alur Google Form → Excel manual.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span class="label">Versi</span>
+      <span class="value">2.0 — Final MVP</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="label">Terakhir diupdate</span>
+      <span class="value">13 Mei 2026</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="label">Referensi utama</span>
+      <span class="value">Notul Rapat 12 Mei 2026</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="label">Status</span>
+      <span class="value">🟢 In Development</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 1. RINGKASAN ════ -->
+<section class="section" id="ringkasan">
+  <div class="section-header">
+    <div class="section-icon">📋</div>
+    <div>
+      <div class="section-num">01 — Ringkasan</div>
+      <div class="section-title">Apa itu sistem ini?</div>
+      <div class="section-subtitle">Gambaran besar produk dalam satu halaman</div>
+    </div>
+  </div>
+
+  <div class="card-grid col-3" style="margin-bottom:20px;">
+    <div class="card" style="border-top:3px solid var(--navy);">
+      <div style="font-size:28px;margin-bottom:8px;">🎯</div>
+      <div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:6px;">Tujuan Utama</div>
+      <div style="font-size:13px;color:var(--fg2);">Menggantikan Google Form + Excel manual dengan sistem berbasis web yang real-time dan terstruktur.</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--amber);">
+      <div style="font-size:28px;margin-bottom:8px;">📱</div>
+      <div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:6px;">Platform</div>
+      <div style="font-size:13px;color:var(--fg2);">Web app mobile-first — dioptimasi untuk smartphone. Cukup buka browser, tidak perlu install apapun.</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--success);">
+      <div style="font-size:28px;margin-bottom:8px;">👥</div>
+      <div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:6px;">Pengguna</div>
+      <div style="font-size:13px;color:var(--fg2);">42 staff + Leader + Ko Isaac. MVP fokus ke divisi Sales, Marketing, dan Product IT.</div>
+    </div>
+  </div>
+
+  <div class="info-box navy">
+    <div class="ib-icon">💡</div>
+    <div class="ib-text">
+      <strong>Cara kerjanya sederhana:</strong> Leader set target bulanan & mingguan → Staff input laporan harian → Ko Isaac lihat progress real-time di dashboard. Tidak ada lagi Bu Fanny yang harus compile Excel setiap hari.
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <tr><th>Info</th><th>Detail</th></tr>
+      <tr><td>Nama Produk</td><td><strong>Maxy Academy Performance Management System</strong></td></tr>
+      <tr><td>Tech Stack</td><td>Laravel 13, Blade, MySQL (produksi), SQLite (lokal)</td></tr>
+      <tr><td>Hosting</td><td>Railway.app</td></tr>
+      <tr><td>Desain</td><td>Mobile-first 390px, Navy #232E66, Amber #FBB041, font Figtree</td></tr>
+      <tr><td>Referensi PRD ini</td><td>Notul Rapat 12 Mei 2026 (dokumen otoritatif)</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ════ 2. LATAR BELAKANG ════ -->
+<section class="section" id="masalah">
+  <div class="section-header">
+    <div class="section-icon">⚠️</div>
+    <div>
+      <div class="section-num">02 — Latar Belakang</div>
+      <div class="section-title">Apa masalahnya?</div>
+      <div class="section-subtitle">Kenapa sistem ini perlu dibuat</div>
+    </div>
+  </div>
+
+  <h2>Kondisi Sebelumnya (Masalah)</h2>
+  <div class="tbl-wrap" style="margin-bottom:20px;">
+    <table class="tbl">
+      <tr><th>#</th><th>Masalah</th><th>Dampaknya</th></tr>
+      <tr><td>1</td><td>Staff input laporan via <strong>Google Form</strong></td><td>Data tersebar, tidak bisa dilihat real-time</td></tr>
+      <tr><td>2</td><td><strong>Bu Fanny harus parsing manual</strong> Google Form → Excel setiap hari</td><td>Bottleneck di HR, data sering telat 1–2 hari</td></tr>
+      <tr><td>3</td><td><strong>42 staff × 7 task/hari</strong> = ~294 entry/hari diproses manual</td><td>Tidak skalabel, error rate tinggi</td></tr>
+      <tr><td>4</td><td>Ko Isaac tidak bisa lihat progress tim <strong>real-time</strong></td><td>Keputusan manajerial lambat</td></tr>
+      <tr><td>5</td><td>Tidak ada link antara <strong>KPI target</strong> dan pekerjaan harian</td><td>Staff kerja tanpa arah yang terukur</td></tr>
+      <tr><td>6</td><td>Field "persentase progress" di form lama <strong>mudah dimanipulasi</strong></td><td>Data tidak reliable untuk evaluasi</td></tr>
+    </table>
+  </div>
+
+  <h2>Solusinya</h2>
+  <div class="card-grid col-2">
+    <div class="card">
+      <div style="font-size:22px;margin-bottom:8px;">🔗</div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">Hierarki Target yang Jelas</div>
+      <div style="font-size:13px;color:var(--fg2);">Monthly Target → Weekly Target → Daily Task. Semua pekerjaan harian terhubung ke target yang sudah ditetapkan.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:22px;margin-bottom:8px;">👁️</div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">Real-time Visibility</div>
+      <div style="font-size:13px;color:var(--fg2);">Ko Isaac bisa buka dashboard kapan saja dan langsung tahu progress semua tim — tanpa perlu minta laporan ke siapapun.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:22px;margin-bottom:8px;">🚫</div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">Tanpa Manual Parsing</div>
+      <div style="font-size:13px;color:var(--fg2);">Data masuk langsung ke database. Bu Fanny tidak perlu lagi compile Excel setiap hari.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:22px;margin-bottom:8px;">🔐</div>
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">Role-based Access</div>
+      <div style="font-size:13px;color:var(--fg2);">Setiap role punya akses sesuai tanggung jawabnya. Staff hanya lihat data miliknya, Leader lihat dept-nya, C-Level lihat semua.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 3. PERSONAS ════ -->
+<section class="section" id="personas">
+  <div class="section-header">
+    <div class="section-icon">👥</div>
+    <div>
+      <div class="section-num">03 — User Personas</div>
+      <div class="section-title">Siapa yang pakai sistem ini?</div>
+      <div class="section-subtitle">3 tipe pengguna dengan kebutuhan berbeda</div>
+    </div>
+  </div>
+
+  <div class="card-grid col-3">
+
+    <!-- C-Level -->
+    <div class="role-card clevel">
+      <div class="role-icon clevel">🏢</div>
+      <div class="role-name">Ko Isaac</div>
+      <div class="role-sub">C-Level / Management</div>
+      <div class="role-rows">
+        <div class="role-row">
+          <div class="lbl">Kebutuhan</div>
+          <div class="val">Lihat progress semua tim real-time tanpa harus minta laporan satu-satu</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Pain Point</div>
+          <div class="val">Harus tunggu Bu Fanny compile dulu baru bisa evaluasi kinerja</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Akses</div>
+          <div class="val">Semua data semua departemen. <strong>Satu-satunya yang bisa input/edit KPI Organization.</strong></div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Menu</div>
+          <div class="val" style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span class="badge badge-navy">Home</span>
+            <span class="badge badge-navy">Monthly</span>
+            <span class="badge badge-navy">Weekly</span>
+            <span class="badge badge-navy">KPI</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leader -->
+    <div class="role-card leader">
+      <div class="role-icon leader">👔</div>
+      <div class="role-name">Leader Dept</div>
+      <div class="role-sub">Leader Sales / Marketing / Product</div>
+      <div class="role-rows">
+        <div class="role-row">
+          <div class="lbl">Kebutuhan</div>
+          <div class="val">Set target bulanan & mingguan untuk tim, pantau progress staff</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Pain Point</div>
+          <div class="val">Tidak tahu staff-nya kerja apa sampai laporan masuk, sering miss deadline</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Akses</div>
+          <div class="val">Data dept sendiri saja. Bisa lihat KPI tapi <strong>tidak bisa edit.</strong></div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Menu</div>
+          <div class="val" style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span class="badge badge-navy">Home</span>
+            <span class="badge badge-navy">Monthly</span>
+            <span class="badge badge-navy">Weekly</span>
+            <span class="badge badge-navy">KPI</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Staff -->
+    <div class="role-card staff">
+      <div class="role-icon staff">👷</div>
+      <div class="role-name">Staff</div>
+      <div class="role-sub">Staff Sales / Marketing / Product</div>
+      <div class="role-rows">
+        <div class="role-row">
+          <div class="lbl">Kebutuhan</div>
+          <div class="val">Input laporan kerja harian dengan cepat, tahu task apa yang jadi prioritas</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Pain Point</div>
+          <div class="val">Google Form terasa redundan, tidak ada feedback apakah laporan sudah dibaca</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Akses</div>
+          <div class="val">Hanya data milik sendiri. Tidak bisa lihat data staff lain.</div>
+        </div>
+        <div class="role-row">
+          <div class="lbl">Menu</div>
+          <div class="val" style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span class="badge badge-navy">Home</span>
+            <span class="badge badge-navy">Target</span>
+            <span class="badge badge-navy">Tugas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════ 4. MVP SCOPE ════ -->
+<section class="section" id="scope">
+  <div class="section-header">
+    <div class="section-icon">🎯</div>
+    <div>
+      <div class="section-num">04 — MVP Scope</div>
+      <div class="section-title">Apa yang masuk & tidak masuk MVP?</div>
+      <div class="section-subtitle">Batasan yang disepakati di Notul Rapat 12 Mei 2026</div>
+    </div>
+  </div>
+
+  <div class="info-box amber" style="margin-bottom:20px;">
+    <div class="ib-icon">⚠️</div>
+    <div class="ib-text">
+      <strong>Keputusan Notul 12 Mei 2026:</strong> "Fokus MVP terlebih dahulu ke divisi <strong>Sales, Marketing, Product</strong>. Operational &amp; GA bisa menjadi pengembangan tahap berikutnya."
+    </div>
+  </div>
+
+  <div class="card-grid col-2" style="margin-bottom:20px;">
+    <div class="card" style="border-left:4px solid var(--success);">
+      <div style="font-size:13px;font-weight:800;color:var(--success);margin-bottom:10px;">✅ MASUK MVP</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.8;">
+        ✓ Divisi Sales, Marketing, Product IT<br>
+        ✓ Login &amp; role-based access<br>
+        ✓ Monthly Target (CRUD)<br>
+        ✓ Weekly Target standalone + "Other"<br>
+        ✓ Daily Task / Laporan Harian + "Other"<br>
+        ✓ 4 status task (tanpa persentase)<br>
+        ✓ Catatan wajib semua status<br>
+        ✓ KPI Organization (c_level edit, leader view)<br>
+        ✓ Dashboard real-time
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--danger);">
+      <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:10px;">❌ TIDAK MASUK MVP (Phase 2)</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.8;">
+        ✗ Divisi Operational, GA, HR, Finance, dll<br>
+        ✗ Task lintas minggu (multi-week task)<br>
+        ✗ KPI formula otomatis per dept<br>
+        ✗ AI summary laporan<br>
+        ✗ Notifikasi / reminder<br>
+        ✗ Export laporan ke Excel/PDF<br>
+        ✗ Onboarding dept baru otomatis
+      </div>
+    </div>
+  </div>
+
+  <h2>Status Fitur MVP</h2>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <tr><th>Fitur</th><th>Siapa</th><th>Status</th></tr>
+      <tr><td>Login / Autentikasi</td><td>Semua</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td>Dashboard real-time</td><td>Semua</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td>Monthly Target (CRUD)</td><td>Leader, C-Level</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td>Weekly Target standalone + "Other"</td><td>Leader, C-Level</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td>Daily Task + "Other" + lanjutkan task</td><td>Staff</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td>4 status task, catatan wajib, tanpa persentase</td><td>Staff</td><td><span class="badge badge-done">✅ Done</span></td></tr>
+      <tr><td><strong>KPI Organization (c_level edit, leader view)</strong></td><td>C-Level / Leader</td><td><span class="badge badge-progress">🔄 In Progress</span></td></tr>
+      <tr><td>Output reporting / export view</td><td>Semua</td><td><span class="badge badge-planned">📋 Planned</span></td></tr>
+      <tr><td>MySQL persistent di Railway</td><td>Infra</td><td><span class="badge badge-blocker">⛔ Blocker</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ════ 5. ARSITEKTUR ════ -->
+<section class="section" id="arsitektur">
+  <div class="section-header">
+    <div class="section-icon">🏗️</div>
+    <div>
+      <div class="section-num">05 — Arsitektur Sistem</div>
+      <div class="section-title">Bagaimana sistem bekerja?</div>
+      <div class="section-subtitle">Gambaran teknis untuk developer</div>
+    </div>
+  </div>
+
+  <h2>Lapisan Sistem</h2>
+  <div class="card" style="padding:24px;margin-bottom:20px;">
+    <div class="arch-layer" style="background:rgba(35,46,102,.05);border-color:var(--navy);">
+      <div class="arch-layer-label">👤 Pengguna (User Layer)</div>
+      <div class="arch-layer-items">
+        <div class="arch-chip">📱 Mobile Browser (utama)</div>
+        <div class="arch-chip">💻 Desktop Browser</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-layer" style="background:rgba(251,176,65,.08);border-color:var(--amber);">
+      <div class="arch-layer-label">🌐 Presentasi (View Layer)</div>
+      <div class="arch-layer-items">
+        <div class="arch-chip amber">Blade Templates</div>
+        <div class="arch-chip">Mobile-first CSS</div>
+        <div class="arch-chip">Design System Maxy</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-layer" style="background:rgba(35,46,102,.05);border-color:var(--navy);">
+      <div class="arch-layer-label">⚙️ Logika Bisnis (App Layer — Railway.app)</div>
+      <div class="arch-layer-items">
+        <div class="arch-chip navy">Laravel 13 + FrankenPHP</div>
+        <div class="arch-chip">Controllers</div>
+        <div class="arch-chip">Middleware (Auth + Role)</div>
+        <div class="arch-chip">Models + Eloquent ORM</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕</div>
+    <div class="arch-layer" style="background:var(--success-bg);border-color:var(--success);">
+      <div class="arch-layer-label">🗄️ Data (Database Layer)</div>
+      <div class="arch-layer-items">
+        <div class="arch-chip green">MySQL (produksi — Railway)</div>
+        <div class="arch-chip">SQLite (lokal — dev)</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Struktur Menu (4 Menu Utama)</h2>
+  <div class="info-box navy" style="margin-bottom:16px;">
+    <div class="ib-icon">📌</div>
+    <div class="ib-text"><strong>Keputusan final Notul 12 Mei 2026:</strong> Hanya 4 menu. Tidak ada menu tambahan di luar yang disepakati.</div>
+  </div>
+  <div class="card-grid col-2">
+    <div class="card" style="border-top:3px solid var(--navy);">
+      <div style="font-size:13px;font-weight:800;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">C-Level &amp; Leader — 4 Menu</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>🏠</span> Home (Dashboard)</div>
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>📅</span> Monthly Target</div>
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>📆</span> Weekly Target</div>
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>📊</span> KPI Organization</div>
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--success);">
+      <div style="font-size:13px;font-weight:800;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Staff — 3–4 Menu</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>🏠</span> Home (Dashboard)</div>
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>📆</span> Target (Weekly)</div>
+        <div style="background:var(--navy);color:white;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>📝</span> Tugas (Daily Task)</div>
+        <div style="background:var(--neutral-bg);color:var(--fg3);border:1px dashed var(--border);border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;"><span>👤</span> Profil</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 6. DATA MODEL ════ -->
+<section class="section" id="data">
+  <div class="section-header">
+    <div class="section-icon">🗄️</div>
+    <div>
+      <div class="section-num">06 — Model Data</div>
+      <div class="section-title">Bagaimana data disimpan?</div>
+      <div class="section-subtitle">Struktur database dan hubungan antar tabel</div>
+    </div>
+  </div>
+
+  <h2>Hierarki Data</h2>
+  <div class="card" style="padding:24px;margin-bottom:20px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+      <div style="background:var(--navy);color:white;border-radius:12px;padding:14px 32px;font-size:14px;font-weight:700;text-align:center;">
+        📅 Monthly Target<br><span style="font-size:11px;font-weight:400;opacity:.7;">Leader buat di awal bulan</span>
+      </div>
+      <div style="font-size:20px;color:var(--fg3);padding:4px;">↓</div>
+      <div style="background:var(--info);color:white;border-radius:12px;padding:14px 32px;font-size:14px;font-weight:700;text-align:center;">
+        📆 Weekly Target<br><span style="font-size:11px;font-weight:400;opacity:.7;">Breakdown per minggu. Bisa "Other" (tanpa monthly)</span>
+      </div>
+      <div style="font-size:20px;color:var(--fg3);padding:4px;">↓</div>
+      <div style="background:var(--success);color:white;border-radius:12px;padding:14px 32px;font-size:14px;font-weight:700;text-align:center;">
+        📝 Daily Task Entry<br><span style="font-size:11px;font-weight:400;opacity:.7;">Staff input setiap hari. Bisa "Other" (tanpa weekly target)</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Tabel Database</h2>
+  <div class="erd-grid">
+
+    <div class="erd-table primary">
+      <div class="erd-table-head">👤 users</div>
+      <div class="erd-table-body">
+        <div class="erd-field"><span class="ek pk">PK</span> id</div>
+        <div class="erd-field">name</div>
+        <div class="erd-field">email</div>
+        <div class="erd-field">password</div>
+        <div class="erd-field">role <em style="color:var(--fg3);font-size:10px;">(c_level/leader/staff)</em></div>
+        <div class="erd-field">department <span class="ek nu">nullable</span></div>
+      </div>
+    </div>
+
+    <div class="erd-table leader">
+      <div class="erd-table-head">📅 monthly_targets</div>
+      <div class="erd-table-body">
+        <div class="erd-field"><span class="ek pk">PK</span> id</div>
+        <div class="erd-field"><span class="ek fk">FK</span> user_id</div>
+        <div class="erd-field">department</div>
+        <div class="erd-field">title</div>
+        <div class="erd-field">description <span class="ek nu">nullable</span></div>
+        <div class="erd-field">month, year</div>
+      </div>
+    </div>
+
+    <div class="erd-table leader">
+      <div class="erd-table-head">📆 weekly_targets</div>
+      <div class="erd-table-body">
+        <div class="erd-field"><span class="ek pk">PK</span> id</div>
+        <div class="erd-field"><span class="ek fk">FK</span> monthly_target_id <span class="ek nu">nullable</span></div>
+        <div class="erd-field"><span class="ek fk">FK</span> user_id</div>
+        <div class="erd-field">title</div>
+        <div class="erd-field">target_type <em style="color:var(--fg3);font-size:10px;">(quant/qual)</em></div>
+        <div class="erd-field">target_value, target_unit <span class="ek nu">nullable</span></div>
+        <div class="erd-field">week_number, month, year</div>
+      </div>
+    </div>
+
+    <div class="erd-table staff" style="grid-column:1/3;">
+      <div class="erd-table-head">📝 daily_task_entries</div>
+      <div class="erd-table-body" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;">
+        <div class="erd-field"><span class="ek pk">PK</span> id</div>
+        <div class="erd-field"><span class="ek fk">FK</span> user_id</div>
+        <div class="erd-field"><span class="ek fk">FK</span> monthly_target_id <span class="ek nu">nullable</span></div>
+        <div class="erd-field"><span class="ek fk">FK</span> weekly_target_id <span class="ek nu">nullable</span></div>
+        <div class="erd-field">task_description</div>
+        <div class="erd-field">priority <em style="color:var(--fg3);font-size:10px;">(critical/high/medium/low)</em></div>
+        <div class="erd-field">status <em style="color:var(--fg3);font-size:10px;">(belum/proses/hambat/selesai)</em></div>
+        <div class="erd-field">notes <em style="color:var(--fg3);font-size:10px;">(wajib min. 5 char)</em></div>
+        <div class="erd-field">duration_minutes</div>
+        <div class="erd-field">task_date</div>
+      </div>
+    </div>
+
+    <div class="erd-table planned">
+      <div class="erd-table-head" style="background:var(--warning);">📊 kpi_targets <span style="font-size:10px;opacity:.8;">(planned)</span></div>
+      <div class="erd-table-body">
+        <div class="erd-field"><span class="ek pk">PK</span> id</div>
+        <div class="erd-field">department</div>
+        <div class="erd-field">kpi_name</div>
+        <div class="erd-field">target_value, unit</div>
+        <div class="erd-field">month, year</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="info-box amber" style="margin-top:16px;">
+    <div class="ib-icon">🔑</div>
+    <div class="ib-text">
+      <strong>Pola "Other":</strong> Kolom <code>monthly_target_id</code> di weekly_targets dan <code>weekly_target_id</code> di daily_task_entries boleh kosong (NULL). Kalau kosong → tugas tersebut masuk kategori <strong>"Other"</strong> — tidak terikat planning rutin.
+    </div>
+  </div>
+</section>
+
+<!-- ════ 7. USE CASE ════ -->
+<section class="section" id="usecase">
+  <div class="section-header">
+    <div class="section-icon">📐</div>
+    <div>
+      <div class="section-num">07 — Use Case</div>
+      <div class="section-title">Siapa bisa melakukan apa?</div>
+      <div class="section-subtitle">Matriks akses lengkap per role</div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <tr>
+        <th>Fitur / Aksi</th>
+        <th style="text-align:center;">👷 Staff</th>
+        <th style="text-align:center;">👔 Leader</th>
+        <th style="text-align:center;">🏢 C-Level</th>
+      </tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">Autentikasi</td>
+      </tr>
+      <tr><td>Login / Logout</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td></tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">Dashboard</td>
+      </tr>
+      <tr><td>Lihat dashboard sendiri</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td></tr>
+      <tr><td>Lihat dashboard semua dept</td><td style="text-align:center;">—</td><td style="text-align:center;">Dept sendiri</td><td style="text-align:center;">✅ Semua</td></tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">Monthly Target</td>
+      </tr>
+      <tr><td>Lihat Monthly Target</td><td style="text-align:center;">—</td><td style="text-align:center;">Dept sendiri</td><td style="text-align:center;">✅ Semua</td></tr>
+      <tr><td>Buat / Edit / Hapus Monthly Target</td><td style="text-align:center;">—</td><td style="text-align:center;">✅ Dept sendiri</td><td style="text-align:center;">✅ Semua</td></tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">Weekly Target</td>
+      </tr>
+      <tr><td>Lihat Weekly Target dept sendiri</td><td style="text-align:center;">✅ (pilih saja)</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅ Semua</td></tr>
+      <tr><td>Buat Weekly Target (terikat Monthly)</td><td style="text-align:center;">—</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td></tr>
+      <tr><td>Buat Weekly Target "Other"</td><td style="text-align:center;">—</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td></tr>
+      <tr><td>Edit / Hapus Weekly Target</td><td style="text-align:center;">—</td><td style="text-align:center;">✅ Milik sendiri</td><td style="text-align:center;">✅</td></tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">Daily Task / Laporan Harian</td>
+      </tr>
+      <tr><td>Input laporan harian</td><td style="text-align:center;">✅</td><td style="text-align:center;">⏳ Pending*</td><td style="text-align:center;">⏳ Pending*</td></tr>
+      <tr><td>Edit laporan (hari sama, belum selesai)</td><td style="text-align:center;">✅</td><td style="text-align:center;">⏳ Pending*</td><td style="text-align:center;">⏳ Pending*</td></tr>
+      <tr><td>Tandai task selesai</td><td style="text-align:center;">✅</td><td style="text-align:center;">⏳ Pending*</td><td style="text-align:center;">⏳ Pending*</td></tr>
+      <tr><td>Lihat laporan orang lain</td><td style="text-align:center;">—</td><td style="text-align:center;">✅ Dept sendiri</td><td style="text-align:center;">✅ Semua</td></tr>
+      <tr>
+        <td colspan="4" style="background:var(--neutral-bg);font-size:11px;font-weight:700;color:var(--fg3);text-transform:uppercase;letter-spacing:.08em;">KPI Organization</td>
+      </tr>
+      <tr><td>Lihat KPI Organization</td><td style="text-align:center;">—</td><td style="text-align:center;">✅ (view only)</td><td style="text-align:center;">✅</td></tr>
+      <tr><td>Input / Edit KPI Organization</td><td style="text-align:center;">—</td><td style="text-align:center;">🚫 Tidak boleh</td><td style="text-align:center;">✅ Hanya ini</td></tr>
+    </table>
+  </div>
+  <div style="font-size:11px;color:var(--fg3);margin-top:8px;">* ⏳ Pending konfirmasi Kak Fanny — apakah leader/c_level perlu input daily task juga?</div>
+</section>
+
+<!-- ════ 8. USER FLOW — STAFF ════ -->
+<section class="section" id="flow-staff">
+  <div class="section-header">
+    <div class="section-icon">👷</div>
+    <div>
+      <div class="section-num">08a — User Flow</div>
+      <div class="section-title">Staff: Input Laporan Harian</div>
+      <div class="section-subtitle">Cara staff melaporkan pekerjaan hari ini — step by step</div>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <div class="ib-icon">🎯</div>
+    <div class="ib-text"><strong>Tujuan:</strong> Staff melaporkan apa yang dikerjakan hari ini. Target: selesai dalam kurang dari 2 menit.</div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">🔐 Buka app & Login</div>
+        <div class="flow-desc">Buka browser → masuk ke alamat app → ketik email kerja dan password (maxy2026) → klik "Masuk".</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">🏠 Lihat Dashboard</div>
+        <div class="flow-desc">Langsung muncul halaman utama. Kamu bisa lihat target minggu ini, task yang sudah diinput hari ini, dan status masing-masing task.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num branch">→</div>
+      <div class="flow-content">
+        <div class="flow-title">Klik "+ Tambah Laporan"</div>
+        <div class="flow-desc">Tekan tombol tambah di dashboard atau buka tab "Tugas".</div>
+        <div class="flow-options">
+          <div class="flow-option">
+            <div class="opt-label">Ada task kemarin belum selesai?</div>
+            <div class="opt-text">Muncul banner kuning "Lanjutkan task sebelumnya?" — klik task-nya → form ter-isi otomatis dari data kemarin.</div>
+          </div>
+          <div class="flow-option">
+            <div class="opt-label">Tidak ada / buat baru?</div>
+            <div class="opt-text">Form kosong, langsung isi dari awal.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">📝 Isi Form Laporan (6 Field)</div>
+        <div class="flow-desc" style="margin-bottom:10px;">Isi semua field berikut:</div>
+        <div class="field-list">
+          <div class="field-item">
+            <div class="field-num">1</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">Target Minggu Ini</div>
+              <div class="field-desc">Pilih dari daftar target yang sudah dibuat Leader kamu. Atau pilih <strong>"🗂️ Other"</strong> kalau task mendadak dari Ko Isaac.</div>
+            </div>
+          </div>
+          <div class="field-item">
+            <div class="field-num">2</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">Deskripsi Tugas</div>
+              <div class="field-desc">Tulis singkat apa yang kamu kerjakan. Contoh: "Buat deck proposal client Q2"</div>
+            </div>
+          </div>
+          <div class="field-item">
+            <div class="field-num">3</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">Prioritas</div>
+              <div class="field-desc">🔴 Critical &nbsp;|&nbsp; 🟠 High &nbsp;|&nbsp; 🟡 Medium &nbsp;|&nbsp; 🔵 Low</div>
+            </div>
+          </div>
+          <div class="field-item">
+            <div class="field-num">4</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">Durasi Kerja</div>
+              <div class="field-desc">Isi angka + pilih satuannya (Menit atau Jam). Contoh: 2 Jam, 90 Menit</div>
+            </div>
+          </div>
+          <div class="field-item">
+            <div class="field-num">5</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">Status</div>
+              <div class="field-desc">Belum Mulai &nbsp;|&nbsp; Dalam Proses &nbsp;|&nbsp; Terhambat &nbsp;|&nbsp; Selesai</div>
+            </div>
+          </div>
+          <div class="field-item" style="border-left:3px solid var(--amber);">
+            <div class="field-num" style="background:var(--amber);color:var(--navy);">6</div>
+            <div class="field-info">
+              <span class="field-required">WAJIB</span>
+              <div class="field-label">⭐ Catatan / Progress</div>
+              <div class="field-desc">Jelaskan apa yang sudah dikerjakan, seberapa jauh progressnya, atau apa hambatannya. <strong>Minimal 5 karakter. Berlaku untuk SEMUA status.</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <div class="flow-title">📤 Klik "Kirim Laporan"</div>
+        <div class="flow-desc">Kalau ada field yang belum diisi atau kurang dari minimum → muncul pesan error merah di field tersebut. Isi yang belum lengkap lalu kirim lagi.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num done">✓</div>
+      <div class="flow-content">
+        <div class="flow-title">✅ Berhasil! Kembali ke Dashboard</div>
+        <div class="flow-desc">Laporan tersimpan. Langsung terbaca oleh Leader dan Ko Isaac di dashboard mereka.</div>
+        <div class="flow-note">💡 Laporan masih bisa diedit sampai akhir hari yang sama, ATAU sampai kamu klik "Tandai Selesai". Setelah itu, laporan terkunci permanen sebagai history.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 8B. USER FLOW — LEADER ════ -->
+<section class="section" id="flow-leader">
+  <div class="section-header">
+    <div class="section-icon">👔</div>
+    <div>
+      <div class="section-num">08b — User Flow</div>
+      <div class="section-title">Leader: Set Target & Pantau Tim</div>
+      <div class="section-subtitle">Alur awal bulan (set target) dan monitoring harian</div>
+    </div>
+  </div>
+
+  <h2>Alur Awal Bulan: Set Target</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">📅 Buat Monthly Target (awal bulan)</div>
+        <div class="flow-desc">Klik tab "Monthly" → "+ Tambah Target Bulanan" → isi judul target, deskripsi (opsional), pilih bulan & tahun → Simpan.</div>
+        <div class="flow-note">Contoh: "Capai 200 qualified leads Sales — Mei 2026"</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">📆 Buat Weekly Target (per minggu)</div>
+        <div class="flow-desc">Klik tab "Weekly" → "+ Tambah Target Mingguan" → isi detail target.</div>
+        <div class="flow-options">
+          <div class="flow-option">
+            <div class="opt-label">Terikat Monthly Target</div>
+            <div class="opt-text">Pilih monthly target mana yang jadi induknya → isi judul, minggu ke-, tipe & angka target.</div>
+          </div>
+          <div class="flow-option">
+            <div class="opt-label">🗂️ "Other"</div>
+            <div class="opt-text">Pilih "Other" di dropdown — untuk pekerjaan mingguan yang di luar planning bulanan.</div>
+          </div>
+        </div>
+        <div class="flow-note">Setelah disimpan, staff tim kamu langsung bisa lihat target ini dan memilihnya saat input laporan harian.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="margin-top:32px;">Alur Harian: Pantau Tim</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">🏠 Buka Dashboard setiap pagi / sore</div>
+        <div class="flow-desc">Langsung lihat: siapa yang sudah input laporan, ada yang terhambat tidak, task apa yang sudah selesai hari ini.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">4</div>
+      <div class="flow-content">
+        <div class="flow-title">📊 Cek KPI</div>
+        <div class="flow-desc">Klik tab "KPI" → lihat KPI Organization yang sudah diset Ko Isaac untuk dept kamu.</div>
+        <div class="flow-note">⚠️ Leader hanya bisa LIHAT KPI, tidak bisa mengubah. Hanya Ko Isaac yang bisa edit KPI.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 8C. USER FLOW — C-LEVEL ════ -->
+<section class="section" id="flow-clevel">
+  <div class="section-header">
+    <div class="section-icon">🏢</div>
+    <div>
+      <div class="section-num">08c — User Flow</div>
+      <div class="section-title">C-Level: Pantau Semua & Set KPI</div>
+      <div class="section-subtitle">Ko Isaac — visibilitas penuh semua departemen</div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">🏠 Dashboard — Lihat Semua Departemen</div>
+        <div class="flow-desc">Langsung lihat progress SEMUA departemen (Sales + Marketing + Product) dalam satu layar. Tidak perlu minta laporan ke siapapun.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">📊 Set KPI Organization <span style="font-size:11px;background:var(--amber);color:var(--navy);padding:2px 8px;border-radius:4px;font-weight:700;">Hanya Ko Isaac</span></div>
+        <div class="flow-desc">Klik tab "KPI" → "+ Tambah KPI" atau klik edit yang sudah ada → isi nama KPI, angka target, satuan, departemen, bulan & tahun → Simpan.</div>
+        <div class="flow-note">KPI yang sudah disimpan langsung bisa dilihat oleh Leader (view-only).</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">3</div>
+      <div class="flow-content">
+        <div class="flow-title">📅📆 Buat Target untuk Dept Mana Pun (kalau perlu)</div>
+        <div class="flow-desc">Ko Isaac bisa buat Monthly Target dan Weekly Target untuk departemen mana pun, tidak terbatas dept sendiri.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num done">✓</div>
+      <div class="flow-content">
+        <div class="flow-title">Semua data visible tanpa harus minta ke siapapun</div>
+        <div class="flow-desc">Cukup buka app → semua informasi yang dibutuhkan sudah ada.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 8D. SKENARIO OTHER ════ -->
+<section class="section" id="flow-other">
+  <div class="section-header">
+    <div class="section-icon">🗂️</div>
+    <div>
+      <div class="section-num">08d — Skenario Khusus</div>
+      <div class="section-title">Kategori "Other" — Task Ad-hoc</div>
+      <div class="section-subtitle">Apa itu "Other" dan kapan dipakai?</div>
+    </div>
+  </div>
+
+  <div class="info-box amber">
+    <div class="ib-icon">🗂️</div>
+    <div class="ib-text">
+      <strong>"Other"</strong> adalah kategori khusus untuk tugas yang <strong>tidak ada di planning rutin</strong> — misalnya task mendadak dari Ko Isaac, rapat darurat, atau pekerjaan mingguan yang di luar target bulanan.
+    </div>
+  </div>
+
+  <div class="card-grid col-2" style="margin-bottom:20px;">
+    <div class="card" style="border-left:4px solid var(--amber);">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px;">🗂️ Weekly Target "Other"</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.6;">
+        Leader buat weekly target yang tidak terhubung ke monthly target manapun.<br><br>
+        <strong>Kapan dipakai:</strong> Ada pekerjaan tim yang tidak ada di planning bulanan, tapi perlu di-tracking tetap.
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--amber);">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px;">🗂️ Daily Task "Other"</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.6;">
+        Staff input laporan tanpa memilih weekly target manapun.<br><br>
+        <strong>Kapan dipakai:</strong> Ko Isaac tiba-tiba minta handle sesuatu, atau ada rapat mendadak yang tidak ada di weekly target.
+      </div>
+    </div>
+  </div>
+
+  <h2>Contoh Skenario</h2>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-num">💬</div>
+      <div class="flow-content">
+        <div class="flow-title">Situasi: Ko Isaac minta Budi (staff Sales) handle meeting vendor mendadak</div>
+        <div class="flow-desc">Meeting ini tidak ada di planning weekly target Sales minggu ini.</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">1</div>
+      <div class="flow-content">
+        <div class="flow-title">Budi buka form laporan harian</div>
+        <div class="flow-desc">Di field "Target Minggu Ini" → pilih <strong>"🗂️ Other (task tambahan dari CEO/CTO)"</strong></div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num">2</div>
+      <div class="flow-content">
+        <div class="flow-title">Budi isi deskripsi & catatan</div>
+        <div class="flow-desc">Deskripsi: "Meeting mendadak dengan vendor partnership per permintaan Ko Isaac"<br>Catatan: "Rapat 2 jam dengan vendor X, output: MOU draft selesai dibahas"</div>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="flow-num done">✓</div>
+      <div class="flow-content">
+        <div class="flow-title">Laporan tersimpan dengan badge "Task Tambahan (Other)"</div>
+        <div class="flow-desc">Ko Isaac bisa lihat task ini di dashboard dengan badge khusus warna amber — langsung tahu ini task ad-hoc.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 9. FITUR ════ -->
+<section class="section" id="fitur">
+  <div class="section-header">
+    <div class="section-icon">✅</div>
+    <div>
+      <div class="section-num">09 — Functional Requirements</div>
+      <div class="section-title">Aturan & ketentuan fitur</div>
+      <div class="section-subtitle">Business rules yang harus dipenuhi sistem</div>
+    </div>
+  </div>
+
+  <h2>Aturan Daily Task (Paling Penting)</h2>
+  <div class="card-grid col-2" style="margin-bottom:20px;">
+    <div class="card" style="border-top:3px solid var(--success);">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;">✅ Yang Boleh</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.8;">
+        ✓ Input laporan kapanpun di hari yang sama<br>
+        ✓ Input beberapa laporan dalam satu hari<br>
+        ✓ Edit laporan sampai akhir hari (sebelum tengah malam)<br>
+        ✓ Lanjutkan task dari hari sebelumnya (buat laporan baru)<br>
+        ✓ Pilih "Other" untuk task mendadak
+      </div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--danger);">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;">🚫 Yang Tidak Boleh</div>
+      <div style="font-size:13px;color:var(--fg2);line-height:1.8;">
+        ✗ Input laporan untuk hari kemarin atau besok<br>
+        ✗ Edit laporan hari sebelumnya<br>
+        ✗ Edit laporan yang sudah di-tandai "Selesai"<br>
+        ✗ Kosongkan field catatan<br>
+        ✗ Catatan kurang dari 5 karakter<br>
+        ✗ Lihat laporan staff lain (khusus staff)
+      </div>
+    </div>
+  </div>
+
+  <h2>Status Task</h2>
+  <div class="card-grid col-2" style="margin-bottom:20px;">
+    <div class="card" style="border-left:4px solid var(--fg3);display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;">⬜</div>
+      <div>
+        <div style="font-weight:700;color:var(--navy);">Belum Mulai</div>
+        <div style="font-size:12px;color:var(--fg3);">Task sudah dicatat, belum dikerjakan</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--warning);display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;">🔄</div>
+      <div>
+        <div style="font-weight:700;color:var(--navy);">Dalam Proses</div>
+        <div style="font-size:12px;color:var(--fg3);">Task sedang dikerjakan</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--danger);display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;">🛑</div>
+      <div>
+        <div style="font-weight:700;color:var(--navy);">Terhambat</div>
+        <div style="font-size:12px;color:var(--fg3);">Ada hambatan — wajib jelaskan di catatan</div>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--success);display:flex;align-items:center;gap:12px;">
+      <div style="font-size:24px;">✅</div>
+      <div>
+        <div style="font-weight:700;color:var(--navy);">Selesai</div>
+        <div style="font-size:12px;color:var(--fg3);">Task selesai — laporan terkunci permanen</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box danger">
+    <div class="ib-icon">⚠️</div>
+    <div class="ib-text">
+      <strong>Catatan wajib untuk SEMUA status</strong> — termasuk "Belum Mulai" dan "Selesai". Minimal 5 karakter. Ini keputusan dari Notul 12 Mei 2026 — menggantikan field "persentase progress" yang dianggap tidak akurat.
+    </div>
+  </div>
+</section>
+
+<!-- ════ 10. ROADMAP ════ -->
+<section class="section" id="roadmap">
+  <div class="section-header">
+    <div class="section-icon">🗺️</div>
+    <div>
+      <div class="section-num">10 — Roadmap</div>
+      <div class="section-title">Apa yang dikerjakan kapan?</div>
+      <div class="section-subtitle">Prioritas pengembangan berdasarkan notul</div>
+    </div>
+  </div>
+
+  <div class="roadmap-group">
+    <div class="roadmap-label" style="color:var(--danger);">
+      <span style="background:var(--danger);"></span>
+      🔥 P0 — Harus Selesai untuk MVP
+    </div>
+    <div class="roadmap-items">
+      <div class="roadmap-item">
+        <div class="ri-num">1</div>
+        <div class="ri-text">KPI Organization CRUD — input c_level, view-only leader</div>
+        <span class="badge badge-progress">🔄 In Progress</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">2</div>
+        <div class="ri-text">MySQL Railway persistent — tidak reset saat redeploy</div>
+        <span class="badge badge-blocker">⛔ Blocker</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">3</div>
+        <div class="ri-text">Output reporting / export view — gantikan kerja manual Bu Fanny</div>
+        <span class="badge badge-planned">📋 Planned</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="roadmap-group">
+    <div class="roadmap-label" style="color:var(--warning);">
+      <span style="background:var(--warning);"></span>
+      🟡 P1 — Polish MVP
+    </div>
+    <div class="roadmap-items">
+      <div class="roadmap-item">
+        <div class="ri-num">4</div>
+        <div class="ri-text">Leader daily task input flow</div>
+        <span class="badge badge-pending">⏳ Pending Fanny</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">5</div>
+        <div class="ri-text">Filter & search di riwayat task</div>
+        <span class="badge badge-planned">📋 Planned</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">6</div>
+        <div class="ri-text">Quick-add UX — optimasi untuk 7 task/staff/hari</div>
+        <span class="badge badge-planned">📋 Planned</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="roadmap-group">
+    <div class="roadmap-label" style="color:var(--info);">
+      <span style="background:var(--info);"></span>
+      🔵 Phase 2 — Setelah MVP Stabil
+    </div>
+    <div class="roadmap-items">
+      <div class="roadmap-item">
+        <div class="ri-num">7</div>
+        <div class="ri-text">Onboarding dept Operational, GA, HR, Finance, Creative, CS</div>
+        <span class="badge badge-planned">📋 Phase 2</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">8</div>
+        <div class="ri-text">Multi-week task (task lintas minggu untuk procurement/hiring)</div>
+        <span class="badge badge-planned">📋 Phase 2</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">9</div>
+        <div class="ri-text">KPI formula otomatis per dept (monthly completion rate, dll)</div>
+        <span class="badge badge-planned">📋 Phase 2</span>
+      </div>
+      <div class="roadmap-item">
+        <div class="ri-num">10</div>
+        <div class="ri-text">AI summary laporan harian — butuh data historis dulu</div>
+        <span class="badge badge-planned">📋 Phase 2</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 11. OPEN QUESTIONS ════ -->
+<section class="section" id="oq">
+  <div class="section-header">
+    <div class="section-icon">❓</div>
+    <div>
+      <div class="section-num">11 — Open Questions</div>
+      <div class="section-title">Yang masih perlu dikonfirmasi</div>
+      <div class="section-subtitle">Jangan asumsi — tanyakan dulu ke orang yang tepat</div>
+    </div>
+  </div>
+
+  <div class="info-box amber">
+    <div class="ib-icon">⚠️</div>
+    <div class="ib-text">
+      Semua pertanyaan di bawah ini <strong>belum ada jawaban resmi</strong>. Development tidak akan dilanjutkan untuk fitur terkait sampai ada konfirmasi.
+    </div>
+  </div>
+
+  <div class="oq-item">
+    <div class="oq-num">1</div>
+    <div class="oq-body">
+      <div class="oq-q">Apakah Leader juga perlu input daily task (laporan harian ke Ko Isaac)?</div>
+      <div class="oq-meta">
+        <div class="oq-pic">👤 Tanya ke: Kak Fanny</div>
+        <div class="oq-impact">Impact: Menentukan apakah ada menu "Tugas" untuk role Leader</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="oq-item">
+    <div class="oq-num">2</div>
+    <div class="oq-body">
+      <div class="oq-q">Apakah Ko Isaac set target spesifik per Leader (bukan per dept)?</div>
+      <div class="oq-meta">
+        <div class="oq-pic">👤 Tanya ke: Ko Isaac</div>
+        <div class="oq-impact">Impact: Apakah perlu relasi KPI → User (per person) atau cukup per dept</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="oq-item">
+    <div class="oq-num">3</div>
+    <div class="oq-body">
+      <div class="oq-q">Task lintas minggu di Operational — bagaimana cara pelaporannya sekarang?</div>
+      <div class="oq-meta">
+        <div class="oq-pic">👤 Tanya ke: Kak Fanny</div>
+        <div class="oq-impact">Impact: Design decision untuk Phase 2 — multi-week task</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="oq-item">
+    <div class="oq-num">4</div>
+    <div class="oq-body">
+      <div class="oq-q">Task mendadak dari Ko Isaac — perlu flag khusus "from management" atau cukup "Other"?</div>
+      <div class="oq-meta">
+        <div class="oq-pic">👤 Tanya ke: Ko Isaac</div>
+        <div class="oq-impact">Impact: Enhancement untuk kategori "Other" — tambah field asal perintah</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="oq-item">
+    <div class="oq-num">5</div>
+    <div class="oq-body">
+      <div class="oq-q">Berapa dept yang masuk MVP tepat? Konfirmasi: hanya Sales, Marketing, Product saja?</div>
+      <div class="oq-meta">
+        <div class="oq-pic">👤 Tanya ke: Ko Isaac</div>
+        <div class="oq-impact">Impact: Scope creep — jangan tambah dept tanpa konfirmasi</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<div style="background:var(--navy);color:rgba(255,255,255,.5);padding:28px 48px;font-size:12px;display:flex;justify-content:space-between;flex-wrap:gap;">
+  <div>
+    <div style="font-weight:700;color:white;margin-bottom:4px;">Maxy Academy Performance Management</div>
+    <div>PRD v2.0 — Berdasarkan Notul Rapat 12 Mei 2026</div>
+  </div>
+  <div style="text-align:right;">
+    <div>Dibuat: 13 Mei 2026</div>
+    <div>Dokumen ini bersifat <strong style="color:var(--amber);">INTERNAL</strong></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// Active link in sidebar
+const sections = document.querySelectorAll('section[id], div[id]');
+const links = document.querySelectorAll('.toc a');
+
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.toc a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-80px 0px -60% 0px' });
+
+sections.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>

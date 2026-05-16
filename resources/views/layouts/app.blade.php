@@ -17,15 +17,17 @@
     $greet    = $hour < 11 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 18 ? 'Selamat sore' : 'Selamat malam'));
     $initials = collect(explode(' ', $user->name))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
     $isStaff  = $user->role === 'staff';
+    $isLeader = $user->role === 'leader';
     $isCLevel = $user->role === 'c_level';
 
     // Null-safe active tab detection
-    $onDashboard  = request()->routeIs('dashboard');
-    $onTasks      = request()->routeIs('daily-tasks.*');
-    $onTargets    = request()->routeIs('monthly-targets.*');
-    $onMyTargets  = request()->routeIs('staff-targets.*');
-    $onKpi        = request()->routeIs('kpi');
-    $onProfile    = request()->routeIs('profile.*');
+    $onDashboard    = request()->routeIs('dashboard');
+    $onTasks        = request()->routeIs('daily-tasks.*');
+    // Tab Target aktif jika di monthly-targets ATAU weekly-targets ATAU leader-targets
+    $onTargets      = request()->routeIs('monthly-targets.*') || request()->routeIs('weekly-targets.*') || request()->routeIs('leader-targets.*');
+    $onMyTargets    = request()->routeIs('staff-targets.*');
+    $onKpi          = request()->routeIs('kpi');
+    $onProfile      = request()->routeIs('profile.*');
 @endphp
 
 <div class="app-shell">
@@ -95,13 +97,23 @@
                 Tugas
             </a>
         @else
-            {{-- Target (leader/c_level) --}}
+            {{-- Target (leader/c_level) — dengan segmented control Kelola Tim | Target Saya --}}
             <a href="{{ route('monthly-targets.index') }}" class="tab {{ $onTargets ? 'active' : '' }}">
                 <span class="glyph">
-                    <svg class="lucide" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 </span>
                 Target
             </a>
+
+            {{-- Tugas (leader) — input daily task mereka sendiri ke C-Level --}}
+            @if($isLeader)
+            <a href="{{ route('daily-tasks.index') }}" class="tab {{ $onTasks ? 'active' : '' }}">
+                <span class="glyph">
+                    <svg class="lucide" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </span>
+                Tugas
+            </a>
+            @endif
 
             {{-- KPI (leader/c_level) --}}
             <a href="{{ route('kpi') }}" class="tab {{ $onKpi ? 'active' : '' }}">

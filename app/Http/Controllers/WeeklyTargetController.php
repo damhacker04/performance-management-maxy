@@ -10,45 +10,91 @@ use Illuminate\Validation\Rule;
 class WeeklyTargetController extends Controller
 {
     /**
-     * Daftar weekly target di bawah satu monthly target.
+     * List semua weekly target untuk dept user (c_level: semua dept).
+     * Group by bulan & status linking ke monthly.
      */
-    public function index(MonthlyTarget $monthlyTarget)
+    public function index(Request $request)
     {
-        $this->authorizeMonthly($monthlyTarget);
+        $user = auth()->user();
 
-        $weeklyTargets = $monthlyTarget->weeklyTargets()->get();
+        $query = WeeklyTarget::with('monthlyTarget')
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->orderBy('week_number');
 
-        return view('weekly-targets.index', compact('monthlyTarget', 'weeklyTargets'));
+        // Leader: hanya weekly target untuk dept-nya
+        if ($user->role === 'leader') {
+            $query->where(function ($q) use ($user) {
+                $q->whereHas('monthlyTarget', fn($mq) => $mq->where('department', $user->department))
+                  ->orWhere(function ($oq) use ($user) {
+                      // "Other" weekly target (tanpa monthly): yang dibuat user ini
+                      $oq->whereNull('monthly_target_id')->where('user_id', $user->id);
+                  });
+            });
+        }
+
+        // Optional filter by month
+        if ($request->filled('month_filter')) {
+            [$m, $y] = explode('-', $request->month_filter) + [null, null];
+            if ($m && $y) {
+                $query->where('month', (int) $m)->where('year', (int) $y);
+            }
+        }
+
+        $weeklyTargets = $query->get();
+
+        return view('weekly-targets.index', compact('weeklyTargets'));
     }
 
     /**
-     * Form buat weekly target baru di bawah monthly target.
+     * Form buat weekly target baru.
+     * Bisa pre-select monthly via query ?monthly_target_id=X.
      */
-    public function create(MonthlyTarget $monthlyTarget)
+    public function create(Request $request)
     {
-        $this->authorizeMonthly($monthlyTarget);
+        $user = auth()->user();
 
-        return view('weekly-targets.create', compact('monthlyTarget'));
+        $monthliesQuery = MonthlyTarget::query()
+            ->where('month', now()->month)
+            ->where('year', now()->year)
+            ->orderBy('title');
+
+        if ($user->role === 'leader') {
+            $monthliesQuery->where('department', $user->department);
+        }
+
+        $monthlyTargets = $monthliesQuery->get();
+
+        $preSelected = $request->filled('monthly_target_id')
+            ? (int) $request->monthly_target_id
+            : null;
+
+        return view('weekly-targets.create', compact('monthlyTargets', 'preSelected'));
     }
 
-    public function store(Request $request, MonthlyTarget $monthlyTarget)
+    public function store(Request $request)
     {
-        $this->authorizeMonthly($monthlyTarget);
-
         $validated = $request->validate([
-            'title'         => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'week_number'   => 'required|integer|min:1|max:5',
-            'target_type'   => ['required', Rule::in(['quantitative', 'qualitative'])],
-            'target_value'  => 'nullable|required_if:target_type,quantitative|numeric|min:0',
-            'target_unit'   => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'monthly_target_id' => 'required|exists:monthly_targets,id',
+            'title'             => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'week_number'       => 'required|integer|min:1|max:5',
+            'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
+            'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
+            'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
         ], [
+            'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
         ]);
 
+        // Authorize: leader hanya boleh ke monthly miliknya
+        $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
+        $this->authorizeMonthly($monthlyTarget);
+
         WeeklyTarget::create([
             'monthly_target_id' => $monthlyTarget->id,
+            'category'          => 'planned',
             'user_id'           => auth()->id(),
             'title'             => $validated['title'],
             'description'       => $validated['description'] ?? null,
@@ -60,7 +106,7 @@ class WeeklyTargetController extends Controller
             'year'              => $monthlyTarget->year,
         ]);
 
-        return redirect()->route('weekly-targets.index', $monthlyTarget)
+        return redirect()->route('monthly-targets.show', $monthlyTarget)
             ->with('success', 'Target mingguan berhasil disimpan.');
     }
 
@@ -79,7 +125,6 @@ class WeeklyTargetController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // Summary per status
         $summary = [
             'total'        => $dailyTasks->count(),
             'selesai'      => $dailyTasks->where('status', 'selesai')->count(),
@@ -88,7 +133,6 @@ class WeeklyTargetController extends Controller
             'belum_mulai'  => $dailyTasks->where('status', 'belum_mulai')->count(),
         ];
 
-        // Group by staff supaya leader bisa lihat kontribusi per orang
         $byStaff = $dailyTasks->groupBy('user_id');
 
         return view('weekly-targets.show', compact('weeklyTarget', 'dailyTasks', 'summary', 'byStaff'));
@@ -98,9 +142,21 @@ class WeeklyTargetController extends Controller
     {
         $this->authorizeWeekly($weeklyTarget);
 
-        $monthlyTarget = $weeklyTarget->monthlyTarget;
+        $user = auth()->user();
 
-        return view('weekly-targets.edit', compact('weeklyTarget', 'monthlyTarget'));
+        // Untuk dropdown monthly target di form edit
+        $monthliesQuery = MonthlyTarget::query()
+            ->where('month', $weeklyTarget->month)
+            ->where('year', $weeklyTarget->year)
+            ->orderBy('title');
+
+        if ($user->role === 'leader') {
+            $monthliesQuery->where('department', $user->department);
+        }
+
+        $monthlyTargets = $monthliesQuery->get();
+
+        return view('weekly-targets.edit', compact('weeklyTarget', 'monthlyTargets'));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)
@@ -108,27 +164,34 @@ class WeeklyTargetController extends Controller
         $this->authorizeWeekly($weeklyTarget);
 
         $validated = $request->validate([
-            'title'         => 'required|string|max:255',
-            'description'   => 'nullable|string',
-            'week_number'   => 'required|integer|min:1|max:5',
-            'target_type'   => ['required', Rule::in(['quantitative', 'qualitative'])],
-            'target_value'  => 'nullable|required_if:target_type,quantitative|numeric|min:0',
-            'target_unit'   => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'monthly_target_id' => 'required|exists:monthly_targets,id',
+            'title'             => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'week_number'       => 'required|integer|min:1|max:5',
+            'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
+            'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
+            'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
         ], [
+            'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
         ]);
 
+        $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
+        $this->authorizeMonthly($monthlyTarget);
+
         $weeklyTarget->update([
-            'title'        => $validated['title'],
-            'description'  => $validated['description'] ?? null,
-            'target_type'  => $validated['target_type'],
-            'target_value' => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
-            'target_unit'  => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
-            'week_number'  => $validated['week_number'],
+            'monthly_target_id' => $monthlyTarget->id,
+            'category'          => 'planned',
+            'title'             => $validated['title'],
+            'description'       => $validated['description'] ?? null,
+            'target_type'       => $validated['target_type'],
+            'target_value'      => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
+            'target_unit'       => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
+            'week_number'       => $validated['week_number'],
         ]);
 
-        return redirect()->route('weekly-targets.index', $weeklyTarget->monthlyTarget)
+        return redirect()->route('monthly-targets.show', $monthlyTarget)
             ->with('success', 'Target mingguan berhasil diperbarui.');
     }
 
@@ -139,13 +202,18 @@ class WeeklyTargetController extends Controller
         $monthlyTargetId = $weeklyTarget->monthly_target_id;
         $weeklyTarget->delete();
 
-        return redirect()->route('weekly-targets.index', $monthlyTargetId)
+        if ($monthlyTargetId) {
+            return redirect()->route('monthly-targets.show', $monthlyTargetId)
+                ->with('success', 'Target mingguan berhasil dihapus.');
+        }
+
+        return redirect()->route('monthly-targets.index')
             ->with('success', 'Target mingguan berhasil dihapus.');
     }
 
     /**
-     * Pastikan leader hanya bisa akses monthly target miliknya.
-     * C-Level boleh akses semuanya.
+     * Leader hanya boleh akses monthly target miliknya.
+     * C-Level boleh akses semua.
      */
     private function authorizeMonthly(MonthlyTarget $monthlyTarget): void
     {
@@ -156,8 +224,24 @@ class WeeklyTargetController extends Controller
         abort(403, 'Anda tidak memiliki akses ke target ini.');
     }
 
+    /**
+     * Untuk weekly target:
+     * - Jika linked ke monthly: cek via monthly's ownership.
+     * - Jika "Other" (monthly_target_id null): cek pembuatnya.
+     */
     private function authorizeWeekly(WeeklyTarget $weeklyTarget): void
     {
-        $this->authorizeMonthly($weeklyTarget->monthlyTarget);
+        $user = auth()->user();
+        if ($user->role === 'c_level') return;
+
+        if ($weeklyTarget->monthly_target_id) {
+            $this->authorizeMonthly($weeklyTarget->monthlyTarget);
+            return;
+        }
+
+        // "Other" weekly target — pemilik = user_id
+        if ($weeklyTarget->user_id === $user->id) return;
+
+        abort(403, 'Anda tidak memiliki akses ke target mingguan ini.');
     }
 }

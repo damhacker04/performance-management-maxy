@@ -73,16 +73,7 @@
         @if($dailyTask->is_overdue)
             <span class="chip chip-danger" style="font-size:11px;">⏰ Terlambat</span>
         @endif
-        <span style="margin-left:auto;font-size:13px;font-weight:700;color:var(--maxy-navy);">
-            {{ $dailyTask->percent_done }}%
-        </span>
     </div>
-
-    @if($dailyTask->status !== 'selesai')
-        <div class="progress-bar" style="margin-top:-12px;">
-            <i class="navy" style="width:{{ $dailyTask->percent_done }}%"></i>
-        </div>
-    @endif
 
     <!-- Detail card -->
     <div class="m-card" style="display:flex;flex-direction:column;gap:16px;">
@@ -109,7 +100,15 @@
                     </div>
                 @endif
             </div>
-
+            <div style="height:1px;background:var(--bg-3);"></div>
+        @else
+            {{-- Task "Other" — tidak terikat weekly target --}}
+            <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 12px;">
+                <div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.05em;">🗂️ Tugas Tambahan (Other)</div>
+                <p style="font-size:12px;color:#8B5A00;margin:4px 0 0;line-height:1.5;">
+                    Tidak terikat target mingguan — kemungkinan task mendadak dari CEO/CTO/management lain.
+                </p>
+            </div>
             <div style="height:1px;background:var(--bg-3);"></div>
         @endif
 

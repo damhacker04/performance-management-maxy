@@ -11,7 +11,7 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        $targets = MonthlyTarget::with(['user', 'weeklyTargets'])
+        $targets = MonthlyTarget::with(['user', 'weeklyTargets', 'weeklyTargets.dailyTaskEntries'])
             ->when($user->role === 'leader', fn($q) => $q->where('user_id', $user->id))
             ->orderByDesc('year')
             ->orderByDesc('month')
@@ -51,8 +51,32 @@ class MonthlyTargetController extends Controller
 
     public function show(MonthlyTarget $monthlyTarget)
     {
-        $monthlyTarget->load(['user', 'dailyTaskEntries.user']);
-        return view('monthly-targets.show', compact('monthlyTarget'));
+        $monthlyTarget->load([
+            'user',
+            'weeklyTargets' => fn($q) => $q->orderBy('week_number'),
+            'weeklyTargets.dailyTaskEntries.user',
+        ]);
+
+        // Statistik laporan per weekly target
+        $entriesByWeek = $monthlyTarget->weeklyTargets
+            ->mapWithKeys(fn($wt) => [
+                $wt->id => [
+                    'total' => $wt->dailyTaskEntries->count(),
+                    'done'  => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
+                ],
+            ]);
+
+        // Untuk C-Level: laporan leader per weekly target, digroup [weekly_id][user_id]
+        // Data sudah ter-eager load via dailyTaskEntries.user — tidak ada query tambahan
+        $leaderEntriesByWeek = [];
+        if (auth()->user()->role === 'c_level') {
+            foreach ($monthlyTarget->weeklyTargets as $wt) {
+                $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries
+                    ->groupBy('user_id');
+            }
+        }
+
+        return view('monthly-targets.show', compact('monthlyTarget', 'entriesByWeek', 'leaderEntriesByWeek'));
     }
 
     public function edit(MonthlyTarget $monthlyTarget)

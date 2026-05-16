@@ -2,21 +2,16 @@
 @php
     $months = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     $weekRanges = \App\Models\WeeklyTarget::WEEK_RANGES;
+    $selectedMonthly = old('monthly_target_id', $weeklyTarget->monthly_target_id);
 @endphp
 
 <div class="page">
     <!-- Back -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('weekly-targets.index', $monthlyTarget) }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ route('monthly-targets.show', $weeklyTarget->monthly_target_id) }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Edit Target Mingguan</h1>
-    </div>
-
-    <div class="m-card" style="background:var(--bg-2);padding:12px 14px;">
-        <div style="font-size:11px;color:var(--fg-4);text-transform:uppercase;letter-spacing:.06em;">Di bawah target bulanan</div>
-        <div style="font-size:14px;font-weight:600;color:var(--fg-1);margin-top:2px;">{{ $monthlyTarget->title }}</div>
-        <div style="font-size:12px;color:var(--fg-3);margin-top:2px;">{{ $months[$monthlyTarget->month] }} {{ $monthlyTarget->year }}</div>
     </div>
 
     <div class="m-card">
@@ -24,6 +19,26 @@
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
             @method('PATCH')
+
+            <!-- Monthly Target (required) -->
+            <div class="field">
+                <label for="monthly_target_id">
+                    Terkait Target Bulanan <span style="color:var(--danger);">*</span>
+                </label>
+                <div class="select-wrap">
+                    <select id="monthly_target_id" name="monthly_target_id"
+                            class="m-select {{ $errors->has('monthly_target_id') ? 'err' : '' }}" required>
+                        <option value="" disabled {{ empty($selectedMonthly) ? 'selected' : '' }}>Pilih target bulanan...</option>
+                        @foreach($monthlyTargets as $mt)
+                            <option value="{{ $mt->id }}"
+                                    {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
+                                {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @error('monthly_target_id')<span class="err">{{ $message }}</span>@enderror
+            </div>
 
             <!-- Minggu -->
             <div class="field">
@@ -34,7 +49,7 @@
                         @foreach($weekRanges as $num => [$start, $end])
                             <option value="{{ $num }}"
                                     {{ old('week_number', $weeklyTarget->week_number) == $num ? 'selected' : '' }}>
-                                Minggu {{ $num }} ({{ $start }}–{{ $end }} {{ $months[$monthlyTarget->month] }})
+                                Minggu {{ $num }} (tanggal {{ $start }}–{{ $end }})
                             </option>
                         @endforeach
                     </select>

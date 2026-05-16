@@ -39,13 +39,24 @@ class DailyTaskEntryController extends Controller
     {
         $user = auth()->user();
 
-        // Ambil weekly targets bulan ini untuk department user
+        // Ambil weekly targets yang relevan untuk user ini:
+        // - Staff: weekly target dari monthly target (leader) untuk dept-nya
+        // - Leader: HANYA weekly target dari monthly target yang dibuat C-Level untuk dept-nya
+        // - C-Level: semua weekly target bulan ini lintas department
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->whereHas('monthlyTarget', fn($q) =>
-                $q->where('department', $user->department)
-                  ->where('month', now()->month)
-                  ->where('year', now()->year)
-            )
+            ->where(function ($q) use ($user) {
+                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
+                    $mq->where('month', now()->month)
+                       ->where('year', now()->year);
+                    if (!empty($user->department)) {
+                        $mq->where('department', $user->department);
+                    }
+                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
+                    if ($user->role === 'leader') {
+                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                    }
+                });
+            })
             ->where('month', now()->month)
             ->where('year', now()->year)
             ->orderBy('week_number')
@@ -89,11 +100,19 @@ class DailyTaskEntryController extends Controller
         $user = auth()->user();
 
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->whereHas('monthlyTarget', fn($q) =>
-                $q->where('department', $user->department)
-                  ->where('month', now()->month)
-                  ->where('year', now()->year)
-            )
+            ->where(function ($q) use ($user) {
+                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
+                    $mq->where('month', now()->month)
+                       ->where('year', now()->year);
+                    if (!empty($user->department)) {
+                        $mq->where('department', $user->department);
+                    }
+                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
+                    if ($user->role === 'leader') {
+                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                    }
+                });
+            })
             ->where('month', now()->month)
             ->where('year', now()->year)
             ->orderBy('week_number')
@@ -107,16 +126,16 @@ class DailyTaskEntryController extends Controller
         $this->authorizeEdit($dailyTask);
 
         $validated = $request->validate([
-            'weekly_target_id'  => 'required|exists:weekly_targets,id',
+            'weekly_target_id'  => 'nullable|exists:weekly_targets,id',
             'task_description'  => 'required|string',
             'priority'          => ['required', Rule::in(array_keys(DailyTaskEntry::PRIORITIES))],
             'duration_value'    => 'required|integer|min:1|max:1440',
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
-            'percent_done'      => 'required|integer|min:0|max:100',
-            'notes'             => 'nullable|string|required_if:status,terhambat',
+            'notes'             => 'required|string|min:5',
         ], [
-            'notes.required_if' => 'Catatan wajib diisi jika status Terhambat.',
+            'notes.required' => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'      => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
         ]);
 
         $durationMinutes = $validated['duration_unit'] === 'jam'
@@ -128,17 +147,20 @@ class DailyTaskEntryController extends Controller
                 ->withErrors(['duration_value' => 'Durasi maksimal 24 jam (1440 menit).']);
         }
 
-        $weeklyTarget = WeeklyTarget::findOrFail($validated['weekly_target_id']);
+        // Resolve target context — kalau "Other" (weekly_target_id null), tidak ada parent monthly
+        $weeklyTarget    = !empty($validated['weekly_target_id'])
+            ? WeeklyTarget::find($validated['weekly_target_id'])
+            : null;
+        $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
         $dailyTask->update([
-            'monthly_target_id' => $weeklyTarget->monthly_target_id,
-            'weekly_target_id'  => $weeklyTarget->id,
+            'monthly_target_id' => $monthlyTargetId,
+            'weekly_target_id'  => $weeklyTarget?->id,
             'task_description'  => $validated['task_description'],
             'priority'          => $validated['priority'],
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
-            'percent_done'      => $validated['percent_done'],
-            'notes'             => $validated['notes'] ?? null,
+            'notes'             => $validated['notes'],
             // task_date TIDAK diubah — tetap tanggal asli submit
         ]);
 
@@ -147,8 +169,13 @@ class DailyTaskEntryController extends Controller
     }
 
     /**
-     * Guard untuk edit/update: harus pemilik, status belum selesai,
-     * dan masih hari yang sama (sebelum tengah malam).
+     * Guard untuk edit/update:
+     * - Harus pemilik entry.
+     * - Status belum 'selesai' (task selesai bersifat final/historis).
+     *
+     * Constraint "hanya bisa edit hari yang sama" DIHILANGKAN sesuai notul rapat 12 Mei 2026.
+     * Alasan: pekerjaan operasional bisa berlangsung berhari-hari. Staff perlu bisa
+     * mengupdate catatan & status task 'Terhambat' / 'Dalam Proses' yang masih ongoing.
      */
     private function authorizeEdit(DailyTaskEntry $dailyTask): void
     {
@@ -157,27 +184,23 @@ class DailyTaskEntryController extends Controller
         }
 
         if ($dailyTask->status === 'selesai') {
-            abort(403, 'Laporan yang sudah ditandai selesai tidak bisa diubah.');
-        }
-
-        if (!$dailyTask->task_date->isToday()) {
-            abort(403, 'Laporan hari sebelumnya sudah menjadi history dan tidak bisa diubah.');
+            abort(403, 'Laporan yang sudah ditandai selesai bersifat final dan tidak bisa diubah.');
         }
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'weekly_target_id'  => 'required|exists:weekly_targets,id',
+            'weekly_target_id'  => 'nullable|exists:weekly_targets,id',
             'task_description'  => 'required|string',
             'priority'          => ['required', Rule::in(array_keys(DailyTaskEntry::PRIORITIES))],
             'duration_value'    => 'required|integer|min:1|max:1440',
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
-            'percent_done'      => 'required|integer|min:0|max:100',
-            'notes'             => 'nullable|string|required_if:status,terhambat',
+            'notes'             => 'required|string|min:5',
         ], [
-            'notes.required_if' => 'Catatan wajib diisi jika status Terhambat.',
+            'notes.required' => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'      => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
         ]);
 
         // Konversi durasi -> menit
@@ -191,19 +214,22 @@ class DailyTaskEntryController extends Controller
                 ->withErrors(['duration_value' => 'Durasi maksimal 24 jam (1440 menit).']);
         }
 
-        // Derive monthly_target_id dari weekly target's parent
-        $weeklyTarget = WeeklyTarget::findOrFail($validated['weekly_target_id']);
+        // "Other" support: weekly_target_id boleh kosong (task ad-hoc dari CEO/CTO).
+        // Kalau ada weekly target, derive monthly dari parent-nya.
+        $weeklyTarget    = !empty($validated['weekly_target_id'])
+            ? WeeklyTarget::find($validated['weekly_target_id'])
+            : null;
+        $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
         DailyTaskEntry::create([
             'user_id'           => auth()->id(),
-            'monthly_target_id' => $weeklyTarget->monthly_target_id,
-            'weekly_target_id'  => $weeklyTarget->id,
+            'monthly_target_id' => $monthlyTargetId,
+            'weekly_target_id'  => $weeklyTarget?->id,
             'task_description'  => $validated['task_description'],
             'priority'          => $validated['priority'],
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
-            'percent_done'      => $validated['percent_done'],
-            'notes'             => $validated['notes'] ?? null,
+            'notes'             => $validated['notes'],
             'task_date'         => now()->toDateString(), // selalu hari ini
         ]);
 
@@ -212,21 +238,29 @@ class DailyTaskEntryController extends Controller
     }
 
     /**
-     * Tandai entry sebagai selesai (dipanggil dari checkbox di dashboard).
+     * Tandai entry sebagai selesai.
+     *
+     * PENTING: endpoint ini TIDAK langsung mengubah status ke selesai.
+     * Sesuai aturan rapat 12 Mei 2026, semua status WAJIB memiliki catatan.
+     * User diarahkan ke form edit dengan status pre-filled 'selesai',
+     * sehingga catatan penyelesaian wajib diisi.
      */
     public function complete(DailyTaskEntry $dailyTask)
     {
-        // Pastikan hanya pemilik entry yang bisa mengubah
         if ($dailyTask->user_id !== auth()->id()) {
             abort(403, 'Anda tidak memiliki akses untuk mengubah laporan ini.');
         }
 
-        $dailyTask->update([
-            'status'       => 'selesai',
-            'percent_done' => 100,
-        ]);
+        if ($dailyTask->status === 'selesai') {
+            return redirect()->route('dashboard')
+                ->with('info', 'Tugas ini sudah ditandai selesai sebelumnya.');
+        }
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Tugas ditandai selesai.');
+        // Redirect ke form edit dengan status selesai sudah dipilih
+        // Staff tetap wajib mengisi catatan penyelesaian
+        return redirect()
+            ->route('daily-tasks.edit', $dailyTask)
+            ->with('complete_mode', true)
+            ->with('info', 'Isi catatan penyelesaian, lalu simpan untuk menandai tugas selesai.');
     }
 }

@@ -40,7 +40,6 @@
                             </div>
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $task->status_label }}</span>
-                                <span>· <strong style="color:var(--maxy-navy);">{{ $task->percent_done }}%</strong></span>
                                 @if($task->weeklyTarget)
                                     <span>· M{{ $task->weeklyTarget->week_number }} {{ Str::limit($task->weeklyTarget->title, 16) }}</span>
                                 @endif
@@ -86,7 +85,7 @@
                             <div style="font-size:10px;color:var(--maxy-navy);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Melanjutkan task</div>
                             <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-top:2px;line-height:1.4;">{{ Str::limit($continueFrom->task_description, 80) }}</div>
                             <div style="font-size:11px;color:var(--fg-3);margin-top:3px;">
-                                {{ \Carbon\Carbon::parse($continueFrom->task_date)->isoFormat('D MMM') }} · {{ $continueFrom->status_label }} · {{ $continueFrom->percent_done }}%
+                                {{ \Carbon\Carbon::parse($continueFrom->task_date)->isoFormat('D MMM') }} · {{ $continueFrom->status_label }}
                             </div>
                         </div>
                         <a href="{{ route('daily-tasks.create') }}"
@@ -100,21 +99,25 @@
                     <label for="weekly_target_id">Target Mingguan <span style="color:var(--danger);">*</span></label>
                     <div class="select-wrap">
                         <select id="weekly_target_id" name="weekly_target_id"
-                                class="m-select {{ $errors->has('weekly_target_id') ? 'err' : '' }}" required>
-                            <option value="">Pilih target mingguan...</option>
+                                class="m-select {{ $errors->has('weekly_target_id') ? 'err' : '' }}">
                             @php
                                 $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
                                 $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id ?? $preSelectedWeeklyId);
                             @endphp
+                            <option value="" {{ empty($defaultWeekly) ? 'selected' : '' }}>
+                                🗂️ Other (task tambahan / tidak ada target mingguan)
+                            </option>
                             @foreach($weeklyTargets as $wt)
-                                <option value="{{ $wt->id }}" {{ $defaultWeekly == $wt->id ? 'selected' : '' }}>
+                                <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
                                     [M{{ $wt->week_number }} {{ $monthShort[$wt->month] }}] {{ $wt->title }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
-                    <span style="font-size:11px;color:var(--fg-4);margin-top:4px;">Pilih minggu yang sedang kamu kerjakan.</span>
+                    <span style="font-size:11px;color:var(--fg-4);margin-top:4px;">
+                        Pilih target mingguan, atau "Other" untuk task mendadak dari CEO/CTO/management lain.
+                    </span>
                 </div>
 
                 <!-- Tanggal (locked ke hari ini) -->
@@ -180,101 +183,40 @@
                     </div>
                 </div>
 
-                <!-- Status & % Done -->
-                <div id="status_percent_wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div class="field">
-                        <label for="status">Status <span style="color:var(--danger);">*</span></label>
-                        <div class="select-wrap">
-                            <select id="status" name="status"
-                                    class="m-select {{ $errors->has('status') ? 'err' : '' }}" required>
-                                @php
-                                    // Kalau lanjutan, default status pakai status sebelumnya (biasanya dalam_proses).
-                                    $defaultStatus = old('status', $continueFrom?->status ?? 'belum_mulai');
-                                @endphp
-                                <option value="belum_mulai"  {{ $defaultStatus === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
-                                <option value="dalam_proses" {{ $defaultStatus === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
-                                <option value="terhambat"    {{ $defaultStatus === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
-                                <option value="selesai"      {{ $defaultStatus === 'selesai'      ? 'selected' : '' }}>Selesai</option>
-                            </select>
-                        </div>
-                        @error('status')<span class="err">{{ $message }}</span>@enderror
+                <!-- Status -->
+                <div class="field">
+                    <label for="status">Status <span style="color:var(--danger);">*</span></label>
+                    <div class="select-wrap">
+                        <select id="status" name="status"
+                                class="m-select {{ $errors->has('status') ? 'err' : '' }}" required>
+                            @php
+                                // Kalau lanjutan, default status pakai status sebelumnya (biasanya dalam_proses).
+                                $defaultStatus = old('status', $continueFrom?->status ?? 'belum_mulai');
+                            @endphp
+                            <option value="belum_mulai"  {{ $defaultStatus === 'belum_mulai' ? 'selected' : '' }}>Belum Mulai</option>
+                            <option value="dalam_proses" {{ $defaultStatus === 'dalam_proses' ? 'selected' : '' }}>Dalam Proses</option>
+                            <option value="terhambat"    {{ $defaultStatus === 'terhambat'    ? 'selected' : '' }}>Terhambat</option>
+                            <option value="selesai"      {{ $defaultStatus === 'selesai'      ? 'selected' : '' }}>Selesai</option>
+                        </select>
                     </div>
-                    <div class="field" id="percent_done_wrap">
-                        @php $defaultPercent = old('percent_done', $continueFrom?->percent_done ?? 0); @endphp
-                        <label for="percent_done">
-                            % Selesai
-                            <span id="percent_value" style="color:var(--maxy-navy);font-weight:700;">{{ $defaultPercent }}%</span>
-                        </label>
-                        <input id="percent_done" type="range" name="percent_done"
-                               value="{{ $defaultPercent }}"
-                               min="0" max="100" step="5"
-                               style="width:100%;accent-color:var(--maxy-navy);" />
-                        @error('percent_done')<span class="err">{{ $message }}</span>@enderror
-                    </div>
+                    @error('status')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
-                <!-- Catatan -->
+                <!-- Catatan / Progress narrative — WAJIB untuk semua status -->
                 <div class="field">
                     <label for="notes">
-                        Catatan
-                        <span id="notes_label_optional" style="color:var(--fg-4);font-weight:400;">(opsional)</span>
-                        <span id="notes_label_required" style="color:var(--danger);display:none;">* (wajib jika Terhambat)</span>
+                        Catatan / Progress
+                        <span style="color:var(--danger);">*</span>
                     </label>
                     <textarea id="notes" name="notes"
                               class="m-textarea {{ $errors->has('notes') ? 'err' : '' }}"
-                              style="min-height:72px;"
-                              placeholder="Ada hambatan? Catatan tambahan?">{{ old('notes') }}</textarea>
+                              style="min-height:96px;"
+                              placeholder="Jelaskan apa yang sudah dikerjakan / progres / hambatan…"
+                              minlength="5"
+                              required>{{ old('notes') }}</textarea>
+                    <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
                 </div>
-
-                <script>
-                    (function () {
-                        const statusEl    = document.getElementById('status');
-                        const notesEl     = document.getElementById('notes');
-                        const optLabel    = document.getElementById('notes_label_optional');
-                        const reqLabel    = document.getElementById('notes_label_required');
-                        const percentEl   = document.getElementById('percent_done');
-                        const percentDisp = document.getElementById('percent_value');
-                        const percentWrap = document.getElementById('percent_done_wrap');
-                        const gridWrap    = document.getElementById('status_percent_wrap');
-
-                        function syncNotesRequired() {
-                            const isBlocked = statusEl.value === 'terhambat';
-                            notesEl.required = isBlocked;
-                            optLabel.style.display = isBlocked ? 'none' : '';
-                            reqLabel.style.display = isBlocked ? '' : 'none';
-                            notesEl.placeholder = isBlocked
-                                ? 'Wajib diisi: jelaskan hambatan yang dialami…'
-                                : 'Ada hambatan? Catatan tambahan?';
-                        }
-
-                        function syncPercentByStatus() {
-                            // Auto-set percent berdasarkan status (helper, bukan hard rule)
-                            if (statusEl.value === 'belum_mulai') percentEl.value = 0;
-                            if (statusEl.value === 'selesai')     percentEl.value = 100;
-                            percentDisp.textContent = percentEl.value + '%';
-                        }
-
-                        function syncPercentVisibility() {
-                            // Slider hanya muncul jika status butuh progress partial
-                            const showSlider = ['dalam_proses', 'terhambat'].includes(statusEl.value);
-                            percentWrap.style.display = showSlider ? '' : 'none';
-                            gridWrap.style.gridTemplateColumns = showSlider ? '1fr 1fr' : '1fr';
-                        }
-
-                        statusEl.addEventListener('change', () => {
-                            syncNotesRequired();
-                            syncPercentByStatus();
-                            syncPercentVisibility();
-                        });
-                        percentEl.addEventListener('input', () => {
-                            percentDisp.textContent = percentEl.value + '%';
-                        });
-
-                        syncNotesRequired();
-                        syncPercentVisibility();
-                    })();
-                </script>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">
                     Kirim Laporan

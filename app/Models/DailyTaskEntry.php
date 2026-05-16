@@ -18,7 +18,6 @@ class DailyTaskEntry extends Model
         'duration_minutes',
         'actual_duration_minutes',
         'status',
-        'percent_done',
         'notes',
         'task_date',
     ];
@@ -27,7 +26,6 @@ class DailyTaskEntry extends Model
         'task_date'              => 'date',
         'duration_minutes'       => 'integer',
         'actual_duration_minutes'=> 'integer',
-        'percent_done'           => 'integer',
     ];
 
     protected $appends = ['is_overdue'];
@@ -99,13 +97,18 @@ class DailyTaskEntry extends Model
 
     /**
      * Apakah entry ini masih bisa di-edit?
-     * Aturan: belum selesai DAN masih hari ini.
-     * (Auth check ditangani terpisah di controller.)
+     *
+     * Aturan (sesuai notul rapat 12 Mei 2026):
+     * - Task yang sudah 'selesai' TIDAK bisa diubah (final & historis).
+     * - Task yang berstatus lain (belum_mulai, dalam_proses, terhambat)
+     *   TETAP bisa di-edit meski sudah lewat dari hari submit.
+     *   Alasan: pekerjaan operasional bisa berlangsung berhari-hari / berminggu-minggu.
+     *   Staff perlu bisa update catatan & status secara ongoing.
+     *
+     * (Auth check — hanya pemilik — ditangani terpisah di controller.)
      */
     public function canBeEdited(): bool
     {
-        if ($this->status === 'selesai') return false;
-        if (!$this->task_date) return false;
-        return $this->task_date->isToday();
+        return $this->status !== 'selesai';
     }
 }

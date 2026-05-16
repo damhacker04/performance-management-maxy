@@ -11,6 +11,7 @@ class WeeklyTarget extends Model
 
     protected $fillable = [
         'monthly_target_id',
+        'category',          // 'planned' | 'other' — sesuai notul rapat 12 Mei 2026
         'user_id',
         'title',
         'description',
@@ -41,15 +42,16 @@ class WeeklyTarget extends Model
     ];
 
     /**
-     * Cascade: ketika weekly target dihapus, daily task staff yang terkait
-     * ikut dihapus juga. Lebih bersih daripada nyangkut sebagai orphan.
+     * SENGAJA tidak ada cascade delete ke dailyTaskEntries.
+     *
+     * Alasan: data laporan harian staff adalah historis KPI yang tidak boleh
+     * hilang hanya karena leader menghapus weekly target. Ketika weekly target
+     * dihapus, kolom weekly_target_id di daily_task_entries akan menjadi NULL
+     * (ON DELETE SET NULL — lihat migration 2026_05_13_100000).
+     *
+     * Referensi: notul rapat 12 Mei 2026 — "Sistem harus membantu evaluasi
+     * objektif, bukan sekadar checklist target."
      */
-    protected static function booted(): void
-    {
-        static::deleting(function (WeeklyTarget $wt) {
-            $wt->dailyTaskEntries()->delete();
-        });
-    }
 
     public function monthlyTarget()
     {
@@ -87,5 +89,19 @@ class WeeklyTarget extends Model
         }
         $value = rtrim(rtrim((string) $this->target_value, '0'), '.');
         return trim("{$value} {$this->target_unit}");
+    }
+
+    /**
+     * Apakah ini weekly target kategori "Other" (tidak terikat monthly target)?
+     * Digunakan untuk filtering planned vs. unplanned di dashboard leader.
+     */
+    public function isOther(): bool
+    {
+        return $this->category === 'other';
+    }
+
+    public function isPlanned(): bool
+    {
+        return $this->category === 'planned';
     }
 }

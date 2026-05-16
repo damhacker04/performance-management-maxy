@@ -17,14 +17,14 @@
 
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('staff-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ route('leader-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
             {{-- Breadcrumb konteks --}}
             <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
                         color:var(--maxy-navy);opacity:.6;margin-bottom:5px;">
-                Target Bulanan
+                Target dari C-Level
             </div>
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                 <span class="chip chip-neutral">{{ $monthNames[$monthlyTarget->month] }} {{ $monthlyTarget->year }}</span>
@@ -88,7 +88,7 @@
                     <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada target mingguan</p>
-                <p style="font-size:12px;color:var(--fg-3);">Leader akan menambahkan target mingguan untuk bulan ini.</p>
+                <p style="font-size:12px;color:var(--fg-3);">C-Level akan menambahkan target mingguan untuk bulan ini.</p>
             </div>
         </div>
     @else
@@ -99,7 +99,6 @@
                 $myDone  = $myTasks->where('status', 'selesai')->count();
                 $myTotal = $myTasks->count();
 
-                // Tentukan apakah minggu ini sedang aktif
                 $today = now();
                 $currentWeek = match(true) {
                     $today->day <= 7  => 1,
@@ -185,18 +184,16 @@
                             </a>
                         @endforeach
                     </div>
-                @else
-                    <div style="border-top:1px solid var(--bg-3);padding:10px 16px;text-align:center;font-size:12px;color:var(--fg-4);">
-                        Belum ada laporan untuk target ini
-                    </div>
                 @endif
 
-                <!-- Info: gunakan menu Tugas untuk input laporan -->
-                <div style="padding:8px 12px 12px;">
-                    <div style="text-align:center;font-size:11px;color:var(--fg-4);padding:6px 0;">
-                        <svg class="lucide" style="width:12px;height:12px;vertical-align:middle;margin-right:3px;opacity:.6;" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                        Gunakan menu <strong>Tugas</strong> untuk menambah laporan
-                    </div>
+                <!-- CTA: Tambah laporan untuk minggu ini -->
+                <div style="padding:{{ $myTasks->isNotEmpty() ? '4px' : '10px' }} 12px 12px;">
+                    <a href="{{ route('daily-tasks.create', ['weekly_target_id' => $wt->id]) }}"
+                       class="btn btn-primary btn-block"
+                       style="font-size:13px;padding:9px 14px;">
+                        <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Tambah Laporan — Minggu {{ $wt->week_number }}
+                    </a>
                 </div>
             </div>
         @endforeach
