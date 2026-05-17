@@ -6,7 +6,7 @@
         7  => 'Juli',     8  => 'Agustus',   9  => 'September',
         10 => 'Oktober',  11 => 'November',  12 => 'Desember',
     ];
-    $priorityLabels = ['low' => 'Low', 'medium' => 'Medium', 'high' => 'High', 'critical' => 'Critical'];
+    $priorityLabels = ['low' => 'Rendah', 'medium' => 'Sedang', 'high' => 'Tinggi', 'critical' => 'Kritis'];
     $priorityColors = [
         'low'      => 'background:#f0fdf4;color:#166534;border:1px solid #bbf7d0',
         'medium'   => 'background:#fffbeb;color:#92400e;border:1px solid #fde68a',
@@ -33,15 +33,75 @@
                 Unduh laporan KPI tim per bulan
             </p>
         </div>
-        <a href="{{ route('export.download', ['month' => $month, 'year' => $year]) }}"
-           class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0;">
-            <svg class="lucide sm" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download CSV
-        </a>
+        {{-- Dropdown "Download As" --}}
+        <div style="position:relative;flex-shrink:0;" id="dl-wrapper">
+            <button onclick="toggleDlMenu()" id="dl-btn"
+                    class="btn btn-primary btn-sm"
+                    style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
+                <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download As
+                <svg id="dl-chevron" style="width:12px;height:12px;transition:transform .2s;"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M6 9l6 6 6-6"/>
+                </svg>
+            </button>
+
+            {{-- Dropdown menu --}}
+            <div id="dl-menu"
+                 style="display:none;position:absolute;right:0;top:calc(100% + 6px);
+                        background:#fff;border:1px solid var(--bd-1);border-radius:12px;
+                        box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:190px;
+                        overflow:hidden;z-index:999;">
+
+                <a href="{{ route('export.download-excel', ['month' => $month, 'year' => $year]) }}"
+                   style="display:flex;align-items:center;gap:10px;padding:11px 14px;
+                          text-decoration:none;color:var(--fg-1);transition:background .15s;"
+                   onmouseover="this.style.background='var(--bg-2)'"
+                   onmouseout="this.style.background=''">
+                    <span style="font-size:18px;">📊</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;">Excel (.xlsx)</div>
+                        <div style="font-size:10px;color:var(--fg-4);">Untuk analisis & filter data</div>
+                    </div>
+                </a>
+
+                <div style="height:1px;background:var(--bd-1);margin:0 14px;"></div>
+
+                <a href="{{ route('export.download-pdf', ['month' => $month, 'year' => $year]) }}"
+                   style="display:flex;align-items:center;gap:10px;padding:11px 14px;
+                          text-decoration:none;color:var(--fg-1);transition:background .15s;"
+                   onmouseover="this.style.background='var(--bg-2)'"
+                   onmouseout="this.style.background=''">
+                    <span style="font-size:18px;">📄</span>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;">PDF (.pdf)</div>
+                        <div style="font-size:10px;color:var(--fg-4);">Untuk print & share via WA/email</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <script>
+            function toggleDlMenu() {
+                const menu    = document.getElementById('dl-menu');
+                const chevron = document.getElementById('dl-chevron');
+                const isOpen  = menu.style.display !== 'none';
+                menu.style.display = isOpen ? 'none' : 'block';
+                chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+            }
+            // Tutup saat klik di luar
+            document.addEventListener('click', function(e) {
+                const wrapper = document.getElementById('dl-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    document.getElementById('dl-menu').style.display = 'none';
+                    document.getElementById('dl-chevron').style.transform = '';
+                }
+            });
+        </script>
     </div>
 
     {{-- ── Filter bulan / tahun ── --}}
@@ -169,8 +229,6 @@
                                            font-weight:700;white-space:nowrap;width:55px;">Durasi</th>
                                 <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
                                            font-weight:700;white-space:nowrap;width:78px;">Status</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:center;font-size:10px;
-                                           font-weight:700;white-space:nowrap;width:50px;">% Done</th>
                                 <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
                                            font-weight:700;">Notes</th>
                             </tr>
@@ -180,18 +238,18 @@
                                 @php
                                     $prio   = $entry->priority ?? 'medium';
                                     $sChip  = $statusChip[$entry->status] ?? 'chip-neutral';
-                                    $sLabel = ucfirst(str_replace('_', ' ', $entry->status));
+                                    $sLabel = $entry->status_label;
                                 @endphp
                                 <tr style="{{ $i % 2 === 1 ? 'background:#fafbff;' : '' }}">
                                     <td style="padding:6px 10px;text-align:center;color:var(--fg-4);
                                                border-bottom:1px solid #f3f4f6;">{{ $i + 1 }}</td>
                                     <td style="padding:6px 10px;white-space:nowrap;color:var(--fg-2);
                                                border-bottom:1px solid #f3f4f6;">
-                                        {{ \Carbon\Carbon::parse($entry->date)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($entry->task_date)->format('d/m/Y') }}
                                     </td>
                                     <td style="padding:6px 10px;font-weight:600;color:var(--fg-1);
                                                border-bottom:1px solid #f3f4f6;line-height:1.4;">
-                                        {{ $entry->title }}
+                                        {{ $entry->task_description }}
                                     </td>
                                     <td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">
                                         <span style="display:inline-block;padding:2px 7px;border-radius:99px;
@@ -202,14 +260,10 @@
                                     </td>
                                     <td style="padding:6px 10px;text-align:center;color:var(--fg-2);
                                                border-bottom:1px solid #f3f4f6;">
-                                        {{ $entry->duration ?? '-' }}<span style="font-size:10px;color:var(--fg-4)"> mnt</span>
+                                        {{ $entry->duration_label }}
                                     </td>
                                     <td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">
                                         <span class="chip {{ $sChip }}" style="font-size:10px;">{{ $sLabel }}</span>
-                                    </td>
-                                    <td style="padding:6px 10px;text-align:center;font-weight:800;
-                                               color:var(--maxy-navy);border-bottom:1px solid #f3f4f6;">
-                                        {{ $entry->percent_done ?? 0 }}%
                                     </td>
                                     <td style="padding:6px 10px;color:var(--fg-3);font-size:11px;
                                                border-bottom:1px solid #f3f4f6;line-height:1.4;">

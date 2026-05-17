@@ -41,7 +41,7 @@
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $task->status_label }}</span>
                                 @if($task->weeklyTarget)
-                                    <span>· M{{ $task->weeklyTarget->week_number }} {{ Str::limit($task->weeklyTarget->title, 16) }}</span>
+                                    <span>· Minggu {{ $task->weeklyTarget->week_number }} · {{ Str::limit($task->weeklyTarget->title, 16) }}</span>
                                 @endif
                                 <span>· {{ \Carbon\Carbon::parse($task->task_date)->isoFormat('D MMM') }}</span>
                             </div>
@@ -105,18 +105,18 @@
                                 $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id ?? $preSelectedWeeklyId);
                             @endphp
                             <option value="" {{ empty($defaultWeekly) ? 'selected' : '' }}>
-                                🗂️ Other (task tambahan / tidak ada target mingguan)
+                                📌 Tidak terkait target mingguan (tugas tambahan/mendadak)
                             </option>
                             @foreach($weeklyTargets as $wt)
                                 <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
-                                    [M{{ $wt->week_number }} {{ $monthShort[$wt->month] }}] {{ $wt->title }}
+                                Minggu {{ $wt->week_number }} · {{ $monthShort[$wt->month] }} — {{ $wt->title }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
                     <span style="font-size:11px;color:var(--fg-4);margin-top:4px;">
-                        Pilih target mingguan, atau "Other" untuk task mendadak dari CEO/CTO/management lain.
+                        Pilih target mingguan yang sedang kamu kerjakan.
                     </span>
                 </div>
 
@@ -156,10 +156,10 @@
                             <select id="priority" name="priority"
                                     class="m-select {{ $errors->has('priority') ? 'err' : '' }}" required>
                                 @php $defaultPriority = old('priority', $continueFrom?->priority ?? 'medium'); @endphp
-                                <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Critical</option>
-                                <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 High</option>
-                                <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Medium</option>
-                                <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Low</option>
+                                <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Kritis</option>
+                                <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 Tinggi</option>
+                                <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Sedang</option>
+                                <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Rendah</option>
                             </select>
                         </div>
                         @error('priority')<span class="err">{{ $message }}</span>@enderror

@@ -27,20 +27,30 @@ class MonthlyTargetController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $user  = auth()->user();
+        $rules = [
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'month'       => 'required|integer|min:1|max:12',
             'year'        => 'required|integer|min:2024|max:2030',
-        ]);
+        ];
 
-        $user = auth()->user();
+        // C-Level wajib pilih departemen dari dropdown
+        if ($user->role === 'c_level') {
+            $rules['department'] = 'required|string|in:sales,marketing,product_it,operational,hr,finance,ga,creative,customer_support,ceo_office';
+        }
+
+        $validated = $request->validate($rules);
+
+        $department = $user->role === 'c_level'
+            ? $validated['department']
+            : ($user->department ?? 'ceo_office');
 
         MonthlyTarget::create([
             'user_id'     => $user->id,
-            'department'  => $user->department ?? 'ceo_office',
+            'department'  => $department,
             'title'       => $validated['title'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'month'       => $validated['month'],
             'year'        => $validated['year'],
         ]);

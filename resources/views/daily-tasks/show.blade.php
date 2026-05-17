@@ -14,12 +14,18 @@
     ];
     $sChip = $statusMap[$dailyTask->status] ?? 'neutral';
     $pChip = $priorityChip[$dailyTask->priority] ?? 'neutral';
+
+    // Smart back: jika dari weekly-target, balik ke sana. Jika tidak, ke index.
+    $fromWt  = request('from');
+    $backUrl = $fromWt
+        ? route('weekly-targets.show', $fromWt)
+        : route('daily-tasks.index');
 @endphp
 
 <div class="page">
     <!-- Back & header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('daily-tasks.index') }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ $backUrl }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
@@ -35,8 +41,8 @@
         @endif
     </div>
 
-    {{-- Info kapan bisa di-edit --}}
-    @if($dailyTask->canBeEdited() && $dailyTask->user_id === auth()->id())
+    {{-- Info kapan bisa di-edit (hanya untuk pemilik laporan) --}}
+    @if($dailyTask->user_id === auth()->id())
         <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#8B5A00;">
             <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <div>
@@ -62,16 +68,37 @@
         </div>
     @endif
 
-    <!-- Status bar -->
-    <div class="m-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span class="chip chip-{{ $sChip }}" style="font-size:13px;font-weight:600;">
-            {{ $dailyTask->status_label }}
-        </span>
-        <span class="chip chip-{{ $pChip }}" style="font-size:11px;">
-            {{ $dailyTask->priority_label }}
-        </span>
+    {{-- Jika leader/c-level mengakses laporan staff: tampilkan banner info --}}
+    @if($dailyTask->user_id !== auth()->id())
+        <div style="background:var(--bg-2);border:1px solid var(--bg-3);border-radius:10px;
+                    padding:10px 12px;display:flex;gap:8px;align-items:center;font-size:11px;color:var(--fg-3);">
+            <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24">
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+            <span>Anda melihat laporan milik <strong>{{ $dailyTask->user->name ?? 'Staff' }}</strong> (mode baca saja)</span>
+        </div>
+    @endif
+
+    <!-- Status & Prioritas berlabel -->
+    <div class="m-card" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;color:var(--fg-3);">Status</span>
+            <span class="chip chip-{{ $sChip }}" style="font-size:13px;font-weight:600;">
+                {{ $dailyTask->status_label }}
+            </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;color:var(--fg-3);">Prioritas</span>
+            <span class="chip chip-{{ $pChip }}" style="font-size:12px;">
+                {{ $dailyTask->priority_label }}
+            </span>
+        </div>
         @if($dailyTask->is_overdue)
-            <span class="chip chip-danger" style="font-size:11px;">⏰ Terlambat</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--fg-3);">Peringatan</span>
+                <span class="chip chip-danger" style="font-size:12px;">⏰ Terlambat</span>
+            </div>
         @endif
     </div>
 
@@ -104,9 +131,9 @@
         @else
             {{-- Task "Other" — tidak terikat weekly target --}}
             <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 12px;">
-                <div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.05em;">🗂️ Tugas Tambahan (Other)</div>
+                <div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.05em;">📌 Tugas Tambahan / Mendadak</div>
                 <p style="font-size:12px;color:#8B5A00;margin:4px 0 0;line-height:1.5;">
-                    Tidak terikat target mingguan — kemungkinan task mendadak dari CEO/CTO/management lain.
+                    Tidak terkait target mingguan — ini merupakan tugas tambahan atau instruksi langsung dari atasan.
                 </p>
             </div>
             <div style="height:1px;background:var(--bg-3);"></div>
@@ -146,7 +173,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
             <span style="color:var(--fg-3);">Tanggal tugas</span>
             <span style="color:var(--fg-1);font-weight:600;">
-                {{ \Carbon\Carbon::parse($dailyTask->task_date)->format('d M Y') }}
+                {{ \Carbon\Carbon::parse($dailyTask->task_date)->isoFormat('D MMMM YYYY') }}
             </span>
         </div>
 
@@ -168,7 +195,7 @@
     </div>
 
     <!-- Quick action: mark as done (jika belum) -->
-    @if($dailyTask->status !== 'selesai')
+    @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
         <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
               onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
             @csrf

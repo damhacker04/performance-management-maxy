@@ -38,10 +38,10 @@ class DailyTaskEntry extends Model
     ];
 
     public const PRIORITIES = [
-        'critical' => 'Critical',
-        'high'     => 'High',
-        'medium'   => 'Medium',
-        'low'      => 'Low',
+        'critical' => 'Kritis',
+        'high'     => 'Tinggi',
+        'medium'   => 'Sedang',
+        'low'      => 'Rendah',
     ];
 
     // Relasi ke User (Staff yang submit)

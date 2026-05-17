@@ -59,8 +59,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Export Laporan — hanya c_level dan user dengan is_management = true
     // Guard dilakukan di controller via canExport() agar lebih fleksibel.
-    Route::get('/export',          [ExportController::class, 'index'])->name('export.index');
-    Route::get('/export/download', [ExportController::class, 'download'])->name('export.download');
+    Route::get('/export',               [ExportController::class, 'index'])->name('export.index');
+    Route::get('/export/download-excel',[ExportController::class, 'downloadExcel'])->name('export.download-excel');
+    Route::get('/export/download-pdf',  [ExportController::class, 'downloadPdf'])->name('export.download-pdf');
 });
 
 require __DIR__ . '/auth.php';

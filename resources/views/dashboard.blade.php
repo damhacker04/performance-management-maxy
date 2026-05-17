@@ -234,7 +234,7 @@
             </div>
             <div style="padding:0 16px 8px;">
                 @forelse ($targets->take(3) as $target)
-                    <a href="{{ route('monthly-targets.edit', $target->id) }}"
+                    <a href="{{ route('monthly-targets.show', $target->id) }}"
                        class="m-row"
                        style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-body">

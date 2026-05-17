@@ -25,12 +25,20 @@ class DailyTaskEntryController extends Controller
 
     public function show(DailyTaskEntry $dailyTask)
     {
-        // Pastikan staff hanya bisa lihat laporannya sendiri
-        if ($dailyTask->user_id !== auth()->id()) {
+        $user = auth()->user();
+
+        // Pemilik: boleh lihat laporan sendiri
+        // Leader: boleh lihat laporan staff se-departemen
+        // C-Level: boleh lihat semua laporan
+        $canView = $dailyTask->user_id === $user->id
+            || $user->role === 'c_level'
+            || ($user->role === 'leader' && $dailyTask->user->department === $user->department);
+
+        if (!$canView) {
             abort(403, 'Anda tidak memiliki akses untuk melihat laporan ini.');
         }
 
-        $dailyTask->load(['weeklyTarget.monthlyTarget', 'monthlyTarget']);
+        $dailyTask->load(['weeklyTarget.monthlyTarget', 'monthlyTarget', 'user']);
 
         return view('daily-tasks.show', compact('dailyTask'));
     }
@@ -240,10 +248,9 @@ class DailyTaskEntryController extends Controller
     /**
      * Tandai entry sebagai selesai.
      *
-     * PENTING: endpoint ini TIDAK langsung mengubah status ke selesai.
-     * Sesuai aturan rapat 12 Mei 2026, semua status WAJIB memiliki catatan.
-     * User diarahkan ke form edit dengan status pre-filled 'selesai',
-     * sehingga catatan penyelesaian wajib diisi.
+     * - Jika catatan SUDAH ada → langsung update status ke 'selesai', redirect ke show.
+     * - Jika catatan BELUM ada → arahkan ke form edit agar staff isi catatan dulu.
+     *   (Sesuai aturan rapat 12 Mei 2026: semua status 'selesai' wajib punya catatan.)
      */
     public function complete(DailyTaskEntry $dailyTask)
     {
@@ -252,15 +259,22 @@ class DailyTaskEntryController extends Controller
         }
 
         if ($dailyTask->status === 'selesai') {
-            return redirect()->route('dashboard')
+            return redirect()->route('daily-tasks.show', $dailyTask)
                 ->with('info', 'Tugas ini sudah ditandai selesai sebelumnya.');
         }
 
-        // Redirect ke form edit dengan status selesai sudah dipilih
-        // Staff tetap wajib mengisi catatan penyelesaian
+        // Catatan sudah ada → langsung selesaikan tanpa perlu ke form edit
+        if (!empty($dailyTask->notes)) {
+            $dailyTask->update(['status' => 'selesai']);
+
+            return redirect()->route('daily-tasks.show', $dailyTask)
+                ->with('success', '✅ Tugas berhasil ditandai selesai!');
+        }
+
+        // Catatan belum ada → wajib isi dulu sebelum bisa selesaikan
         return redirect()
             ->route('daily-tasks.edit', $dailyTask)
             ->with('complete_mode', true)
-            ->with('info', 'Isi catatan penyelesaian, lalu simpan untuk menandai tugas selesai.');
+            ->with('info', 'Isi catatan penyelesaian terlebih dahulu, lalu simpan untuk menandai tugas selesai.');
     }
 }

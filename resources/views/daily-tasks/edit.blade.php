@@ -53,16 +53,16 @@
                             $selectedWeekly = old('weekly_target_id', $dailyTask->weekly_target_id);
                         @endphp
                         <option value="" {{ empty($selectedWeekly) ? 'selected' : '' }}>
-                            🗂️ Other (task tambahan)
+                            📌 Tidak terkait target mingguan (tugas tambahan/mendadak)
                         </option>
                         @foreach($weeklyTargets as $wt)
                             <option value="{{ $wt->id }}" {{ (int)$selectedWeekly === $wt->id ? 'selected' : '' }}>
-                                [M{{ $wt->week_number }} {{ $monthShort[$wt->month] }}] {{ $wt->title }}
+                                Minggu {{ $wt->week_number }} · {{ $monthShort[$wt->month] }} — {{ $wt->title }}
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <small style="color:var(--fg-4);font-size:11px;">"Other" untuk task mendadak dari CEO/CTO.</small>
+                <small style="color:var(--fg-4);font-size:11px;">Pilih target mingguan yang terkait, atau pilih "Tidak terkait" untuk tugas tambahan.</small>
                 @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
             </div>
 
@@ -93,10 +93,10 @@
                         <select id="priority" name="priority"
                                 class="m-select {{ $errors->has('priority') ? 'err' : '' }}" required>
                             @php $defaultPriority = old('priority', $dailyTask->priority); @endphp
-                            <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Critical</option>
-                            <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 High</option>
-                            <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Medium</option>
-                            <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Low</option>
+                            <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Kritis</option>
+                            <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 Tinggi</option>
+                            <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Sedang</option>
+                            <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Rendah</option>
                         </select>
                     </div>
                     @error('priority')<span class="err">{{ $message }}</span>@enderror

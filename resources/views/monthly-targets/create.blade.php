@@ -14,15 +14,45 @@
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
 
-            <!-- Departemen (read-only) -->
-            <div class="field">
-                <label>Departemen</label>
-                <div class="m-input" style="display:flex;align-items:center;background:var(--neutral-50);color:var(--fg-2);cursor:default;">
-                    <span class="chip chip-dept-{{ str_replace('_','-', auth()->user()->department ?? 'ceo') }}" style="pointer-events:none;">
-                        {{ ucfirst(str_replace('_', ' ', auth()->user()->department ?? 'CEO Office')) }}
-                    </span>
+            <!-- Departemen -->
+            @if(auth()->user()->role === 'c_level')
+                {{-- C-Level: pilih departemen tujuan --}}
+                <div class="field">
+                    <label for="department">Departemen <span style="color:var(--danger);">*</span></label>
+                    <div class="select-wrap">
+                        <select id="department" name="department" class="m-select" required>
+                            <option value="">Pilih departemen...</option>
+                            @foreach([
+                                'sales'           => 'Sales',
+                                'marketing'       => 'Marketing',
+                                'product_it'      => 'Product & IT',
+                                'operational'     => 'Operational',
+                                'hr'              => 'HR',
+                                'finance'         => 'Finance',
+                                'ga'              => 'General Affairs',
+                                'creative'        => 'Creative',
+                                'customer_support'=> 'Customer Support',
+                                'ceo_office'      => 'CEO Office',
+                            ] as $key => $label)
+                                <option value="{{ $key }}" {{ old('department') === $key ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('department')<span class="err">{{ $message }}</span>@enderror
                 </div>
-            </div>
+            @else
+                {{-- Leader: read-only, hanya dept sendiri --}}
+                <div class="field">
+                    <label>Departemen</label>
+                    <div class="m-input" style="display:flex;align-items:center;background:var(--neutral-50);color:var(--fg-2);cursor:default;">
+                        <span class="chip chip-dept-{{ str_replace('_','-', auth()->user()->department ?? 'ceo') }}" style="pointer-events:none;">
+                            {{ ucfirst(str_replace('_', ' ', auth()->user()->department ?? 'CEO Office')) }}
+                        </span>
+                    </div>
+                </div>
+            @endif
 
             <!-- Judul -->
             <div class="field">

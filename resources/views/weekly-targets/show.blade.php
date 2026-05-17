@@ -118,38 +118,54 @@
                 </div>
                 <div style="padding:0 16px 8px;">
                     @foreach($entries as $entry)
-                        @php $sChip = $statusMap[$entry->status] ?? 'neutral'; @endphp
-                        <div class="m-row">
-                            <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" aria-hidden="true">
-                                @if($entry->status === 'selesai')
-                                    <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>
-                                @endif
-                            </span>
-                            <div class="row-body">
-                                <div class="row-title">
-                                    {{ $entry->task_description }}
-                                    @if($entry->is_overdue)
-                                        <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                        @php
+                            $sChip = $statusMap[$entry->status] ?? 'neutral';
+                            $dotColor = [
+                                'belum_mulai'  => '#9CA3AF',
+                                'dalam_proses' => '#F59E0B',
+                                'terhambat'    => '#EF4444',
+                                'selesai'      => '#16A571',
+                            ][$entry->status] ?? '#9CA3AF';
+                        @endphp
+                        <a href="{{ route('daily-tasks.show', $entry) }}?from={{ $weeklyTarget->id }}"
+                           style="text-decoration:none;color:inherit;display:block;
+                                  border-radius:8px;margin:0 -8px;
+                                  transition:background .15s;"
+                           onmouseover="this.style.background='var(--bg-2)'"
+                           onmouseout="this.style.background=''"
+                           title="Lihat detail laporan {{ $entry->user->name ?? '' }}">
+                            <div class="m-row" style="padding:8px;">
+                                {{-- Status dot --}}
+                                <div style="width:9px;height:9px;border-radius:50%;
+                                            background:{{ $dotColor }};flex-shrink:0;margin-top:5px;"></div>
+                                <div class="row-body">
+                                    <div class="row-title" style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                                        <span>{{ $entry->task_description }}</span>
+                                        <svg style="width:13px;height:13px;flex-shrink:0;color:var(--fg-4);margin-top:2px;"
+                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path d="M9 18l6-6-6-6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="row-meta">
+                                        <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
+                                        <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                        <span>· {{ $entry->duration_label }}</span>
+                                        @if($entry->is_overdue)
+                                            <span class="chip chip-danger" style="font-size:10px;">⏰ Terlambat</span>
+                                        @endif
+                                    </div>
+                                    @if($entry->notes)
+                                        <div style="margin-top:6px;background:var(--bg-2);border-radius:8px;
+                                                    padding:8px 10px;border-left:3px solid var(--maxy-navy);">
+                                            <div style="font-size:10px;font-weight:700;letter-spacing:.04em;
+                                                        text-transform:uppercase;color:var(--maxy-navy);
+                                                        opacity:.7;margin-bottom:3px;">Catatan</div>
+                                            <div style="font-size:12px;color:var(--fg-2);line-height:1.5;">{{ $entry->notes }}</div>
+                                        </div>
                                     @endif
                                 </div>
-                                <div class="row-meta">
-                                    <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
-                                    <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
-                                    <span>· {{ $entry->duration_label }}</span>
-                                </div>
-                                @if($entry->notes)
-                                    <div style="margin-top:6px;background:var(--bg-2);border-radius:8px;
-                                                padding:8px 10px;border-left:3px solid var(--maxy-navy);">
-                                        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;
-                                                    text-transform:uppercase;color:var(--maxy-navy);
-                                                    opacity:.7;margin-bottom:3px;">Catatan</div>
-                                        <div style="font-size:12px;color:var(--fg-2);line-height:1.5;">
-                                            {{ $entry->notes }}
-                                        </div>
-                                    </div>
-                                @endif
                             </div>
-                        </div>
+                        </a>
                     @endforeach
                 </div>
             </div>
