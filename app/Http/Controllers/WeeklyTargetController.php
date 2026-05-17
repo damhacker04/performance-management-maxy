@@ -10,40 +10,12 @@ use Illuminate\Validation\Rule;
 class WeeklyTargetController extends Controller
 {
     /**
-     * List semua weekly target untuk dept user (c_level: semua dept).
-     * Group by bulan & status linking ke monthly.
+     * Redirect ke monthly-targets — weekly target dikelola dari dalam halaman monthly target.
+     * Halaman index standalone tidak dipakai agar tidak membingungkan user.
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
-
-        $query = WeeklyTarget::with('monthlyTarget')
-            ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->orderBy('week_number');
-
-        // Leader: hanya weekly target untuk dept-nya
-        if ($user->role === 'leader') {
-            $query->where(function ($q) use ($user) {
-                $q->whereHas('monthlyTarget', fn($mq) => $mq->where('department', $user->department))
-                  ->orWhere(function ($oq) use ($user) {
-                      // "Other" weekly target (tanpa monthly): yang dibuat user ini
-                      $oq->whereNull('monthly_target_id')->where('user_id', $user->id);
-                  });
-            });
-        }
-
-        // Optional filter by month
-        if ($request->filled('month_filter')) {
-            [$m, $y] = explode('-', $request->month_filter) + [null, null];
-            if ($m && $y) {
-                $query->where('month', (int) $m)->where('year', (int) $y);
-            }
-        }
-
-        $weeklyTargets = $query->get();
-
-        return view('weekly-targets.index', compact('weeklyTargets'));
+        return redirect()->route('monthly-targets.index');
     }
 
     /**

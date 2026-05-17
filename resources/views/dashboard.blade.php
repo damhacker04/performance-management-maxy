@@ -217,7 +217,7 @@
             </div>
             <div class="kpi-card">
                 <div class="kc-header">
-                    <span class="kc-title">Staff laporan</span>
+                    <span class="kc-title">Tim lapor hari ini</span>
                     <span class="chip {{ $reported >= $totalStaff ? 'chip-success' : 'chip-warning' }}">
                         {{ $reported >= $totalStaff ? 'Lengkap' : 'Kurang' }}
                     </span>
@@ -330,7 +330,7 @@
             <div class="kpi-card">
                 <div class="kc-header">
                     <span class="kc-title">Laporan hari ini</span>
-                    <span class="chip chip-success">All dept</span>
+                    <span class="chip chip-success">Semua dept</span>
                 </div>
                 <div class="kc-value">{{ $totalEntries }}<span class="kc-sub"> laporan</span></div>
                 <div class="progress-bar"><i class="success" style="width:{{ min($totalEntries * 5, 100) }}%"></i></div>

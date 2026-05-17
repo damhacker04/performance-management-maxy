@@ -6,6 +6,7 @@ use App\Http\Controllers\WeeklyTargetController;
 use App\Http\Controllers\DailyTaskEntryController;
 use App\Http\Controllers\StaffTargetController;
 use App\Http\Controllers\LeaderTargetController;
+use App\Http\Controllers\ExportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -55,6 +56,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Export Laporan — hanya c_level dan user dengan is_management = true
+    // Guard dilakukan di controller via canExport() agar lebih fleksibel.
+    Route::get('/export',          [ExportController::class, 'index'])->name('export.index');
+    Route::get('/export/download', [ExportController::class, 'download'])->name('export.download');
 });
 
 require __DIR__ . '/auth.php';

@@ -138,15 +138,20 @@
                                         {{ Str::limit($wt->description, 100) }}
                                     </p>
                                 @endif
-                                <div style="margin-top:8px;font-size:11px;color:var(--maxy-navy);font-weight:600;display:flex;align-items:center;gap:4px;">
-                                    <svg class="lucide" style="width:11px;height:11px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                    {{ $entryCount }} laporan
+                                <a href="{{ route('weekly-targets.show', $wt) }}"
+                                   style="margin-top:8px;font-size:12px;color:var(--maxy-navy);font-weight:600;
+                                          display:inline-flex;align-items:center;gap:5px;text-decoration:none;
+                                          background:var(--bg-2);border:1px solid var(--bd-1);border-radius:8px;
+                                          padding:5px 10px;">
+                                    <svg class="lucide" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Lihat {{ $entryCount }} laporan anggota tim
                                     @if($wtTotal > 0)
                                         <span class="chip {{ $wtDone === $wtTotal ? 'chip-success' : 'chip-warning' }}" style="font-size:10px;">
                                             {{ $wtDone }}/{{ $wtTotal }} selesai
                                         </span>
                                     @endif
-                                </div>
+                                    <svg class="lucide" style="width:10px;height:10px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                                </a>
                             </div>
                             {{-- Tombol aksi --}}
                             <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
@@ -192,7 +197,7 @@
                                                 <div style="font-size:10px;color:var(--fg-4);">{{ $ldDone }}/{{ $ldTotal }} selesai</div>
                                             </div>
                                             <span class="chip {{ $ldDone === $ldTotal && $ldTotal > 0 ? 'chip-success' : 'chip-warning' }}" style="font-size:10px;">
-                                                {{ $ldDone === $ldTotal && $ldTotal > 0 ? 'Selesai' : 'On-going' }}
+                                                {{ $ldDone === $ldTotal && $ldTotal > 0 ? 'Selesai' : 'Berjalan' }}
                                             </span>
                                         </div>
                                         <div style="padding-left:34px;display:flex;flex-direction:column;gap:4px;">

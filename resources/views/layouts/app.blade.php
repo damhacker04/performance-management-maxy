@@ -16,9 +16,10 @@
     $hour     = now()->hour;
     $greet    = $hour < 11 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 18 ? 'Selamat sore' : 'Selamat malam'));
     $initials = collect(explode(' ', $user->name))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-    $isStaff  = $user->role === 'staff';
-    $isLeader = $user->role === 'leader';
-    $isCLevel = $user->role === 'c_level';
+    $isStaff    = $user->role === 'staff';
+    $isLeader   = $user->role === 'leader';
+    $isCLevel   = $user->role === 'c_level';
+    $canExport  = $user->canExport(); // c_level atau is_management = true
 
     // Null-safe active tab detection
     $onDashboard    = request()->routeIs('dashboard');
@@ -28,6 +29,7 @@
     $onMyTargets    = request()->routeIs('staff-targets.*');
     $onKpi          = request()->routeIs('kpi');
     $onProfile      = request()->routeIs('profile.*');
+    $onExport       = request()->routeIs('export.*');
 @endphp
 
 <div class="app-shell">
@@ -122,6 +124,16 @@
                 </span>
                 KPI
             </a>
+        @endif
+
+        {{-- Export — hanya c_level dan is_management (Bu Ika, Fanny, dll) --}}
+        @if($canExport)
+        <a href="{{ route('export.index') }}" class="tab {{ $onExport ? 'active' : '' }}">
+            <span class="glyph">
+                <svg class="lucide" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </span>
+            Export
+        </a>
         @endif
 
         {{-- Profil --}}

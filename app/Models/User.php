@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'department'])]
+#[Fillable(['name', 'email', 'password', 'role', 'department', 'is_management'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,10 +34,28 @@ class User extends Authenticatable
     ];
 
     public const ROLES = [
-        'staff'   => 'Staff',
-        'leader'  => 'Leader',
-        'c_level' => 'C-Level',
+        'staff'      => 'Staff',
+        'leader'     => 'Leader',
+        'c_level'    => 'C-Level',
     ];
+
+    /**
+     * Apakah user ini bisa mengakses fitur Export laporan?
+     *
+     * Aturan (Rapat 17 Mei 2026):
+     * - c_level selalu bisa export (semua departemen)
+     * - User dengan flag is_management = true juga bisa export (semua departemen)
+     *   contoh: Bu Ika (leader), Fanny (staff) — tanpa mengubah role utama mereka
+     */
+    public function canExport(): bool
+    {
+        return $this->role === 'c_level' || (bool) $this->is_management;
+    }
+
+    public function isManagement(): bool
+    {
+        return (bool) $this->is_management;
+    }
 
     /**
      * Get the attributes that should be cast.

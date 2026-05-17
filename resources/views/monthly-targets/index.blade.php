@@ -41,7 +41,7 @@
         </div>
         <a href="{{ route('monthly-targets.create') }}" class="btn btn-primary btn-sm">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Baru
+            Tambah
         </a>
     </div>
 

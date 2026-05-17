@@ -18,7 +18,8 @@
 <div class="page">
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('weekly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ $weeklyTarget->monthlyTarget ? route('monthly-targets.show', $weeklyTarget->monthlyTarget) : route('weekly-targets.index') }}"
+           class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
@@ -31,7 +32,7 @@
                 @if($weeklyTarget->monthlyTarget)
                     ↳ {{ $weeklyTarget->monthlyTarget->title }}
                 @else
-                    <span style="color:#B45309;font-weight:600;">🗂️ Other</span> — tidak terikat target bulanan
+                    <span style="color:#B45309;font-weight:600;">📌 Aktivitas Lain</span> — tidak terikat target bulanan
                 @endif
             </p>
         </div>
@@ -63,7 +64,7 @@
                 <span class="kc-title">Total laporan</span>
                 <span class="chip chip-info">{{ $byStaff->count() }} staff</span>
             </div>
-            <div class="kc-value">{{ $summary['total'] }}<span class="kc-sub"> task</span></div>
+            <div class="kc-value">{{ $summary['total'] }}<span class="kc-sub"> tugas</span></div>
             <div class="progress-bar"><i class="navy" style="width:{{ min($summary['total']*10, 100) }}%"></i></div>
         </div>
         <div class="kpi-card">
@@ -82,7 +83,7 @@
         <div class="m-card" style="background:#FDECEE;border:1px solid var(--danger);padding:12px 16px;display:flex;gap:10px;align-items:flex-start;">
             <svg class="lucide sm" style="color:var(--danger);flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
             <div style="font-size:13px;color:var(--fg-1);">
-                <strong>{{ $summary['terhambat'] }} task terhambat</strong> — perlu perhatian khusus
+                <strong>{{ $summary['terhambat'] }} tugas terhambat</strong> — perlu perhatian segera
             </div>
         </div>
     @endif
@@ -92,8 +93,8 @@
         <div class="m-card">
             <div class="empty-state">
                 <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada laporan staff</p>
-                <p style="font-size:12px;color:var(--fg-3);">Laporan staff akan muncul di sini saat mereka submit untuk target ini.</p>
+                <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada laporan dari anggota tim</p>
+                <p style="font-size:12px;color:var(--fg-3);">Laporan akan muncul di sini setelah anggota tim mengisi tugas untuk target ini.</p>
             </div>
         </div>
     @else
@@ -137,8 +138,14 @@
                                     <span>· {{ $entry->duration_label }}</span>
                                 </div>
                                 @if($entry->notes)
-                                    <div style="font-size:11px;color:var(--fg-3);margin-top:4px;font-style:italic;background:var(--bg-2);padding:6px 8px;border-radius:6px;border-left:2px solid var(--fg-4);">
-                                        "{{ $entry->notes }}"
+                                    <div style="margin-top:6px;background:var(--bg-2);border-radius:8px;
+                                                padding:8px 10px;border-left:3px solid var(--maxy-navy);">
+                                        <div style="font-size:10px;font-weight:700;letter-spacing:.04em;
+                                                    text-transform:uppercase;color:var(--maxy-navy);
+                                                    opacity:.7;margin-bottom:3px;">Catatan</div>
+                                        <div style="font-size:12px;color:var(--fg-2);line-height:1.5;">
+                                            {{ $entry->notes }}
+                                        </div>
                                     </div>
                                 @endif
                             </div>
