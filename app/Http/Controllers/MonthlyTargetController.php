@@ -13,6 +13,10 @@ class MonthlyTargetController extends Controller
 
         $targets = MonthlyTarget::with(['user', 'weeklyTargets', 'weeklyTargets.dailyTaskEntries'])
             ->when($user->role === 'leader', fn($q) => $q->where('user_id', $user->id))
+            ->when($user->role === 'staff', fn($q) => 
+                $q->where('department', $user->department)
+                  ->whereHas('user', fn($uq) => $uq->where('role', 'leader'))
+            )
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
@@ -37,7 +41,7 @@ class MonthlyTargetController extends Controller
 
         // C-Level wajib pilih departemen dari dropdown
         if ($user->role === 'c_level') {
-            $rules['department'] = 'required|string|in:sales,marketing,product_it,operational,hr,finance,ga,creative,customer_support,ceo_office';
+            $rules['department'] = 'required|string|in:sales,marketing,product_it,operational,ceo_office';
         }
 
         $validated = $request->validate($rules);

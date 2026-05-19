@@ -57,7 +57,11 @@
                         box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:190px;
                         overflow:hidden;z-index:999;">
 
-                <a href="{{ route('export.download-excel', ['month' => $month, 'year' => $year]) }}"
+                <a href="{{ route('export.download-excel', [
+                               'start_date' => $startDate->format('Y-m-d'),
+                               'end_date'   => $endDate->format('Y-m-d'),
+                               'user_id'    => $selectedUserId,
+                           ]) }}"
                    style="display:flex;align-items:center;gap:10px;padding:11px 14px;
                           text-decoration:none;color:var(--fg-1);transition:background .15s;"
                    onmouseover="this.style.background='var(--bg-2)'"
@@ -71,15 +75,20 @@
 
                 <div style="height:1px;background:var(--bd-1);margin:0 14px;"></div>
 
-                <a href="{{ route('export.download-pdf', ['month' => $month, 'year' => $year]) }}"
+                <a href="{{ route('export.print', [
+                               'start_date' => $startDate->format('Y-m-d'),
+                               'end_date'   => $endDate->format('Y-m-d'),
+                               'user_id'    => $selectedUserId,
+                           ]) }}"
+                   target="_blank"
                    style="display:flex;align-items:center;gap:10px;padding:11px 14px;
                           text-decoration:none;color:var(--fg-1);transition:background .15s;"
                    onmouseover="this.style.background='var(--bg-2)'"
                    onmouseout="this.style.background=''">
                     <span style="font-size:18px;">📄</span>
                     <div>
-                        <div style="font-size:13px;font-weight:600;">PDF (.pdf)</div>
-                        <div style="font-size:10px;color:var(--fg-4);">Untuk print & share via WA/email</div>
+                        <div style="font-size:13px;font-weight:600;">PDF / Print</div>
+                        <div style="font-size:10px;color:var(--fg-4);">Print atau simpan sebagai PDF</div>
                     </div>
                 </a>
             </div>
@@ -104,44 +113,94 @@
         </script>
     </div>
 
-    {{-- ── Filter bulan / tahun ── --}}
+    {{-- ── Filter ── --}}
     <form method="GET" action="{{ route('export.index') }}">
         <div class="m-card" style="padding:14px 16px;">
             <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px;">
+
+                {{-- Dari tanggal --}}
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
                     <label style="font-size:10px;font-weight:700;color:var(--fg-3);
                                   text-transform:uppercase;letter-spacing:.06em;">
-                        Bulan
+                        Dari Tanggal
                     </label>
-                    <select name="month" style="border:1px solid var(--bd-1);border-radius:8px;
-                                                padding:8px 10px;font-size:14px;color:var(--fg-1);
-                                                background:#fff;width:100%;">
-                        @foreach($months as $m)
-                            <option value="{{ $m['value'] }}" {{ $m['value'] == $month ? 'selected' : '' }}>
-                                {{ $m['label'] }}
+                    <input type="date" name="start_date"
+                           value="{{ $startDate->format('Y-m-d') }}"
+                           style="border:1px solid var(--bd-1);border-radius:8px;
+                                  padding:8px 10px;font-size:14px;color:var(--fg-1);
+                                  background:#fff;width:100%;">
+                </div>
+
+                {{-- Sampai tanggal --}}
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
+                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
+                                  text-transform:uppercase;letter-spacing:.06em;">
+                        Sampai Tanggal
+                    </label>
+                    <input type="date" name="end_date"
+                           value="{{ $endDate->format('Y-m-d') }}"
+                           style="border:1px solid var(--bd-1);border-radius:8px;
+                                  padding:8px 10px;font-size:14px;color:var(--fg-1);
+                                  background:#fff;width:100%;">
+                </div>
+
+                {{-- Filter nama staff --}}
+                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;">
+                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
+                                  text-transform:uppercase;letter-spacing:.06em;">
+                        Nama Staff
+                    </label>
+                    <select name="user_id"
+                            style="border:1px solid var(--bd-1);border-radius:8px;
+                                   padding:8px 10px;font-size:14px;color:var(--fg-1);
+                                   background:#fff;width:100%;">
+                        <option value="0" {{ $selectedUserId == 0 ? 'selected' : '' }}>
+                            — Semua Staff —
+                        </option>
+                        @foreach($reportableUsers as $u)
+                            <option value="{{ $u->id }}" {{ $selectedUserId == $u->id ? 'selected' : '' }}>
+                                {{ $u->name }}
+                                ({{ ucfirst(str_replace('_',' ',$u->department ?? '-')) }})
                             </option>
                         @endforeach
                     </select>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:80px;">
-                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
-                                  text-transform:uppercase;letter-spacing:.06em;">
-                        Tahun
-                    </label>
-                    <select name="year" style="border:1px solid var(--bd-1);border-radius:8px;
-                                               padding:8px 10px;font-size:14px;color:var(--fg-1);
-                                               background:#fff;width:100%;">
-                        @foreach($years as $y)
-                            <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
-                        @endforeach
-                    </select>
-                </div>
+
+                {{-- Tombol filter --}}
                 <button type="submit" class="btn btn-primary btn-sm" style="flex-shrink:0;">
                     <svg class="lucide sm" viewBox="0 0 24 24">
                         <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                     </svg>
                     Tampilkan
                 </button>
+
+                {{-- Reset filter --}}
+                <a href="{{ route('export.index') }}"
+                   class="btn btn-sm" style="flex-shrink:0;background:var(--bg-2);color:var(--fg-2);">
+                    ↺ Reset
+                </a>
+            </div>
+
+            {{-- Shortcut periode cepat --}}
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                <span style="font-size:10px;color:var(--fg-4);align-self:center;">Cepat:</span>
+                @php
+                    $shortcuts = [
+                        'Bulan ini'  => [now()->startOfMonth()->format('Y-m-d'), now()->endOfMonth()->format('Y-m-d')],
+                        'Minggu ini' => [now()->startOfWeek()->format('Y-m-d'), now()->endOfWeek()->format('Y-m-d')],
+                        '7 hari'     => [now()->subDays(6)->format('Y-m-d'), now()->format('Y-m-d')],
+                        '30 hari'    => [now()->subDays(29)->format('Y-m-d'), now()->format('Y-m-d')],
+                    ];
+                @endphp
+                @foreach($shortcuts as $label => [$s, $e])
+                    <a href="{{ route('export.index', ['start_date' => $s, 'end_date' => $e, 'user_id' => $selectedUserId]) }}"
+                       style="font-size:11px;padding:3px 9px;border-radius:99px;
+                              background:{{ ($startDate->format('Y-m-d') === $s && $endDate->format('Y-m-d') === $e) ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                              color:{{ ($startDate->format('Y-m-d') === $s && $endDate->format('Y-m-d') === $e) ? '#fff' : 'var(--fg-2)' }};
+                              text-decoration:none;font-weight:500;">
+                        {{ $label }}
+                    </a>
+                @endforeach
             </div>
         </div>
     </form>
@@ -161,8 +220,8 @@
                     Tidak ada data
                 </p>
                 <p style="font-size:13px;color:var(--fg-3);margin:0;">
-                    Belum ada laporan untuk
-                    <strong>{{ $monthNamesId[$month] }} {{ $year }}</strong>.
+                    Belum ada laporan untuk periode
+                    <strong>{{ $periodLabel }}</strong>.
                 </p>
             </div>
         </div>
@@ -171,7 +230,9 @@
         <div style="display:flex;align-items:center;gap:8px;">
             <span class="overline-label">Hasil</span>
             <span class="chip chip-neutral" style="font-size:10px;">
-                {{ count($reports) }} anggota · {{ $monthNamesId[$month] }} {{ $year }}
+                {{ count($reports) }} anggota
+                @if($selectedUserId) &nbsp;·&nbsp; 1 staff dipilih @endif
+                &nbsp;·&nbsp; {{ $periodLabel }}
             </span>
         </div>
 

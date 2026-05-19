@@ -6,13 +6,9 @@
     $depts = [
         'sales'             => ['label' => 'Sales',            'color' => '#2F6BD6'],
         'marketing'         => ['label' => 'Marketing',        'color' => '#B43BB7'],
-        'product_it'        => ['label' => 'Product / IT',     'color' => '#16A571'],
+        'product_it'        => ['label' => 'Product & IT',     'color' => '#16A571'],
         'operational'       => ['label' => 'Operational',      'color' => '#E89B2A'],
-        'hr'                => ['label' => 'HR',               'color' => '#6D28D9'],
-        'finance'           => ['label' => 'Finance',          'color' => '#0D9488'],
-        'ga'                => ['label' => 'General Affairs',  'color' => '#B45309'],
-        'creative'          => ['label' => 'Creative',         'color' => '#DB2777'],
-        'customer_support'  => ['label' => 'Customer Support', 'color' => '#1D4ED8'],
+        'ceo_office'        => ['label' => 'CEO Office',       'color' => '#1D4ED8'],
     ];
 
     $now = now();

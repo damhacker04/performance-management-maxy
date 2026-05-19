@@ -3,6 +3,11 @@
     $months = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     $weekRanges = \App\Models\WeeklyTarget::WEEK_RANGES;
     $selectedMonthly = old('monthly_target_id', $weeklyTarget->monthly_target_id);
+    $contextBanner = match($context ?? null) {
+        'leader' => ['🎯', 'Target Saya', 'Mingguan ini terkait Target Anda dari C-Level', '#eff6ff', '#1e40af'],
+        'team'   => ['👥', 'Target Tim', 'Mingguan ini terkait Target yang Anda buat untuk tim', '#f0fdf4', '#166534'],
+        default  => null,
+    };
 @endphp
 
 <div class="page">
@@ -25,16 +30,50 @@
                 <label for="monthly_target_id">
                     Terkait Target Bulanan <span style="color:var(--danger);">*</span>
                 </label>
+
+                @if($contextBanner)
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;
+                                border-radius:8px;margin-bottom:6px;
+                                background:{{ $contextBanner[3] }};color:{{ $contextBanner[4] }};
+                                font-size:12px;font-weight:600;">
+                        <span style="font-size:16px;">{{ $contextBanner[0] }}</span>
+                        <div>
+                            <div>{{ $contextBanner[1] }}</div>
+                            <div style="font-weight:400;opacity:.8;margin-top:1px;">{{ $contextBanner[2] }}</div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="select-wrap">
                     <select id="monthly_target_id" name="monthly_target_id"
                             class="m-select {{ $errors->has('monthly_target_id') ? 'err' : '' }}" required>
-                        <option value="" disabled {{ empty($selectedMonthly) ? 'selected' : '' }}>Pilih target bulanan...</option>
-                        @foreach($monthlyTargets as $mt)
-                            <option value="{{ $mt->id }}"
-                                    {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
-                                {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
-                            </option>
-                        @endforeach
+                        <option value="" disabled {{ empty($selectedMonthly) ? 'selected' : '' }}>
+                            Pilih target bulanan...
+                        </option>
+
+                        {{-- Grup C-Level (hanya muncul jika konteks = leader) --}}
+                        @if($cLevelTargets->isNotEmpty())
+                            <optgroup label="🎯 Target Saya — dari C-Level">
+                                @foreach($cLevelTargets as $mt)
+                                    <option value="{{ $mt->id }}"
+                                            {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
+                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+
+                        {{-- Grup Tim (hanya muncul jika konteks = team) --}}
+                        @if($teamTargets->isNotEmpty())
+                            <optgroup label="👥 Target Tim — untuk Staff">
+                                @foreach($teamTargets as $mt)
+                                    <option value="{{ $mt->id }}"
+                                            {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
+                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
                 </div>
                 @error('monthly_target_id')<span class="err">{{ $message }}</span>@enderror

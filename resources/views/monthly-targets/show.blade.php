@@ -77,7 +77,7 @@
     {{-- Section: Target Mingguan --}}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
         <span class="overline-label">Target Mingguan</span>
-        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id]) }}"
+        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team']) }}"
            class="btn btn-primary btn-sm">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Tambah
@@ -170,15 +170,17 @@
                         </div>
                     </div>
 
-                    {{-- LAPORAN LEADER — hanya C-Level --}}
+                    {{-- LAPORAN TERKAIT — hanya C-Level --}}
                     @if($isCLevel)
                         <div style="border-top:1px dashed var(--bd-1);padding:10px 16px 14px;">
                             <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
                                         color:var(--maxy-navy);opacity:.7;margin-bottom:8px;">
-                                Laporan Leader
+                                {{ $monthlyTarget->user?->role === 'c_level' ? 'Laporan Leader' : 'Laporan Tim' }}
                             </div>
                             @if($leaderGroups->isEmpty())
-                                <div style="text-align:center;font-size:12px;color:var(--fg-4);padding:4px 0;">Belum ada laporan dari leader untuk minggu ini</div>
+                                <div style="text-align:center;font-size:12px;color:var(--fg-4);padding:4px 0;">
+                                    Belum ada laporan dari {{ $monthlyTarget->user?->role === 'c_level' ? 'leader' : 'tim' }} untuk minggu ini
+                                </div>
                             @else
                                 @foreach($leaderGroups as $userId => $entries)
                                     @php

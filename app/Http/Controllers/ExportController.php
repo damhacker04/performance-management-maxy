@@ -8,7 +8,6 @@ use App\Exports\KpiReportExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExportController extends Controller
 {
@@ -19,19 +18,39 @@ class ExportController extends Controller
     {
         $this->authorizeExport();
 
-        $month = $request->integer('month', now()->month);
-        $year  = $request->integer('year',  now()->year);
+        // ── Resolve filter values ──────────────────────────────────────────
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)->startOfDay()
+            : now()->startOfMonth();
 
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)->endOfDay()
+            : now()->endOfMonth();
+
+        // Pastikan end >= start
+        if ($endDate->lt($startDate)) {
+            $endDate = $startDate->copy()->endOfDay();
+        }
+
+        $selectedUserId = $request->integer('user_id', 0); // 0 = semua
+
+        // ── Daftar user yang bisa dipilih ─────────────────────────────────
         $reportableUsers = $this->getReportableUsers();
-        $period          = Carbon::createFromDate($year, $month, 1);
-        $startDate       = $period->copy()->startOfMonth();
-        $endDate         = $period->copy()->endOfMonth();
 
+        // ── Filter user jika dipilih ──────────────────────────────────────
+        $filteredUsers = $selectedUserId
+            ? $reportableUsers->where('id', $selectedUserId)
+            : $reportableUsers;
+
+        // ── Build reports ─────────────────────────────────────────────────
         $reports = [];
-        foreach ($reportableUsers as $user) {
+        foreach ($filteredUsers as $user) {
             $entries = DailyTaskEntry::with(['weeklyTarget.monthlyTarget'])
                 ->where('user_id', $user->id)
-                ->whereBetween('task_date', [$startDate, $endDate])
+                ->whereBetween('task_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ])
                 ->orderBy('task_date')
                 ->get();
 
@@ -40,45 +59,30 @@ class ExportController extends Controller
             }
         }
 
-        $monthNames = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
-            4 => 'April',   5 => 'Mei',       6 => 'Juni',
-            7 => 'Juli',    8 => 'Agustus',   9 => 'September',
-            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
-        $months = collect(range(1, 12))->map(fn($m) => [
-            'value' => $m,
-            'label' => $monthNames[$m],
-        ]);
-
-        try {
-            $minRaw    = DailyTaskEntry::min('task_date');
-            $firstYear = ($minRaw && strlen((string)$minRaw) >= 4)
-                       ? (int) Carbon::parse((string)$minRaw)->format('Y')
-                       : now()->year;
-        } catch (\Throwable) {
-            $firstYear = now()->year;
-        }
-        $years = range($firstYear, now()->year);
+        $periodLabel = $startDate->isSameDay($endDate)
+            ? $startDate->isoFormat('D MMMM YYYY')
+            : $startDate->isoFormat('D MMMM YYYY') . ' – ' . $endDate->isoFormat('D MMMM YYYY');
 
         return view('export.index', compact(
-            'reports', 'months', 'years', 'month', 'year', 'period'
+            'reports', 'reportableUsers',
+            'startDate', 'endDate',
+            'selectedUserId', 'periodLabel'
         ));
     }
 
     /**
-     * Download sebagai Excel (XLSX) — bisa dianalisis, filter, sort.
+     * Download sebagai Excel (XLSX).
      */
     public function downloadExcel(Request $request)
     {
         $this->authorizeExport();
 
-        [$startDate, $endDate, $periodLabel, $filename] = $this->getPeriodInfo($request, 'xlsx');
+        [$startDate, $endDate, $periodLabel, $filename, $users] = $this->resolveFilters($request, 'xlsx');
 
         $export = new KpiReportExport(
-            reportableUsers: $this->getReportableUsers(),
-            startDate:       $startDate,
-            endDate:         $endDate,
+            reportableUsers: $users,
+            startDate:       $startDate->toDateString(),
+            endDate:         $endDate->toDateString(),
             periodLabel:     $periodLabel,
         );
 
@@ -86,20 +90,22 @@ class ExportController extends Controller
     }
 
     /**
-     * Download sebagai PDF — untuk print atau share.
+     * Buka halaman print-friendly → user pilih "Save as PDF" di dialog print.
      */
-    public function downloadPdf(Request $request)
+    public function printView(Request $request)
     {
         $this->authorizeExport();
 
-        [$startDate, $endDate, $periodLabel, $filename] = $this->getPeriodInfo($request, 'pdf');
+        [$startDate, $endDate, $periodLabel, , $users] = $this->resolveFilters($request, 'pdf');
 
-        $reportableUsers = $this->getReportableUsers();
         $reports = [];
-        foreach ($reportableUsers as $user) {
+        foreach ($users as $user) {
             $entries = DailyTaskEntry::with(['weeklyTarget.monthlyTarget'])
                 ->where('user_id', $user->id)
-                ->whereBetween('task_date', [$startDate, $endDate])
+                ->whereBetween('task_date', [
+                    $startDate->toDateString(),
+                    $endDate->toDateString(),
+                ])
                 ->orderBy('task_date')
                 ->get();
 
@@ -108,32 +114,43 @@ class ExportController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('export.pdf', compact('reports', 'periodLabel'))
-                  ->setPaper('a4', 'landscape');
-
-        return $pdf->download($filename);
+        return view('export.pdf', compact('reports', 'periodLabel'));
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function getPeriodInfo(Request $request, string $ext): array
+    private function resolveFilters(Request $request, string $ext): array
     {
-        $monthNames = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
-            4 => 'April',   5 => 'Mei',       6 => 'Juni',
-            7 => 'Juli',    8 => 'Agustus',   9 => 'September',
-            10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
+        $startDate = $request->filled('start_date')
+            ? Carbon::parse($request->start_date)->startOfDay()
+            : now()->startOfMonth();
 
-        $month       = $request->integer('month', now()->month);
-        $year        = $request->integer('year',  now()->year);
-        $period      = Carbon::createFromDate($year, $month, 1);
-        $startDate   = $period->copy()->startOfMonth();
-        $endDate     = $period->copy()->endOfMonth();
-        $periodLabel = ($monthNames[$month] ?? 'Bulan') . ' ' . $year;
-        $filename    = 'laporan_kpi_' . $period->format('Y_m') . '.' . $ext;
+        $endDate = $request->filled('end_date')
+            ? Carbon::parse($request->end_date)->endOfDay()
+            : now()->endOfMonth();
 
-        return [$startDate, $endDate, $periodLabel, $filename];
+        if ($endDate->lt($startDate)) {
+            $endDate = $startDate->copy()->endOfDay();
+        }
+
+        $selectedUserId  = $request->integer('user_id', 0);
+        $reportableUsers = $this->getReportableUsers();
+        $users           = $selectedUserId
+            ? $reportableUsers->where('id', $selectedUserId)
+            : $reportableUsers;
+
+        $periodLabel = $startDate->isSameDay($endDate)
+            ? $startDate->isoFormat('D MMMM YYYY')
+            : $startDate->isoFormat('D MMMM YYYY') . ' – ' . $endDate->isoFormat('D MMMM YYYY');
+
+        $safeName = $selectedUserId
+            ? 'staff_' . $selectedUserId
+            : 'semua_staff';
+
+        $filename = 'laporan_kpi_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd')
+                  . '_' . $safeName . '.' . $ext;
+
+        return [$startDate, $endDate, $periodLabel, $filename, $users];
     }
 
     private function getReportableUsers()

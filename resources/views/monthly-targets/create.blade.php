@@ -27,11 +27,6 @@
                                 'marketing'       => 'Marketing',
                                 'product_it'      => 'Product & IT',
                                 'operational'     => 'Operational',
-                                'hr'              => 'HR',
-                                'finance'         => 'Finance',
-                                'ga'              => 'General Affairs',
-                                'creative'        => 'Creative',
-                                'customer_support'=> 'Customer Support',
                                 'ceo_office'      => 'CEO Office',
                             ] as $key => $label)
                                 <option value="{{ $key }}" {{ old('department') === $key ? 'selected' : '' }}>

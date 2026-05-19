@@ -25,23 +25,72 @@
                 <label for="monthly_target_id">
                     Terkait Target Bulanan <span style="color:var(--danger);">*</span>
                 </label>
+
+                @php
+                    // Banner konteks berdasarkan dari mana user buka form ini
+                    $contextBanner = match($context) {
+                        'leader' => ['🎯', 'Target Saya', 'Mingguan ini akan masuk ke Target Anda dari C-Level', '#eff6ff', '#1e40af'],
+                        'team'   => ['👥', 'Target Tim', 'Mingguan ini akan masuk ke Target yang Anda buat untuk tim', '#f0fdf4', '#166534'],
+                        default  => null,
+                    };
+                @endphp
+
+                @if($contextBanner)
+                    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;
+                                border-radius:8px;margin-bottom:6px;
+                                background:{{ $contextBanner[3] }};color:{{ $contextBanner[4] }};
+                                font-size:12px;font-weight:600;">
+                        <span style="font-size:16px;">{{ $contextBanner[0] }}</span>
+                        <div>
+                            <div>{{ $contextBanner[1] }}</div>
+                            <div style="font-weight:400;opacity:.8;margin-top:1px;">{{ $contextBanner[2] }}</div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="select-wrap">
                     <select id="monthly_target_id" name="monthly_target_id"
                             class="m-select {{ $errors->has('monthly_target_id') ? 'err' : '' }}"
                             required>
-                        <option value="" disabled {{ $selectedMonthly === null ? 'selected' : '' }}>
+                        <option value="" disabled {{ $preSelected === null ? 'selected' : '' }}>
                             Pilih target bulanan...
                         </option>
-                        @foreach($monthlyTargets as $mt)
-                            <option value="{{ $mt->id }}"
-                                    {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
-                                {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
-                            </option>
-                        @endforeach
+
+                        {{-- ── Grup 1: Target dari C-Level (untuk leader sendiri) ── --}}
+                        @if($cLevelTargets->isNotEmpty() && $context !== 'team')
+                            <optgroup label="🎯 Target Saya — dari C-Level">
+                                @foreach($cLevelTargets as $mt)
+                                    <option value="{{ $mt->id }}"
+                                            {{ (int)$preSelected === $mt->id ? 'selected' : '' }}>
+                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+
+                        {{-- ── Grup 2: Target untuk Tim (buatan leader) ── --}}
+                        @if($teamTargets->isNotEmpty() && $context !== 'leader')
+                            <optgroup label="👥 Target Tim — untuk Staff">
+                                @foreach($teamTargets as $mt)
+                                    <option value="{{ $mt->id }}"
+                                            {{ (int)$preSelected === $mt->id ? 'selected' : '' }}>
+                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
+
+                        {{-- Fallback jika konteks tapi grup kosong --}}
+                        @if($context === 'leader' && $cLevelTargets->isEmpty())
+                            <option value="" disabled>— Belum ada target dari C-Level bulan ini —</option>
+                        @elseif($context === 'team' && $teamTargets->isEmpty())
+                            <option value="" disabled>— Belum ada target tim bulan ini —</option>
+                        @endif
                     </select>
                 </div>
                 @error('monthly_target_id')<span class="err">{{ $message }}</span>@enderror
             </div>
+
 
             <!-- Minggu -->
             <div class="field">

@@ -26,22 +26,45 @@ class WeeklyTargetController extends Controller
     {
         $user = auth()->user();
 
-        $monthliesQuery = MonthlyTarget::query()
+        // Konteks: dari mana leader membuka form ini?
+        // 'leader' = dari menu Target Saya (dari C-Level)
+        // 'team'   = dari menu Target Tim  (yang leader buat untuk staff)
+        $context = $request->input('context', null);
+
+        // ── Target DARI C-Level (untuk leader pribadi) ────────────────────
+        $cLevelTargetsQuery = MonthlyTarget::query()
+            ->whereHas('user', fn($q) => $q->where('role', 'c_level'))
             ->where('month', now()->month)
-            ->where('year', now()->year)
+            ->where('year',  now()->year)
+            ->orderBy('title');
+
+        // ── Target BUATAN LEADER (untuk tim/staff) ────────────────────────
+        $teamTargetsQuery = MonthlyTarget::query()
             ->orderBy('title');
 
         if ($user->role === 'leader') {
-            $monthliesQuery->where('department', $user->department);
+            $cLevelTargetsQuery->where('department', $user->department);
+            $teamTargetsQuery
+                ->where('department', $user->department)
+                ->where('user_id', $user->id) // hanya buatan leader ini
+                ->where('month', now()->month)
+                ->where('year',  now()->year);
+        } elseif ($user->role === 'c_level') {
+            $teamTargetsQuery
+                ->where('month', now()->month)
+                ->where('year',  now()->year);
         }
 
-        $monthlyTargets = $monthliesQuery->get();
+        $cLevelTargets = $cLevelTargetsQuery->get();
+        $teamTargets   = $teamTargetsQuery->get();
 
         $preSelected = $request->filled('monthly_target_id')
             ? (int) $request->monthly_target_id
             : null;
 
-        return view('weekly-targets.create', compact('monthlyTargets', 'preSelected'));
+        return view('weekly-targets.create', compact(
+            'cLevelTargets', 'teamTargets', 'preSelected', 'context'
+        ));
     }
 
     public function store(Request $request)
@@ -116,19 +139,48 @@ class WeeklyTargetController extends Controller
 
         $user = auth()->user();
 
-        // Untuk dropdown monthly target di form edit
-        $monthliesQuery = MonthlyTarget::query()
-            ->where('month', $weeklyTarget->month)
-            ->where('year', $weeklyTarget->year)
-            ->orderBy('title');
+        // ── Deteksi konteks dari monthly target yang sedang diedit ────────
+        // Jika monthly target dibuat oleh c_level → ini target Saya (leader)
+        // Jika dibuat oleh leader → ini target Tim (untuk staff)
+        $weeklyTarget->load('monthlyTarget.user');
+        $currentMonthly = $weeklyTarget->monthlyTarget;
+        $isLeaderContext = $currentMonthly?->user?->role === 'c_level';
 
-        if ($user->role === 'leader') {
-            $monthliesQuery->where('department', $user->department);
+        // ── Hanya tampilkan grup yang sesuai konteks ──────────────────────
+        if ($isLeaderContext) {
+            // Edit target milik leader → hanya tampil target dari C-Level
+            $cLevelTargetsQuery = MonthlyTarget::query()
+                ->whereHas('user', fn($q) => $q->where('role', 'c_level'))
+                ->where('month', $weeklyTarget->month)
+                ->where('year',  $weeklyTarget->year)
+                ->orderBy('title');
+
+            if ($user->role === 'leader') {
+                $cLevelTargetsQuery->where('department', $user->department);
+            }
+
+            $cLevelTargets = $cLevelTargetsQuery->get();
+            $teamTargets   = collect(); // kosong — tidak ditampilkan
+            $context       = 'leader';
+        } else {
+            // Edit target tim → hanya tampil target buatan leader (untuk staff)
+            $teamTargetsQuery = MonthlyTarget::query()
+                ->where('month', $weeklyTarget->month)
+                ->where('year',  $weeklyTarget->year)
+                ->orderBy('title');
+
+            if ($user->role === 'leader') {
+                $teamTargetsQuery
+                    ->where('department', $user->department)
+                    ->where('user_id', $user->id);
+            }
+
+            $teamTargets   = $teamTargetsQuery->get();
+            $cLevelTargets = collect(); // kosong — tidak ditampilkan
+            $context       = 'team';
         }
 
-        $monthlyTargets = $monthliesQuery->get();
-
-        return view('weekly-targets.edit', compact('weeklyTarget', 'monthlyTargets'));
+        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context'));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)

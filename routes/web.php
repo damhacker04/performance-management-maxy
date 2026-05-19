@@ -61,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
     // Guard dilakukan di controller via canExport() agar lebih fleksibel.
     Route::get('/export',               [ExportController::class, 'index'])->name('export.index');
     Route::get('/export/download-excel',[ExportController::class, 'downloadExcel'])->name('export.download-excel');
-    Route::get('/export/download-pdf',  [ExportController::class, 'downloadPdf'])->name('export.download-pdf');
+    Route::get('/export/print',         [ExportController::class, 'printView'])->name('export.print');
 });
 
 require __DIR__ . '/auth.php';

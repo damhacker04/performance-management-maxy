@@ -16,6 +16,7 @@ class StaffTargetController extends Controller
 
         $targets = MonthlyTarget::with(['weeklyTargets'])
             ->where('department', $user->department)
+            ->whereHas('user', fn($q) => $q->where('role', 'leader'))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
@@ -43,6 +44,10 @@ class StaffTargetController extends Controller
         // Staff hanya boleh lihat target dept-nya sendiri
         abort_if($monthlyTarget->department !== $user->department, 403,
             'Anda tidak memiliki akses untuk melihat target ini.');
+
+        // Pastikan target dibuat oleh leader, bukan C-Level
+        abort_if($monthlyTarget->user?->role !== 'leader', 403,
+            'Target ini bukan target dari Leader Anda.');
 
         $monthlyTarget->load(['weeklyTargets' => fn($q) => $q->orderBy('week_number')]);
 

@@ -2,7 +2,13 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<title>Laporan KPI</title>
 <style>
+    @media print {
+        @page { size: A4 landscape; margin: 12mm; }
+        body  { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .no-print { display: none !important; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'DejaVu Sans', Arial, sans-serif; font-size: 10px; color: #1f2937; background: #fff; }
 
@@ -158,6 +164,26 @@
 <div class="footer">
     Dokumen ini dibuat otomatis oleh Sistem Manajemen KPI &nbsp;·&nbsp; {{ now()->format('Y') }}
 </div>
+
+{{-- Tombol print (tersembunyi saat print) --}}
+<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:8px;">
+    <button onclick="window.print()"
+            style="background:#1e3a8a;color:#fff;border:none;border-radius:10px;
+                   padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;
+                   box-shadow:0 4px 12px rgba(0,0,0,.2);">
+        🖨️ Print / Save as PDF
+    </button>
+    <button onclick="window.close()"
+            style="background:#f3f4f6;color:#374151;border:none;border-radius:10px;
+                   padding:10px 14px;font-size:13px;cursor:pointer;">
+        ✕ Tutup
+    </button>
+</div>
+
+<script>
+    // Auto buka dialog print saat halaman dimuat
+    window.addEventListener('load', function() { window.print(); });
+</script>
 
 </body>
 </html>

@@ -307,12 +307,12 @@
         {{-- C-Level --}}
         @php
             $depts = [
-                'sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product / IT','operational'=>'Operational',
-                'hr'=>'HR','finance'=>'Finance','ga'=>'General Affairs','creative'=>'Creative','customer_support'=>'Customer Support',
+                'sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product & IT',
+                'operational'=>'Operational','ceo_office'=>'CEO Office',
             ];
             $deptColors = [
-                'sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571','operational'=>'#E89B2A',
-                'hr'=>'#6D28D9','finance'=>'#0D9488','ga'=>'#B45309','creative'=>'#DB2777','customer_support'=>'#1D4ED8',
+                'sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571',
+                'operational'=>'#E89B2A','ceo_office'=>'#1D4ED8',
             ];
             $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
             $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
