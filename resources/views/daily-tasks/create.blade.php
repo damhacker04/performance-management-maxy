@@ -103,14 +103,25 @@
                             @php
                                 $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
                                 $defaultWeekly = old('weekly_target_id', $continueFrom?->weekly_target_id ?? $preSelectedWeeklyId);
+                                $groupedTargets = $weeklyTargets->groupBy(function($item) {
+                                    return $item->monthlyTarget ? $item->monthlyTarget->id : 0;
+                                });
                             @endphp
                             <option value="" {{ empty($defaultWeekly) ? 'selected' : '' }}>
                                 📌 Tidak terkait target mingguan (tugas tambahan/mendadak)
                             </option>
-                            @foreach($weeklyTargets as $wt)
-                                <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
-                                Minggu {{ $wt->week_number }} · {{ $monthShort[$wt->month] }} — {{ $wt->title }}
-                                </option>
+                            @foreach($groupedTargets as $monthlyId => $wTargets)
+                                @php
+                                    $monthly = $wTargets->first()->monthlyTarget;
+                                    $groupLabel = $monthly ? "Target Bulanan: {$monthly->title} ({$monthShort[$monthly->month]})" : "Tanpa Target Bulanan";
+                                @endphp
+                                <optgroup label="{{ Str::limit($groupLabel, 80) }}">
+                                    @foreach($wTargets as $wt)
+                                        <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
+                                            Minggu {{ $wt->week_number }} — {{ Str::limit($wt->title, 60) }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>

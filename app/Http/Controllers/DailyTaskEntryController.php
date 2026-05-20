@@ -63,6 +63,10 @@ class DailyTaskEntryController extends Controller
                     if ($user->role === 'leader') {
                         $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
                     }
+                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
+                    if ($user->role === 'staff') {
+                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
+                    }
                 });
             })
             ->where('month', now()->month)
@@ -118,6 +122,10 @@ class DailyTaskEntryController extends Controller
                     // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
                     if ($user->role === 'leader') {
                         $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                    }
+                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
+                    if ($user->role === 'staff') {
+                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
                     }
                 });
             })

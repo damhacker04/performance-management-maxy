@@ -283,6 +283,10 @@
                                 <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
                                            font-weight:700;white-space:nowrap;width:72px;">Tanggal</th>
                                 <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                           font-weight:700;">Target Bulanan</th>
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                           font-weight:700;">Target Mingguan</th>
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
                                            font-weight:700;">Task / Deskripsi</th>
                                 <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
                                            font-weight:700;white-space:nowrap;width:65px;">Prioritas</th>
@@ -307,6 +311,14 @@
                                     <td style="padding:6px 10px;white-space:nowrap;color:var(--fg-2);
                                                border-bottom:1px solid #f3f4f6;">
                                         {{ \Carbon\Carbon::parse($entry->task_date)->format('d/m/Y') }}
+                                    </td>
+                                    <td style="padding:6px 10px;color:var(--fg-2);font-size:11px;
+                                               border-bottom:1px solid #f3f4f6;line-height:1.4;">
+                                        {{ $entry->monthlyTarget->title ?? $entry->weeklyTarget->monthlyTarget->title ?? '-' }}
+                                    </td>
+                                    <td style="padding:6px 10px;color:var(--fg-2);font-size:11px;
+                                               border-bottom:1px solid #f3f4f6;line-height:1.4;">
+                                        {{ $entry->weeklyTarget->title ?? '-' }}
                                     </td>
                                     <td style="padding:6px 10px;font-weight:600;color:var(--fg-1);
                                                border-bottom:1px solid #f3f4f6;line-height:1.4;">

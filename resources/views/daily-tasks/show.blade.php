@@ -15,10 +15,10 @@
     $sChip = $statusMap[$dailyTask->status] ?? 'neutral';
     $pChip = $priorityChip[$dailyTask->priority] ?? 'neutral';
 
-    // Smart back: jika dari weekly-target, balik ke sana. Jika tidak, ke index.
-    $fromWt  = request('from');
-    $backUrl = $fromWt
-        ? route('weekly-targets.show', $fromWt)
+    // Smart back: kembali ke halaman sebelumnya (referrer)
+    $prev = url()->previous();
+    $backUrl = ($prev !== url()->current() && !str_contains($prev, '/edit'))
+        ? $prev 
         : route('daily-tasks.index');
 @endphp
 
@@ -122,8 +122,19 @@
                     @endif
                 </div>
                 @if($dailyTask->weeklyTarget->monthlyTarget)
-                    <div style="font-size:11px;color:var(--fg-3);margin-top:6px;">
-                        ↳ Target bulanan: <strong>{{ $dailyTask->weeklyTarget->monthlyTarget->title }}</strong>
+                    <div style="font-size:11px;color:var(--fg-3);margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                        <span>↳ Target bulanan: <strong>{{ $dailyTask->weeklyTarget->monthlyTarget->title }}</strong></span>
+                        @if($dailyTask->weeklyTarget->monthlyTarget->user)
+                            <span style="display:inline-flex;align-items:center;gap:4px;">
+                                <svg class="lucide" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                Ditugaskan oleh: <strong>{{ $dailyTask->weeklyTarget->monthlyTarget->user->name }}</strong>
+                                <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg-2);color:var(--fg-2);">
+                                    {{ ucfirst(str_replace('_', ' ', $dailyTask->weeklyTarget->monthlyTarget->user->role)) }}
+                                </span>
+                            </span>
+                        @endif
                     </div>
                 @endif
             </div>
