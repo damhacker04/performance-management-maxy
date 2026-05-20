@@ -29,6 +29,19 @@
             $total = $todayEntries->count();
             $pct   = $total > 0 ? round(($done / $total) * 100) : 0;
 
+            // Laporan yang perlu direvisi (diminta leader)
+            $revisionEntries = \App\Models\DailyTaskEntry::where('user_id', $user->id)
+                ->where('verification_status', 'revision')
+                ->orderByDesc('reviewed_at')
+                ->get();
+
+            // Laporan yang sudah direvisi staff, menunggu persetujuan leader
+            $pendingAfterRevision = \App\Models\DailyTaskEntry::where('user_id', $user->id)
+                ->where('verification_status', 'pending')
+                ->whereNotNull('reviewed_at')
+                ->orderByDesc('updated_at')
+                ->get();
+
             // Tentukan minggu aktif berdasarkan tanggal hari ini
             $today = now()->day;
             $currentWeek = match(true) {
@@ -54,8 +67,77 @@
                 ->get();
         @endphp
 
+        {{-- ===================== NOTIFIKASI REVISI ===================== --}}
+        {{-- Card merah: laporan yang HARUS direvisi --}}
+        @if($revisionEntries->isNotEmpty())
+            <div style="background:#FFF8E8;border:1.5px solid #FBB041;border-radius:12px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:15px;">↩</span>
+                        <span style="font-size:12px;font-weight:700;color:#B45309;">Laporan Perlu Direvisi</span>
+                    </div>
+                    <span class="chip chip-warning" style="font-size:10px;">{{ $revisionEntries->count() }} laporan</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    @foreach($revisionEntries as $rev)
+                        <a href="{{ route('daily-tasks.show', $rev->id) }}"
+                           style="display:flex;align-items:center;justify-content:space-between;
+                                  background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;
+                                  padding:8px 10px;text-decoration:none;color:inherit;">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
+                                    {{ Str::limit($rev->task_description, 38) }}
+                                </div>
+                                <div style="font-size:11px;color:#8B5A00;">
+                                    {{ \Carbon\Carbon::parse($rev->task_date)->isoFormat('D MMM') }}
+                                    @if($rev->rejection_note)
+                                        · "{{ Str::limit($rev->rejection_note, 30) }}"
+                                    @endif
+                                </div>
+                            </div>
+                            <svg class="lucide sm" style="color:#B45309;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- Card hijau: revisi sudah dikirim, menunggu persetujuan --}}
+        @if($pendingAfterRevision->isNotEmpty())
+            <div style="background:#E8F7F4;border:1.5px solid #16A571;border-radius:12px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:15px;">📨</span>
+                        <span style="font-size:12px;font-weight:700;color:#0F7A50;">Revisi Menunggu Persetujuan</span>
+                    </div>
+                    <span class="chip chip-success" style="font-size:10px;">{{ $pendingAfterRevision->count() }} laporan</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    @foreach($pendingAfterRevision as $rev)
+                        <a href="{{ route('daily-tasks.show', $rev->id) }}"
+                           style="display:flex;align-items:center;justify-content:space-between;
+                                  background:#F0FDF9;border:1px solid #A7F3D0;border-radius:8px;
+                                  padding:8px 10px;text-decoration:none;color:inherit;">
+                            <div>
+                                <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
+                                    {{ Str::limit($rev->task_description, 38) }}
+                                </div>
+                                <div style="font-size:11px;color:#0D6A44;">
+                                    Dikirim {{ $rev->updated_at->diffForHumans() }}
+                                    · {{ \Carbon\Carbon::parse($rev->task_date)->isoFormat('D MMM') }}
+                                </div>
+                            </div>
+                            <svg class="lucide sm" style="color:#0F7A50;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+        {{-- ============================================================ --}}
+
         <!-- KPI grid -->
         <div class="kpi-grid">
+
             <div class="kpi-card">
                 <div class="kc-header">
                     <span class="kc-title">Laporan hari ini</span>

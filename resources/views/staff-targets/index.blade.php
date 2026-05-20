@@ -100,9 +100,7 @@
                                         {{ $weekCount }} minggu
                                     </span>
                                     @if($myTotal > 0)
-                                        <span class="chip {{ $myDone === $myTotal ? 'chip-success' : 'chip-warning' }}">
-                                            {{ $myDone }}/{{ $myTotal }} selesai
-                                        </span>
+                                        <span class="chip chip-neutral">{{ $myTotal }} laporan masuk</span>
                                     @else
                                         <span class="chip chip-neutral" style="color:var(--fg-4);">Belum ada laporan</span>
                                     @endif

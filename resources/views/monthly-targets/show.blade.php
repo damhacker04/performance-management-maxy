@@ -145,11 +145,6 @@
                                           padding:5px 10px;">
                                     <svg class="lucide" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Lihat {{ $entryCount }} laporan anggota tim
-                                    @if($wtTotal > 0)
-                                        <span class="chip {{ $wtDone === $wtTotal ? 'chip-success' : 'chip-warning' }}" style="font-size:10px;">
-                                            {{ $wtDone }}/{{ $wtTotal }} selesai
-                                        </span>
-                                    @endif
                                     <svg class="lucide" style="width:10px;height:10px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                                 </a>
                             </div>

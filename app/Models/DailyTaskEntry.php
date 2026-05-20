@@ -26,6 +26,7 @@ class DailyTaskEntry extends Model
         'verified_at',
         'rejection_note',
         'reviewed_at',
+        'revision_history',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class DailyTaskEntry extends Model
         'actual_duration_minutes'=> 'integer',
         'verified_at'            => 'datetime',
         'reviewed_at'            => 'datetime',
+        'revision_history'       => 'array',
     ];
 
     protected $appends = ['is_overdue'];

@@ -165,7 +165,7 @@
                                                         <div style="height:100%;width:{{ $pct }}%;background:{{ $color }};border-radius:4px;transition:width .4s;"></div>
                                                     </div>
                                                     <div style="font-size:10px;color:var(--fg-4);margin-top:3px;">
-                                                        {{ $doneEntries }}/{{ $totalEntries }} laporan selesai · {{ $pct }}%
+                                                        {{ $totalEntries }} laporan masuk
                                                     </div>
                                                 </div>
                                             @endif
@@ -277,7 +277,7 @@
                                                     <div style="height:100%;width:{{ $pct }}%;background:{{ $color }};border-radius:4px;"></div>
                                                 </div>
                                                 <div style="font-size:10px;color:var(--fg-4);margin-top:3px;">
-                                                    {{ $doneEntries }}/{{ $totalEntries }} laporan selesai · {{ $pct }}%
+                                                {{ $totalEntries }} laporan masuk
                                                 </div>
                                             </div>
                                         @endif
@@ -372,7 +372,7 @@
                                                             <div style="height:100%;width:{{ $pct }}%;background:{{ $pct == 100 ? '#16A571' : $color }};border-radius:4px;"></div>
                                                         </div>
                                                         <div style="font-size:10px;color:var(--fg-4);margin-top:2px;">
-                                                            {{ $doneEntries }}/{{ $totalEntries }} selesai · {{ $pct }}%
+                                                        {{ $totalEntries }} laporan masuk
                                                         </div>
                                                     </div>
                                                 @endif

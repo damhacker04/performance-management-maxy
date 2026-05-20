@@ -116,13 +116,61 @@
 
     {{-- Notifikasi untuk STAFF: laporan butuh revisi atau ditolak --}}
     @if($dailyTask->user_id === auth()->id())
+
+        {{-- Card: revisi sudah terkirim, menunggu persetujuan leader --}}
+        @if($dailyTask->verification_status === 'pending' && $dailyTask->reviewed_at)
+            <div style="background:#E8F7F4;border:1px solid #16A571;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
+                <span style="font-size:18px;flex-shrink:0;">📨</span>
+                <div>
+                    <div style="font-size:12px;font-weight:700;color:#0F7A50;margin-bottom:3px;">Revisi Sudah Terkirim</div>
+                    <p style="font-size:12px;color:#0D6A44;margin:0;line-height:1.5;">
+                        Laporan revisimu sudah dikirim ke leader pada
+                        <strong>{{ $dailyTask->updated_at->isoFormat('D MMM YYYY, HH:mm') }}</strong>.
+                        Tunggu persetujuan — kamu akan bisa melihat hasilnya di sini.
+                    </p>
+                </div>
+            </div>
+        @endif
+
         @if($dailyTask->verification_status === 'revision')
             <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:12px 14px;">
-                <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:4px;">↩ Laporan Perlu Direvisi</div>
-                <p style="font-size:12px;color:#8B5A00;margin:0 0 8px;line-height:1.5;">
-                    <strong>Catatan dari {{ $dailyTask->verifiedBy->name ?? 'Leader' }}:</strong><br>
-                    {{ $dailyTask->rejection_note }}
-                </p>
+                <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:10px;">↩ Laporan Perlu Direvisi</div>
+
+                {{-- Timeline riwayat semua catatan revisi --}}
+                @if($dailyTask->revision_history && count($dailyTask->revision_history) > 0)
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+                        @foreach($dailyTask->revision_history as $i => $rev)
+                            @php $isLatest = $loop->last; @endphp
+                            <div style="display:flex;gap:8px;align-items:flex-start;">
+                                {{-- Garis timeline --}}
+                                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
+                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $isLatest ? '#F59E0B' : '#D1D5DB' }};margin-top:3px;"></div>
+                                    @if(!$loop->last)
+                                        <div style="width:1px;flex:1;min-height:20px;background:#E5E7EB;"></div>
+                                    @endif
+                                </div>
+                                {{-- Konten catatan --}}
+                                <div style="flex:1;background:{{ $isLatest ? '#FFFBEB' : '#F9FAFB' }};border:1px solid {{ $isLatest ? '#FDE68A' : '#E5E7EB' }};border-radius:8px;padding:8px 10px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                                        <span style="font-size:11px;font-weight:700;color:{{ $isLatest ? '#B45309' : '#6B7280' }};">
+                                            {{ $rev['by'] ?? 'Leader' }}
+                                            @if($isLatest) · <em>terbaru</em>@endif
+                                        </span>
+                                        <span style="font-size:10px;color:#9CA3AF;">{{ \Carbon\Carbon::parse($rev['at'])->isoFormat('D MMM, HH:mm') }}</span>
+                                    </div>
+                                    <p style="font-size:12px;color:{{ $isLatest ? '#8B5A00' : '#374151' }};margin:0;line-height:1.5;">{{ $rev['note'] }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    {{-- Fallback untuk data lama sebelum fitur histori --}}
+                    <p style="font-size:12px;color:#8B5A00;margin:0 0 8px;line-height:1.5;">
+                        <strong>Catatan dari {{ $dailyTask->verifiedBy->name ?? 'Leader' }}:</strong><br>
+                        {{ $dailyTask->rejection_note }}
+                    </p>
+                @endif
+
                 @if($dailyTask->canBeRevised())
                     @php $sisa = $dailyTask->reviewed_at->addHours(48)->diffForHumans(); @endphp
                     <a href="{{ route('daily-tasks.edit', $dailyTask) }}" class="btn btn-primary btn-sm">✏️ Revisi Laporan</a>
@@ -150,6 +198,18 @@
                 <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Diverifikasi oleh <strong>{{ $dailyTask->verifiedBy->name ?? '-' }}</strong>
                 pada {{ $dailyTask->verified_at?->isoFormat('D MMM YYYY, HH:mm') }}</span>
+            </div>
+        @elseif($dailyTask->verification_status === 'rejected')
+            <div style="background:#FFF1F2;border:1px solid #F87171;border-radius:10px;padding:12px 14px;display:flex;gap:8px;align-items:flex-start;">
+                <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;color:#B91C1C;margin-top:1px;" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    <div style="font-size:12px;font-weight:700;color:#B91C1C;margin-bottom:2px;">Laporan Ditolak Permanen</div>
+                    <div style="font-size:12px;color:#7F1D1D;">
+                        Ditolak oleh <strong>{{ $dailyTask->verifiedBy->name ?? '-' }}</strong>
+                        · {{ $dailyTask->reviewed_at?->isoFormat('D MMM YYYY, HH:mm') }}
+                    </div>
+                    <div style="font-size:11px;color:#9CA3AF;margin-top:4px;">Laporan ini tidak dapat diubah, disetujui, maupun ditolak ulang.</div>
+                </div>
             </div>
         @else
             <div class="m-card" style="display:flex;flex-direction:column;gap:12px;">

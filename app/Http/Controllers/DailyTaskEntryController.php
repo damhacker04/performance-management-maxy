@@ -169,7 +169,7 @@ class DailyTaskEntryController extends Controller
             : null;
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
-        $dailyTask->update([
+        $updateData = [
             'monthly_target_id' => $monthlyTargetId,
             'weekly_target_id'  => $weeklyTarget?->id,
             'task_description'  => $validated['task_description'],
@@ -178,10 +178,22 @@ class DailyTaskEntryController extends Controller
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
             // task_date TIDAK diubah — tetap tanggal asli submit
-        ]);
+        ];
+
+        // Jika laporan sedang dalam status revision dan staff menyimpan perubahan,
+        // otomatis kembalikan ke pending agar masuk antrian review leader kembali
+        if ($dailyTask->verification_status === 'revision') {
+            $updateData['verification_status'] = 'pending';
+        }
+
+        $dailyTask->update($updateData);
+
+        $message = $dailyTask->getOriginal('verification_status') === 'revision'
+            ? 'Revisi berhasil dikirim. Laporan sedang menunggu review leader.'
+            : 'Laporan berhasil diperbarui.';
 
         return redirect()->route('daily-tasks.show', $dailyTask)
-            ->with('success', 'Laporan berhasil diperbarui.');
+            ->with('success', $message);
     }
 
     /**
@@ -199,12 +211,23 @@ class DailyTaskEntryController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengubah laporan ini.');
         }
 
-        if ($dailyTask->status === 'selesai') {
-            abort(403, 'Laporan yang sudah ditandai selesai bersifat final dan tidak bisa diubah.');
-        }
-
+        // Laporan approved tidak bisa diedit sama sekali
         if ($dailyTask->verification_status === 'approved') {
             abort(403, 'Laporan yang sudah diverifikasi tidak bisa diubah.');
+        }
+
+        // Laporan yang dikembalikan leader untuk direvisi BOLEH diedit,
+        // meskipun statusnya sudah 'selesai' — ini pengecualian khusus revisi
+        if ($dailyTask->verification_status === 'revision') {
+            if (!$dailyTask->canBeRevised()) {
+                abort(403, 'Masa revisi 48 jam sudah berakhir. Laporan tidak bisa diubah lagi.');
+            }
+            return; // Izinkan edit
+        }
+
+        // Laporan yang sudah ditandai selesai (dan bukan revision) bersifat final
+        if ($dailyTask->status === 'selesai') {
+            abort(403, 'Laporan yang sudah ditandai selesai bersifat final dan tidak bisa diubah.');
         }
     }
 
@@ -325,12 +348,22 @@ class DailyTaskEntryController extends Controller
             'rejection_note.min'      => 'Catatan revisi minimal 10 karakter.',
         ]);
 
+        // Append catatan baru ke histori revisi (tidak menimpa catatan lama)
+        $history = $dailyTask->revision_history ?? [];
+        $history[] = [
+            'note'  => $request->rejection_note,
+            'by'    => auth()->user()->name,
+            'by_id' => auth()->id(),
+            'at'    => now()->toDateTimeString(),
+        ];
+
         $dailyTask->update([
             'verification_status' => 'revision',
             'verified_by'         => auth()->id(),
             'verified_at'         => null,
-            'rejection_note'      => $request->rejection_note,
+            'rejection_note'      => $request->rejection_note, // catatan terbaru (untuk notif sederhana)
             'reviewed_at'         => now(),
+            'revision_history'    => $history,
         ]);
 
         return redirect()->route('daily-tasks.show', $dailyTask)
