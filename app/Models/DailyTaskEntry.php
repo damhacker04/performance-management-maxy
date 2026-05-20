@@ -20,12 +20,20 @@ class DailyTaskEntry extends Model
         'status',
         'notes',
         'task_date',
+        // Verification fields
+        'verification_status',
+        'verified_by',
+        'verified_at',
+        'rejection_note',
+        'reviewed_at',
     ];
 
     protected $casts = [
         'task_date'              => 'date',
         'duration_minutes'       => 'integer',
         'actual_duration_minutes'=> 'integer',
+        'verified_at'            => 'datetime',
+        'reviewed_at'            => 'datetime',
     ];
 
     protected $appends = ['is_overdue'];
@@ -44,6 +52,13 @@ class DailyTaskEntry extends Model
         'low'      => 'Rendah',
     ];
 
+    public const VERIFICATION_STATUSES = [
+        'pending'  => 'Menunggu Verifikasi',
+        'approved' => 'Diverifikasi',
+        'revision' => 'Perlu Revisi',
+        'rejected' => 'Ditolak',
+    ];
+
     // Relasi ke User (Staff yang submit)
     public function user()
     {
@@ -60,6 +75,12 @@ class DailyTaskEntry extends Model
     public function weeklyTarget()
     {
         return $this->belongsTo(WeeklyTarget::class);
+    }
+
+    // Relasi ke User yang memverifikasi (leader/c_level)
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     /**
@@ -109,6 +130,41 @@ class DailyTaskEntry extends Model
      */
     public function canBeEdited(): bool
     {
+        // Laporan yang sudah approved tidak bisa diedit sama sekali
+        if ($this->verification_status === 'approved') return false;
+
         return $this->status !== 'selesai';
+    }
+
+    /**
+     * Apakah laporan ini bisa direvisi oleh staff?
+     * Hanya jika verification_status = 'revision' dan masih dalam window 48 jam.
+     */
+    public function canBeRevised(): bool
+    {
+        if ($this->verification_status !== 'revision') return false;
+        if (!$this->reviewed_at) return false;
+        return $this->reviewed_at->addHours(48)->isFuture();
+    }
+
+    /**
+     * Label teks + chip untuk badge verifikasi di UI.
+     */
+    public function getVerificationStatusLabelAttribute(): string
+    {
+        return self::VERIFICATION_STATUSES[$this->verification_status ?? 'pending'] ?? 'Menunggu Verifikasi';
+    }
+
+    /**
+     * Chip color untuk badge verifikasi.
+     */
+    public function getVerificationChipAttribute(): string
+    {
+        return match($this->verification_status ?? 'pending') {
+            'approved' => 'success',
+            'revision' => 'warning',
+            'rejected' => 'danger',
+            default    => 'neutral',
+        };
     }
 }

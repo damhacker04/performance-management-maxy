@@ -80,7 +80,7 @@
         </div>
     @endif
 
-    <!-- Status & Prioritas berlabel -->
+    <!-- Status, Prioritas & Verifikasi -->
     <div class="m-card" style="display:flex;flex-direction:column;gap:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:13px;color:var(--fg-3);">Status</span>
@@ -94,6 +94,18 @@
                 {{ $dailyTask->priority_label }}
             </span>
         </div>
+        {{-- Badge Verifikasi --}}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;color:var(--fg-3);">Verifikasi</span>
+            <span class="chip chip-{{ $dailyTask->verification_chip }}" style="font-size:12px;">
+                @if($dailyTask->verification_status === 'approved') ✅
+                @elseif($dailyTask->verification_status === 'revision') ↩
+                @elseif($dailyTask->verification_status === 'rejected') ❌
+                @else ⏳
+                @endif
+                {{ $dailyTask->verification_status_label }}
+            </span>
+        </div>
         @if($dailyTask->is_overdue)
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:13px;color:var(--fg-3);">Peringatan</span>
@@ -101,6 +113,85 @@
             </div>
         @endif
     </div>
+
+    {{-- Notifikasi untuk STAFF: laporan butuh revisi atau ditolak --}}
+    @if($dailyTask->user_id === auth()->id())
+        @if($dailyTask->verification_status === 'revision')
+            <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:12px 14px;">
+                <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:4px;">↩ Laporan Perlu Direvisi</div>
+                <p style="font-size:12px;color:#8B5A00;margin:0 0 8px;line-height:1.5;">
+                    <strong>Catatan dari {{ $dailyTask->verifiedBy->name ?? 'Leader' }}:</strong><br>
+                    {{ $dailyTask->rejection_note }}
+                </p>
+                @if($dailyTask->canBeRevised())
+                    @php $sisa = $dailyTask->reviewed_at->addHours(48)->diffForHumans(); @endphp
+                    <a href="{{ route('daily-tasks.edit', $dailyTask) }}" class="btn btn-primary btn-sm">✏️ Revisi Laporan</a>
+                    <span style="font-size:11px;color:#8B5A00;margin-left:8px;">Sisa waktu: {{ $sisa }}</span>
+                @else
+                    <span style="font-size:11px;color:#92400E;background:#FEF3C7;padding:4px 8px;border-radius:6px;">⏰ Masa revisi sudah berakhir</span>
+                @endif
+            </div>
+        @elseif($dailyTask->verification_status === 'rejected')
+            <div style="background:#FFF1F2;border:1px solid #F87171;border-radius:10px;padding:12px 14px;">
+                <div style="font-size:12px;font-weight:700;color:#B91C1C;margin-bottom:4px;">❌ Laporan Ditolak</div>
+                <p style="font-size:12px;color:#7F1D1D;margin:0;line-height:1.5;">
+                    <strong>Alasan dari {{ $dailyTask->verifiedBy->name ?? 'Leader' }}:</strong><br>
+                    {{ $dailyTask->rejection_note }}
+                </p>
+                <p style="font-size:11px;color:#9CA3AF;margin:8px 0 0;">Laporan ini ditolak secara permanen dan tidak dapat direvisi.</p>
+            </div>
+        @endif
+    @endif
+
+    {{-- Panel Aksi LEADER / C-LEVEL --}}
+    @if(in_array(auth()->user()->role, ['leader', 'c_level']) && $dailyTask->user_id !== auth()->id())
+        @if($dailyTask->verification_status === 'approved')
+            <div style="background:#E8F7EE;border:1px solid #16A571;border-radius:10px;padding:12px 14px;display:flex;gap:8px;align-items:center;font-size:12px;color:#0F7A50;">
+                <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Diverifikasi oleh <strong>{{ $dailyTask->verifiedBy->name ?? '-' }}</strong>
+                pada {{ $dailyTask->verified_at?->isoFormat('D MMM YYYY, HH:mm') }}</span>
+            </div>
+        @else
+            <div class="m-card" style="display:flex;flex-direction:column;gap:12px;">
+                <div class="overline-label">Aksi Verifikasi</div>
+
+                {{-- Tombol Setujui --}}
+                <form method="POST" action="{{ route('daily-tasks.approve', $dailyTask) }}"
+                      onsubmit="return confirm('Setujui laporan ini? Laporan akan terkunci setelah disetujui.');">
+                    @csrf @method('PATCH')
+                    <button type="submit" class="btn btn-primary btn-block" style="background:#16A571;">
+                        ✅ Setujui Laporan
+                    </button>
+                </form>
+
+                {{-- Form Kembalikan untuk Revisi --}}
+                <details style="border:1px solid #FBB041;border-radius:8px;padding:12px;">
+                    <summary style="font-size:13px;font-weight:600;color:#B45309;cursor:pointer;">↩ Kembalikan untuk Direvisi</summary>
+                    <form method="POST" action="{{ route('daily-tasks.revision', $dailyTask) }}" style="margin-top:10px;">
+                        @csrf @method('PATCH')
+                        <textarea name="rejection_note" rows="3" required minlength="10"
+                            placeholder="Tuliskan apa yang perlu diperbaiki staff..."
+                            style="width:100%;font-size:13px;padding:8px 10px;border:1px solid var(--bg-3);border-radius:8px;resize:vertical;"></textarea>
+                        <button type="submit" class="btn btn-sm" style="margin-top:8px;background:#FBB041;color:#fff;width:100%;">Kirim & Kembalikan ke Staff</button>
+                    </form>
+                </details>
+
+                {{-- Form Tolak Permanen --}}
+                <details style="border:1px solid #F87171;border-radius:8px;padding:12px;">
+                    <summary style="font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">❌ Tolak Permanen</summary>
+                    <p style="font-size:11px;color:#9CA3AF;margin:6px 0;">Staff tidak akan bisa merevisi laporan ini setelah ditolak.</p>
+                    <form method="POST" action="{{ route('daily-tasks.reject', $dailyTask) }}" style="margin-top:6px;"
+                          onsubmit="return confirm('Tolak permanen laporan ini? Tindakan ini tidak bisa dibatalkan.');">
+                        @csrf @method('PATCH')
+                        <textarea name="rejection_note" rows="3" required minlength="10"
+                            placeholder="Tuliskan alasan penolakan..."
+                            style="width:100%;font-size:13px;padding:8px 10px;border:1px solid var(--bg-3);border-radius:8px;resize:vertical;"></textarea>
+                        <button type="submit" class="btn btn-sm" style="margin-top:8px;background:#EF4444;color:#fff;width:100%;">Tolak Laporan Ini</button>
+                    </form>
+                </details>
+            </div>
+        @endif
+    @endif
 
     <!-- Detail card -->
     <div class="m-card" style="display:flex;flex-direction:column;gap:16px;">

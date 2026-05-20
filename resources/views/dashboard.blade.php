@@ -189,7 +189,7 @@
 
         <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-block">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Tambah laporan harian
+            Tambah Laporan Harian (Task)
         </a>
 
     @elseif ($user->role === 'leader')
@@ -224,6 +224,50 @@
                 </div>
                 <div class="kc-value">{{ $reported }}<span class="kc-sub"> / {{ $totalStaff }}</span></div>
                 <div class="progress-bar"><i class="success" style="width:{{ $totalStaff > 0 ? round($reported/$totalStaff*100) : 0 }}%"></i></div>
+            </div>
+        </div>
+
+        {{-- Section: Menunggu Review --}}
+        @php
+            $pendingReviews = \App\Models\DailyTaskEntry::with('user')
+                ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->orderByDesc('task_date')
+                ->orderByDesc('updated_at')
+                ->get();
+        @endphp
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">📥 Menunggu Review Anda</span>
+                @if($pendingReviews->count() > 0)
+                    <span class="chip chip-warning" style="font-size:11px;">{{ $pendingReviews->count() }} laporan</span>
+                @endif
+            </div>
+            <div style="padding:0 16px 8px;">
+                @forelse($pendingReviews as $entry)
+                    @php
+                        $isRevised = $entry->verification_status === 'revision' && $entry->reviewed_at && $entry->updated_at->gt($entry->reviewed_at);
+                    @endphp
+                    <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                       class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
+                        <div class="row-body">
+                            <div class="row-title">
+                                {{ Str::limit($entry->task_description, 40) }}
+                                @if($isRevised)
+                                    <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
+                                @endif
+                            </div>
+                            <div class="row-meta">
+                                <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
+                                <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                <span>· {{ $entry->duration_label }}</span>
+                            </div>
+                        </div>
+                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                @empty
+                    <div class="empty-state" style="padding:16px 0;">✅ Semua laporan sudah diverifikasi</div>
+                @endforelse
             </div>
         </div>
 

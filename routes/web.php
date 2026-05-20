@@ -44,8 +44,14 @@ Route::middleware(['auth'])->group(function () {
     // (Leader & C-Level juga punya aktivitas harian yang perlu dilaporkan)
     Route::resource('daily-tasks', DailyTaskEntryController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-    Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
+    Route::patch('/daily-tasks/{dailyTask}/complete',  [DailyTaskEntryController::class, 'complete'])
         ->name('daily-tasks.complete');
+    Route::patch('/daily-tasks/{dailyTask}/approve',   [DailyTaskEntryController::class, 'approve'])
+        ->name('daily-tasks.approve');
+    Route::patch('/daily-tasks/{dailyTask}/revision',  [DailyTaskEntryController::class, 'sendToRevision'])
+        ->name('daily-tasks.revision');
+    Route::patch('/daily-tasks/{dailyTask}/reject',    [DailyTaskEntryController::class, 'reject'])
+        ->name('daily-tasks.reject');
 
     // Target view khusus Staff (read-only: lihat target bulanan & mingguan dept-nya)
     Route::middleware(['role:staff'])->group(function () {

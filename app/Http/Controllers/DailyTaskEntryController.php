@@ -38,7 +38,7 @@ class DailyTaskEntryController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk melihat laporan ini.');
         }
 
-        $dailyTask->load(['weeklyTarget.monthlyTarget', 'monthlyTarget', 'user']);
+        $dailyTask->load(['weeklyTarget.monthlyTarget', 'monthlyTarget', 'user', 'verifiedBy']);
 
         return view('daily-tasks.show', compact('dailyTask'));
     }
@@ -202,6 +202,10 @@ class DailyTaskEntryController extends Controller
         if ($dailyTask->status === 'selesai') {
             abort(403, 'Laporan yang sudah ditandai selesai bersifat final dan tidak bisa diubah.');
         }
+
+        if ($dailyTask->verification_status === 'approved') {
+            abort(403, 'Laporan yang sudah diverifikasi tidak bisa diubah.');
+        }
     }
 
     public function store(Request $request)
@@ -284,5 +288,106 @@ class DailyTaskEntryController extends Controller
             ->route('daily-tasks.edit', $dailyTask)
             ->with('complete_mode', true)
             ->with('info', 'Isi catatan penyelesaian terlebih dahulu, lalu simpan untuk menandai tugas selesai.');
+    }
+
+    // ─── APPROVAL METHODS ─────────────────────────────────────────────────────
+
+    /**
+     * Leader menyetujui laporan → approved (terkunci permanen).
+     */
+    public function approve(DailyTaskEntry $dailyTask)
+    {
+        $this->authorizeReview($dailyTask);
+
+        $dailyTask->update([
+            'verification_status' => 'approved',
+            'verified_by'         => auth()->id(),
+            'verified_at'         => now(),
+            'rejection_note'      => null,
+        ]);
+
+        return redirect()->route('daily-tasks.show', $dailyTask)
+            ->with('success', '✅ Laporan berhasil diverifikasi dan disetujui.');
+    }
+
+    /**
+     * Leader mengembalikan laporan untuk direvisi → revision.
+     * Staff masih bisa edit (dalam 48 jam), tapi field kunci tidak berubah.
+     */
+    public function sendToRevision(DailyTaskEntry $dailyTask, Request $request)
+    {
+        $this->authorizeReview($dailyTask);
+
+        $request->validate([
+            'rejection_note' => 'required|string|min:10',
+        ], [
+            'rejection_note.required' => 'Catatan revisi wajib diisi agar staff tahu apa yang harus diperbaiki.',
+            'rejection_note.min'      => 'Catatan revisi minimal 10 karakter.',
+        ]);
+
+        $dailyTask->update([
+            'verification_status' => 'revision',
+            'verified_by'         => auth()->id(),
+            'verified_at'         => null,
+            'rejection_note'      => $request->rejection_note,
+            'reviewed_at'         => now(),
+        ]);
+
+        return redirect()->route('daily-tasks.show', $dailyTask)
+            ->with('info', '↩ Laporan dikembalikan ke staff untuk direvisi.');
+    }
+
+    /**
+     * Leader menolak laporan secara permanen → rejected.
+     * Staff TIDAK bisa revisi.
+     */
+    public function reject(DailyTaskEntry $dailyTask, Request $request)
+    {
+        $this->authorizeReview($dailyTask);
+
+        $request->validate([
+            'rejection_note' => 'required|string|min:10',
+        ], [
+            'rejection_note.required' => 'Alasan penolakan wajib diisi.',
+            'rejection_note.min'      => 'Alasan penolakan minimal 10 karakter.',
+        ]);
+
+        $dailyTask->update([
+            'verification_status' => 'rejected',
+            'verified_by'         => auth()->id(),
+            'verified_at'         => null,
+            'rejection_note'      => $request->rejection_note,
+            'reviewed_at'         => now(),
+        ]);
+
+        return redirect()->route('daily-tasks.show', $dailyTask)
+            ->with('error', '❌ Laporan telah ditolak secara permanen.');
+    }
+
+    /**
+     * Guard untuk review (approve/revision/reject):
+     * - Hanya leader atau c_level.
+     * - Leader hanya bisa review laporan staff se-departemen (atau laporan sendiri tidak berlaku).
+     * - Laporan yang sudah approved tidak bisa di-review ulang.
+     */
+    private function authorizeReview(DailyTaskEntry $dailyTask): void
+    {
+        $user = auth()->user();
+
+        if (!in_array($user->role, ['leader', 'c_level'])) {
+            abort(403, 'Hanya Leader atau C-Level yang dapat memverifikasi laporan.');
+        }
+
+        // Leader hanya bisa review laporan dari dept-nya sendiri (kecuali C-Level)
+        if ($user->role === 'leader') {
+            $dailyTask->load('user');
+            if ($dailyTask->user->department !== $user->department) {
+                abort(403, 'Anda hanya dapat memverifikasi laporan dari departemen Anda.');
+            }
+        }
+
+        if ($dailyTask->verification_status === 'approved') {
+            abort(403, 'Laporan yang sudah disetujui tidak dapat diubah statusnya.');
+        }
     }
 }

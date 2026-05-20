@@ -10,7 +10,7 @@
                 <svg class="lucide sm" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" />
                 </svg>
-                Tambah
+                Tambah Laporan Harian (Task)
             </a>
         </div>
 
@@ -56,6 +56,14 @@
                             </div>
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
+                                {{-- Badge verifikasi --}}
+                                <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
+                                    @if($entry->verification_status === 'approved') ✅
+                                    @elseif($entry->verification_status === 'revision') ↩
+                                    @elseif($entry->verification_status === 'rejected') ❌
+                                    @else ⏳
+                                    @endif
+                                </span>
                                 @if($entry->weeklyTarget)
                                     <span>· {{ Str::limit($entry->weeklyTarget->title, 22) }}</span>
                                 @elseif($entry->monthlyTarget)
