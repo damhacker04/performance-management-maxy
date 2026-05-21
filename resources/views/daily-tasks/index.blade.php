@@ -26,7 +26,7 @@
                 </div>
             </div>
         @else
-            <div class="m-card" style="padding:4px 16px;">
+            <div class="dt-card-grid">
                 @foreach($entries as $entry)
                     @php
                         $statusMap = [
@@ -36,44 +36,67 @@
                             'selesai' => 'success',
                         ];
                         $sChip = $statusMap[$entry->status] ?? 'neutral';
+                        $priorityChip = [
+                            'critical' => 'danger',
+                            'high'     => 'warning',
+                            'medium'   => 'info',
+                            'low'      => 'neutral',
+                        ][$entry->priority] ?? 'neutral';
                     @endphp
-                    <div class="m-row">
-                        <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" aria-hidden="true">
-                            @if($entry->status === 'selesai')
-                                <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;"
-                                    viewBox="0 0 16 16">
-                                    <path d="M3 8l3.5 3.5L13 5" />
-                                </svg>
+                    <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                       class="m-card" style="text-decoration:none;color:inherit;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:10px;">
+                        {{-- Header card --}}
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;
+                                            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                    {{ $entry->task_description }}
+                                </div>
+                            </div>
+                            <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" style="flex-shrink:0;" aria-hidden="true">
+                                @if($entry->status === 'selesai')
+                                    <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16">
+                                        <path d="M3 8l3.5 3.5L13 5" />
+                                    </svg>
+                                @endif
+                            </span>
+                        </div>
+                        {{-- Chips --}}
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                            <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
+                            <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
+                                @if($entry->verification_status === 'approved') ✅
+                                @elseif($entry->verification_status === 'revision') ↩
+                                @elseif($entry->verification_status === 'rejected') ❌
+                                @else ⏳
+                                @endif
+                            </span>
+                            @if($entry->priority !== 'medium')
+                                <span class="chip chip-{{ $priorityChip }}" style="font-size:10px;">{{ $entry->priority_label }}</span>
                             @endif
-                        </span>
-                        <a href="{{ route('daily-tasks.show', $entry->id) }}" class="row-body"
-                            style="text-decoration:none;color:inherit;cursor:pointer;">
-                            <div class="row-title">
-                                {{ $entry->task_description }}
-                                @if($entry->is_overdue)
-                                    <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
-                                @endif
+                            @if($entry->is_overdue)
+                                <span class="chip chip-danger" style="font-size:10px;">⏰ Terlambat</span>
+                            @endif
+                        </div>
+                        {{-- Meta --}}
+                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--fg-3);">
+                            <span>{{ \Carbon\Carbon::parse($entry->task_date)->format('d M Y') }}</span>
+                            <span>{{ $entry->duration_label }}</span>
+                        </div>
+                        @if($entry->weeklyTarget)
+                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                📋 {{ Str::limit($entry->weeklyTarget->title, 36) }}
                             </div>
-                            <div class="row-meta">
-                                <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
-                                {{-- Badge verifikasi --}}
-                                <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
-                                    @if($entry->verification_status === 'approved') ✅
-                                    @elseif($entry->verification_status === 'revision') ↩
-                                    @elseif($entry->verification_status === 'rejected') ❌
-                                    @else ⏳
-                                    @endif
-                                </span>
-                                @if($entry->weeklyTarget)
-                                    <span>· {{ Str::limit($entry->weeklyTarget->title, 22) }}</span>
-                                @elseif($entry->monthlyTarget)
-                                    <span>· {{ Str::limit($entry->monthlyTarget->title, 22) }}</span>
-                                @endif
-                                <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
-                                <span>· {{ $entry->duration_label }}</span>
+                        @elseif($entry->monthlyTarget)
+                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                📋 {{ Str::limit($entry->monthlyTarget->title, 36) }}
                             </div>
-                        </a>
-                    </div>
+                        @else
+                            <div style="font-size:11px;color:#B45309;background:#FEF3C7;padding:4px 8px;border-radius:6px;">
+                                📌 Tugas Tambahan
+                            </div>
+                        @endif
+                    </a>
                 @endforeach
             </div>
         @endif

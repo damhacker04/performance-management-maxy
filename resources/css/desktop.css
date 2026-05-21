@@ -1,0 +1,236 @@
+/* =======================================================================
+   Desktop Layout — @media (min-width: 1024px)
+   Sidebar kiri (220px fixed) + Main content kanan (flex-1)
+   Mobile layout TIDAK berubah sama sekali.
+   ======================================================================= */
+
+@media (min-width: 1024px) {
+
+  :root { --app-max: 100%; }
+  body { overflow: hidden; }
+
+  /* ── Shell: flex row ── */
+  .app-shell {
+    max-width: 100%;
+    flex-direction: row;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* ─────────────────────────────────────────
+     SIDEBAR
+  ───────────────────────────────────────── */
+  .dt-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    height: 100dvh;
+    background: var(--maxy-navy);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    z-index: 40;
+  }
+
+  /* Header — logo + nama app */
+  .dt-sidebar-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dt-sidebar-logo {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--maxy-amber);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    color: var(--maxy-navy-900);
+    flex-shrink: 0;
+  }
+  .dt-sidebar-appname {
+    font-size: 13px; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* User info */
+  .dt-sidebar-user {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px; text-align: center;
+  }
+  .dt-sidebar-av {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--maxy-amber); color: var(--maxy-navy-900);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+  }
+  .dt-sidebar-name {
+    font-size: 13px; font-weight: 600; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 160px;
+  }
+  .dt-sidebar-role {
+    font-size: 11px; color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.08);
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* Nav items */
+  .dt-sidebar-nav {
+    flex: 1; padding: 12px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .dt-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    transition: background 150ms ease, color 150ms ease;
+  }
+  .dt-nav-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    text-decoration: none;
+  }
+  .dt-nav-item.active {
+    background: var(--maxy-amber);
+    color: var(--maxy-navy-900);
+    font-weight: 700;
+  }
+  .dt-nav-item .dt-nav-icon {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* Footer — logout */
+  .dt-sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .dt-logout-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    background: transparent; border: none; cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+    font-family: var(--font-sans);
+  }
+  .dt-logout-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.9);
+  }
+
+  /* ─────────────────────────────────────────
+     MAIN WRAPPER
+  ───────────────────────────────────────── */
+  .dt-main {
+    flex: 1;
+    display: flex; flex-direction: column;
+    height: 100dvh; overflow: hidden; min-width: 0;
+  }
+
+  /* Topbar — gantikan appbar di desktop */
+  .appbar {
+    position: sticky; top: 0;
+    height: 56px; padding: 0 24px;
+    border-bottom: 1px solid var(--neutral-100);
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    z-index: 30; flex-shrink: 0;
+  }
+  /* Sembunyikan greeting kiri — info user sudah di sidebar */
+  .appbar .left { display: none; }
+
+  /* Scrollable content area */
+  .dt-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 32px;
+  }
+
+  /* Sembunyikan bottom tabbar */
+  .tabbar { display: none !important; }
+
+  /* Page padding desktop */
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    gap: 20px;
+  }
+
+  /* ─────────────────────────────────────────
+     GRID HELPERS
+  ───────────────────────────────────────── */
+
+  /* Stat cards: 3 kolom horizontal */
+  .dt-stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  /* 2-column: review section, side panels */
+  .dt-col2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* Detail page: info | activity log */
+  .dt-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    align-items: start;
+  }
+  .dt-detail-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .dt-detail-right {
+    position: sticky;
+    top: 16px;
+  }
+  /* Pada mobile, left/right tetap stacked (default block) */
+
+  /* Index pages: card grid 2 kolom */
+  .dt-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Hero greeting: no negative margin on desktop */
+  .hero-greeting {
+    margin: 0;
+    border-radius: var(--r-lg);
+  }
+
+  /* Sheet: centered modal on desktop */
+  .sheet {
+    max-width: 480px;
+    border-radius: var(--r-xl);
+    bottom: 50%;
+    transform: translate(-50%, calc(50% + 60px));
+    opacity: 0;
+    pointer-events: none;
+    transition: transform var(--dur-slow) var(--ease-emphasis),
+                opacity var(--dur-slow) var(--ease-standard);
+  }
+  .sheet.open {
+    transform: translate(-50%, 50%);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

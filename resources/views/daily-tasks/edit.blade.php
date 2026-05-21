@@ -38,6 +38,7 @@
 
     <div class="m-card">
         <form method="POST" action="{{ route('daily-tasks.update', $dailyTask) }}"
+              enctype="multipart/form-data"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
             @method('PATCH')
@@ -169,6 +170,74 @@
                           required>{{ old('notes', $dailyTask->notes) }}</textarea>
                 <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                 @error('notes')<span class="err">{{ $message }}</span>@enderror
+            </div>
+
+            <!-- Bukti Laporan -->
+            <div class="field">
+                @php $isSales = auth()->user()->department === 'sales'; @endphp
+                <label style="display:flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
+                    Bukti Laporan
+                    @if($isSales)
+                        <span style="color:var(--danger);">*</span>
+                        <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib untuk Sales)</span>
+                    @else
+                        <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                    @endif
+                </label>
+
+                {{-- Preview bukti yang sudah ada --}}
+                @if($dailyTask->proof_url || $dailyTask->proof_file)
+                    <div style="background:#F0F7FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;">
+                        <div style="font-weight:600;color:var(--maxy-navy);margin-bottom:4px;">📎 Bukti terlampir sebelumnya:</div>
+                        @if($dailyTask->proof_url)
+                            <div style="margin-bottom:2px;">
+                                🔗 <a href="{{ $dailyTask->proof_url }}" target="_blank"
+                                      style="color:var(--maxy-navy);word-break:break-all;">{{ Str::limit($dailyTask->proof_url, 60) }}</a>
+                            </div>
+                        @endif
+                        @if($dailyTask->proof_file)
+                            <div>
+                                📄 <a href="{{ Storage::url($dailyTask->proof_file) }}" target="_blank"
+                                      style="color:var(--maxy-navy);">{{ basename($dailyTask->proof_file) }}</a>
+                                <span style="color:var(--fg-4);font-size:10px;"> — Upload file baru di bawah untuk mengganti</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- Link URL bukti --}}
+                <div style="margin-bottom:8px;">
+                    <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;font-weight:600;">Link Bukti (Google Sheets, CRM, Drive, dll.)</div>
+                    <input type="url" id="proof_url" name="proof_url"
+                           class="m-input {{ $errors->has('proof_url') ? 'err' : '' }}"
+                           value="{{ old('proof_url', $dailyTask->proof_url) }}"
+                           placeholder="https://docs.google.com/…">
+                    @error('proof_url')<span class="err">{{ $message }}</span>@enderror
+                </div>
+
+                {{-- Divider --}}
+                <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-bottom:8px;">
+                    <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                    atau upload file baru
+                    <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                </div>
+
+                {{-- Upload file --}}
+                <label for="proof_file"
+                       style="display:flex;align-items:center;justify-content:center;gap:8px;
+                              border:2px dashed var(--bg-3);border-radius:10px;padding:14px;
+                              cursor:pointer;color:var(--fg-3);font-size:13px;
+                              background:var(--bg-2);transition:border-color .2s;">
+                    <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span id="edit_proof_file_text">{{ $dailyTask->proof_file ? 'Ganti: '.basename($dailyTask->proof_file) : 'JPG, PNG, atau PDF — maks. 5MB' }}</span>
+                </label>
+                <input type="file" id="proof_file" name="proof_file"
+                       accept=".jpg,.jpeg,.png,.pdf"
+                       class="{{ $errors->has('proof_file') ? 'err' : '' }}"
+                       style="display:none;"
+                       onchange="document.getElementById('edit_proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
+                @error('proof_file')<span class="err">{{ $message }}</span>@enderror
             </div>
 
             <div style="display:flex;gap:10px;">

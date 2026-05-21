@@ -11,20 +11,15 @@ return new class extends Migration {
             $table->enum('role', ['staff', 'leader', 'c_level'])
                 ->default('staff')
                 ->after('email');
-            $table->enum('department', [
-                'sales',
-                'marketing',
-                'product_it',
-                'operational',
-                'ceo_office',
-            ])->nullable()->after('role');
+            $table->string('department')->nullable()->after('role');
+            $table->string('division')->nullable()->after('department');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['role', 'department']);
+            $table->dropColumn(['role', 'department', 'division']);
         });
     }
 };
