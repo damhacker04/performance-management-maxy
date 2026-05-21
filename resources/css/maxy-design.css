@@ -461,3 +461,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   padding-bottom: max(36px, env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 16px;
 }
+
+/* Alpine.js: sembunyikan elemen sebelum Alpine selesai inisialisasi */
+[x-cloak] { display: none !important; }
+
