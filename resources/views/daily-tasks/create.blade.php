@@ -74,6 +74,7 @@
     @else
         <div class="m-card">
             <form method="POST" action="{{ route('daily-tasks.store') }}"
+                  enctype="multipart/form-data"
                   style="display:flex;flex-direction:column;gap:16px;">
                 @csrf
 
@@ -227,6 +228,57 @@
                               required>{{ old('notes') }}</textarea>
                     <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
+                </div>
+
+                <!-- Bukti Laporan -->
+                <div class="field">
+                    @php $isSales = auth()->user()->department === 'sales'; @endphp
+                    <label style="display:flex;align-items:center;gap:6px;">
+                        <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
+                        Bukti Laporan
+                        @if($isSales)
+                            <span style="color:var(--danger);">*</span>
+                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib untuk Sales)</span>
+                        @else
+                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                        @endif
+                    </label>
+
+                    {{-- Link URL bukti --}}
+                    <div style="margin-bottom:8px;">
+                        <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;font-weight:600;">Link Bukti (Google Sheets, CRM, Drive, dll.)</div>
+                        <input type="url" id="proof_url" name="proof_url"
+                               class="m-input {{ $errors->has('proof_url') ? 'err' : '' }}"
+                               value="{{ old('proof_url') }}"
+                               placeholder="https://docs.google.com/…">
+                        @error('proof_url')<span class="err">{{ $message }}</span>@enderror
+                    </div>
+
+                    {{-- Divider --}}
+                    <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-bottom:8px;">
+                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                        atau upload file
+                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                    </div>
+
+                    {{-- Upload file --}}
+                    <label for="proof_file"
+                           style="display:flex;align-items:center;justify-content:center;gap:8px;
+                                  border:2px dashed var(--bg-3);border-radius:10px;padding:16px;
+                                  cursor:pointer;color:var(--fg-3);font-size:13px;
+                                  background:var(--bg-2);transition:border-color .2s;"
+                           id="proof_file_label"
+                           ondragover="this.style.borderColor='var(--maxy-navy)'"
+                           ondragleave="this.style.borderColor='var(--bg-3)'">
+                        <svg class="lucide" style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span id="proof_file_text">JPG, PNG, atau PDF — maks. 5MB</span>
+                    </label>
+                    <input type="file" id="proof_file" name="proof_file"
+                           accept=".jpg,.jpeg,.png,.pdf"
+                           class="{{ $errors->has('proof_file') ? 'err' : '' }}"
+                           style="display:none;"
+                           onchange="document.getElementById('proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
+                    @error('proof_file')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">

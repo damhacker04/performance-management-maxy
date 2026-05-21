@@ -20,6 +20,9 @@ class DailyTaskEntry extends Model
         'status',
         'notes',
         'task_date',
+        // Bukti laporan
+        'proof_url',
+        'proof_file',
         // Verification fields
         'verification_status',
         'verified_by',
@@ -92,6 +95,8 @@ class DailyTaskEntry extends Model
     {
         if (!$this->task_date) return false;
         if ($this->status === 'selesai') return false;
+        // Laporan yang sudah diverifikasi/approved tidak tampil sebagai terlambat
+        if ($this->verification_status === 'approved') return false;
         return $this->task_date->isPast() && !$this->task_date->isToday();
     }
 
@@ -146,7 +151,7 @@ class DailyTaskEntry extends Model
     {
         if ($this->verification_status !== 'revision') return false;
         if (!$this->reviewed_at) return false;
-        return $this->reviewed_at->addHours(48)->isFuture();
+        return $this->reviewed_at->addHours(10)->isFuture();
     }
 
     /**
