@@ -1,12 +1,12 @@
 <x-app-layout>
 
     <div class="page">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;width:100%;">
+            <div style="min-width:200px;">
                 <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Tugas Saya</h1>
                 <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">{{ $entries->count() }} laporan tercatat</p>
             </div>
-            <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-sm">
+            <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
                 <svg class="lucide sm" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" />
                 </svg>

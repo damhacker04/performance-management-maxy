@@ -199,6 +199,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 /* ===================== Hero Greeting ===================== */
