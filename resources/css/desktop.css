@@ -4,6 +4,13 @@
    Mobile layout TIDAK berubah sama sekali.
    ======================================================================= */
 
+/* Sembunyikan sidebar desktop saat di HP */
+.dt-sidebar {
+  display: none;
+}
+
+/* ───────────────────────────────────────── */
+
 @media (min-width: 1024px) {
 
   :root { --app-max: 100%; }
@@ -148,6 +155,8 @@
   }
   /* Sembunyikan greeting kiri — info user sudah di sidebar */
   .appbar .left { display: none; }
+  /* Sembunyikan logout mobile — sudah ada di sidebar bawah */
+  .dt-mobile-logout { display: none !important; }
 
   /* Scrollable content area */
   .dt-content {
