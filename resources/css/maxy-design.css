@@ -109,6 +109,24 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   position: relative;
 }
 
+/* Mobile & Desktop Wrappers (Fixed App Shell) */
+.dt-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  min-width: 0;
+}
+.dt-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ===================== App Bar ===================== */
 .appbar {
   position: sticky; top: 0; z-index: 30;
