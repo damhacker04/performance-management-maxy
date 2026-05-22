@@ -109,7 +109,8 @@
     color: var(--maxy-navy-900);
     font-weight: 700;
   }
-  .dt-nav-item .dt-nav-icon {
+  .dt-nav-item .dt-nav-icon,
+  .dt-logout-btn .dt-nav-icon {
     width: 18px; height: 18px;
     stroke: currentColor; fill: none;
     stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
@@ -151,7 +152,8 @@
     border-bottom: 1px solid var(--neutral-100);
     background: rgba(255,255,255,0.96);
     backdrop-filter: blur(8px);
-    z-index: 30; flex-shrink: 0;
+    z-index: 50; flex-shrink: 0;
+    justify-content: flex-end; /* Paksa item ke kanan karena .left disembunyikan */
   }
   /* Sembunyikan greeting kiri — info user sudah di sidebar */
   .appbar .left { display: none; }
