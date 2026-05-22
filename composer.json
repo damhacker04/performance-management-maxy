@@ -7,7 +7,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-gd": "*",
+        "ext-zip": "*",
         "laravel/framework": "^13.7",
+        "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^3.1"
     },

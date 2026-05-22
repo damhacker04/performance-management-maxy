@@ -239,9 +239,10 @@
                     </svg>
                 </summary>
 
-                <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;">
-                    <div style="height:1px;background:var(--bd-1);margin-bottom:4px;"></div>
+                <div style="padding:0 12px 12px;">
+                    <div style="height:1px;background:var(--bd-1);margin-bottom:12px;"></div>
 
+                    <div class="dt-card-grid" style="gap:12px;">
                     @forelse($aktifTargets as $target)
                         @php
                             $weeklyCount  = $target->weeklyTargets->count();
@@ -294,11 +295,12 @@
                             </div>
                         </a>
                     @empty
-                        <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--fg-4);">
+                        <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--fg-4);grid-column:1/-1;">
                             Belum ada target untuk bulan ini.
                             <a href="{{ route('monthly-targets.create') }}" style="color:var(--maxy-navy);font-weight:600;">Buat sekarang →</a>
                         </div>
                     @endforelse
+                    </div>{{-- end dt-card-grid --}}
                 </div>
             </details>
 

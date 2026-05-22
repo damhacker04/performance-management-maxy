@@ -219,7 +219,7 @@
                         ][$entry->priority] ?? 'neutral';
                     @endphp
                     <div class="m-row">
-                        @if($entry->status === 'selesai')
+                        @if($entry->status === 'selesai' || $entry->verification_status === 'approved')
                             <span class="m-checkbox done" aria-hidden="true">
                                 <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>
                             </span>
@@ -286,9 +286,16 @@
                 ->whereDate('task_date', today())
                 ->orderByDesc('created_at')
                 ->get();
+
+            // Notifikasi hari ini yang belum dibaca (untuk card dashboard)
+            $todayNotifications = \App\Models\AppNotification::where('user_id', $user->id)
+                ->todayUnread()
+                ->orderByDesc('created_at')
+                ->get();
         @endphp
 
-        <div class="kpi-grid">
+        {{-- Stat cards: pada desktop jadi 3 kolom (dt-stat-row), mobile tetap 2 kolom (kpi-grid) --}}
+        <div class="dt-stat-row kpi-grid">
             <div class="kpi-card">
                 <div class="kc-header">
                     <span class="kc-title">Target bulan ini</span>
@@ -307,51 +314,265 @@
                 <div class="kc-value">{{ $reported }}<span class="kc-sub"> / {{ $totalStaff }}</span></div>
                 <div class="progress-bar"><i class="success" style="width:{{ $totalStaff > 0 ? round($reported/$totalStaff*100) : 0 }}%"></i></div>
             </div>
+            {{-- Kolom ke-3 hanya muncul di desktop (dt-stat-row) --}}
+            <div class="kpi-card" style="display:none;" id="dt-stat-pending">
+                <div class="kc-header">
+                    <span class="kc-title">Menunggu Review</span>
+                    <span class="chip chip-warning">Hari ini</span>
+                </div>
+                <div class="kc-value" id="dt-pending-count">—</div>
+                <div class="progress-bar"><i class="navy" style="width:0%" id="dt-pending-bar"></i></div>
+            </div>
         </div>
+        <script>
+            // Isi stat card ke-3 setelah DOM ready
+            document.addEventListener('DOMContentLoaded', function() {
+                const pendingTotal = {{ $totalPending ?? 0 }};
+                const card = document.getElementById('dt-stat-pending');
+                const count = document.getElementById('dt-pending-count');
+                const bar = document.getElementById('dt-pending-bar');
+                if (card) card.style.display = '';
+                if (count) count.innerHTML = pendingTotal + '<span class="kc-sub"> laporan</span>';
+                if (bar) bar.style.width = Math.min(pendingTotal * 20, 100) + '%';
+            });
+        </script>
 
-        {{-- Section: Menunggu Review --}}
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        {{-- NOTIFICATION CARD HARIAN — muncul di atas Menunggu Review     --}}
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        @if($todayNotifications->isNotEmpty())
+        <div id="notif-card-daily"
+             style="background:var(--surface-1,#fff);
+                    border:1.5px solid #E2E8F0;
+                    border-radius:16px;
+                    overflow:hidden;
+                    box-shadow:0 2px 12px rgba(0,0,0,.06);">
+
+            {{-- Header --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:12px 16px 10px;
+                        border-bottom:1px solid #F1F5F9;">
+                <div style="display:flex;align-items:center;gap:7px;">
+                    <span style="font-size:17px;">🔔</span>
+                    <span style="font-size:12px;font-weight:700;color:var(--fg-1,#1E293B);letter-spacing:.04em;text-transform:uppercase;">Notifikasi Hari Ini</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="background:#EF4444;color:#fff;font-size:10px;font-weight:700;
+                                 border-radius:99px;padding:2px 8px;">{{ $todayNotifications->count() }} baru</span>
+                    <form method="POST" action="{{ route('notifications.read-all') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit"
+                                style="font-size:11px;font-weight:600;color:#64748B;
+                                       background:none;border:none;cursor:pointer;padding:2px 4px;
+                                       text-decoration:underline;">
+                            Tandai semua dibaca
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {{-- Daftar notifikasi --}}
+            <div style="display:flex;flex-direction:column;">
+                @foreach($todayNotifications as $notif)
+                @php
+                    $notifIcon = match($notif->type) {
+                        'revision_submitted' => '📨',
+                        'auto_rejected'      => '❌',
+                        'not_submitted'      => '⚠️',
+                        default              => '🔔',
+                    };
+                    $notifBg = match($notif->type) {
+                        'revision_submitted' => '#F0FDF9',
+                        'auto_rejected'      => '#FFF5F5',
+                        'not_submitted'      => '#FFFBEB',
+                        default              => '#F8FAFC',
+                    };
+                    $notifBorder = match($notif->type) {
+                        'revision_submitted' => '#BBF7D0',
+                        'auto_rejected'      => '#FECACA',
+                        'not_submitted'      => '#FDE68A',
+                        default              => '#E2E8F0',
+                    };
+                    $notifAccent = match($notif->type) {
+                        'revision_submitted' => '#0F7A50',
+                        'auto_rejected'      => '#DC2626',
+                        'not_submitted'      => '#B45309',
+                        default              => '#475569',
+                    };
+                    $hasDiff = $notif->type === 'revision_submitted'
+                               && ($notif->getMeta('leader_note') || $notif->getMeta('staff_new_notes'));
+                @endphp
+
+                <div style="border-bottom:1px solid #F1F5F9;padding:10px 14px;
+                            background:{{ $notifBg }};" id="notif-item-{{ $notif->id }}">
+
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        {{-- Ikon --}}
+                        <div style="font-size:18px;flex-shrink:0;margin-top:1px;">{{ $notifIcon }}</div>
+
+                        {{-- Konten --}}
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:700;color:var(--fg-1,#1E293B);margin-bottom:2px;">
+                                {{ $notif->title }}
+                            </div>
+                            <div style="font-size:12px;color:#64748B;line-height:1.5;">
+                                {{ $notif->body }}
+                            </div>
+
+                            {{-- DIFF catatan revisi --}}
+                            @if($hasDiff)
+                            <div style="margin-top:8px;border-radius:8px;overflow:hidden;
+                                        border:1px solid {{ $notifBorder }};font-size:11px;">
+                                @if($notif->getMeta('leader_note'))
+                                <div style="padding:6px 10px;background:#FEF2F2;">
+                                    <span style="font-weight:700;color:#DC2626;">Catatan leader:</span><br>
+                                    <span style="color:#7F1D1D;">{{ $notif->getMeta('leader_note') }}</span>
+                                </div>
+                                @endif
+                                @if($notif->getMeta('staff_new_notes'))
+                                <div style="padding:6px 10px;background:#F0FDF4;border-top:1px solid {{ $notifBorder }};">
+                                    <span style="font-weight:700;color:#16A34A;">Jawaban staff:</span><br>
+                                    <span style="color:#14532D;">{{ $notif->getMeta('staff_new_notes') }}</span>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
+
+                            {{-- Meta bawah: waktu + tombol lihat --}}
+                            <div style="display:flex;align-items:center;gap:8px;margin-top:7px;">
+                                <span style="font-size:10px;color:#94A3B8;">{{ $notif->created_at->diffForHumans() }}</span>
+                                @if($notif->related_id)
+                                <a href="{{ route('notifications.read', $notif->id) }}"
+                                   style="font-size:11px;font-weight:700;color:{{ $notifAccent }};
+                                          text-decoration:none;
+                                          background:rgba(0,0,0,.04);border-radius:6px;
+                                          padding:3px 8px;">
+                                    Lihat laporan →
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Tombol dismiss (×) --}}
+                        <a href="{{ route('notifications.read', $notif->id) }}?dismiss=1"
+                           style="flex-shrink:0;color:#CBD5E1;font-size:16px;
+                                  text-decoration:none;line-height:1;
+                                  padding:2px 4px;border-radius:4px;
+                                  display:flex;align-items:center;justify-content:center;"
+                           title="Tutup">&times;</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+
+        {{-- Section: Menunggu Review — dibagi 2: dengan target & tugas tambahan --}}
         @php
-            $pendingReviews = \App\Models\DailyTaskEntry::with('user')
+            $baseQuery = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
                 ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
                 ->whereIn('verification_status', ['pending', 'revision'])
                 ->orderByDesc('task_date')
-                ->orderByDesc('updated_at')
+                ->orderByDesc('updated_at');
+
+            // Laporan yang terhubung ke target (mingguan atau bulanan)
+            $pendingWithTarget = (clone $baseQuery)
+                ->where(fn($q) => $q->whereNotNull('weekly_target_id')->orWhereNotNull('monthly_target_id'))
                 ->get();
+
+            // Laporan tugas tambahan / mendadak (tidak terhubung target apapun)
+            $pendingAdHoc = (clone $baseQuery)
+                ->whereNull('weekly_target_id')
+                ->whereNull('monthly_target_id')
+                ->get();
+
+            $totalPending = $pendingWithTarget->count() + $pendingAdHoc->count();
         @endphp
-        <div class="m-card" style="padding:0;">
-            <div class="section-head">
-                <span class="overline-label">📥 Menunggu Review Anda</span>
-                @if($pendingReviews->count() > 0)
-                    <span class="chip chip-warning" style="font-size:11px;">{{ $pendingReviews->count() }} laporan</span>
-                @endif
-            </div>
-            <div style="padding:0 16px 8px;">
-                @forelse($pendingReviews as $entry)
-                    @php
-                        $isRevised = $entry->verification_status === 'revision' && $entry->reviewed_at && $entry->updated_at->gt($entry->reviewed_at);
-                    @endphp
-                    <a href="{{ route('daily-tasks.show', $entry->id) }}"
-                       class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
-                        <div class="row-body">
-                            <div class="row-title">
-                                {{ Str::limit($entry->task_description, 40) }}
-                                @if($isRevised)
-                                    <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
-                                @endif
+
+        {{-- ── Review Section: 2 kolom berdampingan di desktop ── --}}
+        <div class="dt-col2">
+
+            {{-- Card 1: Task Target --}}
+            <div class="m-card" style="padding:0;">
+                <div class="section-head">
+                    <span class="overline-label">📋 Menunggu Review — Task Target</span>
+                    @if($pendingWithTarget->count() > 0)
+                        <span class="chip chip-warning" style="font-size:11px;">{{ $pendingWithTarget->count() }}</span>
+                    @endif
+                </div>
+                <div style="padding:0 16px 8px;">
+                    @forelse($pendingWithTarget as $entry)
+                        @php
+                            $isRevised = $entry->verification_status === 'revision'
+                                && $entry->reviewed_at
+                                && $entry->updated_at->gt($entry->reviewed_at);
+                            $targetLabel = $entry->weeklyTarget?->title ?? $entry->monthlyTarget?->title;
+                        @endphp
+                        <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                           class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
+                            <div class="row-body">
+                                <div class="row-title">
+                                    {{ Str::limit($entry->task_description, 38) }}
+                                    @if($isRevised)
+                                        <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
+                                    @endif
+                                </div>
+                                <div class="row-meta">
+                                    <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
+                                    <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                    @if($targetLabel)
+                                        <span>· {{ Str::limit($targetLabel, 22) }}</span>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="row-meta">
-                                <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
-                                <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
-                                <span>· {{ $entry->duration_label }}</span>
-                            </div>
-                        </div>
-                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-                    </a>
-                @empty
-                    <div class="empty-state" style="padding:16px 0;">✅ Semua laporan sudah diverifikasi</div>
-                @endforelse
+                            <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                        </a>
+                    @empty
+                        <div class="empty-state" style="padding:16px 0;">✅ Tidak ada laporan dari target yang menunggu review</div>
+                    @endforelse
+                </div>
             </div>
-        </div>
+
+            {{-- Card 2: Task Other --}}
+            <div class="m-card" style="padding:0;">
+                <div class="section-head" style="background:linear-gradient(90deg,#FFF7ED 0%,transparent 100%);">
+                    <span class="overline-label" style="color:#B45309;">📌 Menunggu Review — Task Other</span>
+                    @if($pendingAdHoc->count() > 0)
+                        <span class="chip" style="font-size:11px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">{{ $pendingAdHoc->count() }}</span>
+                    @endif
+                </div>
+                <div style="padding:0 16px 8px;">
+                    @forelse($pendingAdHoc as $entry)
+                        @php
+                            $isRevised = $entry->verification_status === 'revision'
+                                && $entry->reviewed_at
+                                && $entry->updated_at->gt($entry->reviewed_at);
+                        @endphp
+                        <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                           class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
+                            <div class="row-body">
+                                <div class="row-title">
+                                    {{ Str::limit($entry->task_description, 38) }}
+                                    @if($isRevised)
+                                        <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
+                                    @endif
+                                </div>
+                                <div class="row-meta">
+                                    <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
+                                    <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                    <span style="color:#B45309;font-weight:600;">· Tugas Tambahan</span>
+                                </div>
+                            </div>
+                            <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                        </a>
+                    @empty
+                        <div class="empty-state" style="padding:16px 0;">✅ Tidak ada tugas tambahan yang menunggu review</div>
+                    @endforelse
+                </div>
+            </div>
+
+        </div>{{-- end dt-col2 --}}
 
         <div class="m-card" style="padding:0;">
             <div class="section-head">

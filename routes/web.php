@@ -7,11 +7,16 @@ use App\Http\Controllers\DailyTaskEntryController;
 use App\Http\Controllers\StaffTargetController;
 use App\Http\Controllers\LeaderTargetController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+// Google Auth Routes
+Route::get('/auth/google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])->name('google.callback');
 
 // Routes untuk Leader
 Route::middleware(['auth'])->group(function () {
@@ -58,6 +63,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/my-targets', [StaffTargetController::class, 'index'])->name('staff-targets.index');
         Route::get('/my-targets/{monthlyTarget}', [StaffTargetController::class, 'show'])->name('staff-targets.show');
     });
+
+    // Notifikasi
+    Route::get('/notifications',                    [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}/read',[NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all',          [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
