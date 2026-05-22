@@ -70,4 +70,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/export/print',         [ExportController::class, 'printView'])->name('export.print');
 });
 
+// Temporary route for Railway DB Migration without CLI
+Route::get('/migrate-now', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
+        '--seed' => true,
+        '--force' => true
+    ]);
+    return 'Database migrated and seeded successfully! You can now log in.';
+});
+
 require __DIR__ . '/auth.php';
