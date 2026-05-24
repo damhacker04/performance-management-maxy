@@ -89,4 +89,45 @@ Route::get('/migrate-now', function() {
     return 'Database migrated and seeded successfully! You can now log in.';
 });
 
+// Route rahasia untuk mengupdate Role Bu Ika menjadi Leader di Railway tanpa menghapus data
+Route::get('/update-user-roles', function() {
+    \Illuminate\Support\Facades\Artisan::call('db:seed', [
+        '--class' => 'InitialUserSeeder',
+        '--force' => true
+    ]);
+    return 'Berhasil memperbarui Role User di Railway! Bu Ika sekarang adalah Leader.';
+});
+
+// Developer Login Route (Local Only)
+if (app()->environment('local')) {
+    Route::get('/dev/impersonate/{role}', function ($role) {
+        // Cari user dengan role tersebut, utamakan yang di departemen Operational
+        $user = \App\Models\User::where('role', $role)->where('department', 'Operational')->first();
+        
+        // Jika tidak ketemu di Operational, cari bebas
+        if (!$user) {
+            $user = \App\Models\User::where('role', $role)->first();
+        }
+
+        if (!$user) {
+            // Jika user tidak ada sama sekali, coba buatkan dummy
+            $user = \App\Models\User::create([
+                'name' => ucfirst($role) . ' Dummy',
+                'email' => $role . '@maxy.academy',
+                'password' => bcrypt('password'),
+                'role' => $role,
+                'department' => 'Operational', // ganti ke Operational
+            ]);
+        } else {
+            // Paksa update department ke Operational agar testing tidak bocor/berbeda
+            if ($user->department !== 'Operational' && str_contains($user->email, 'dummy')) {
+                $user->update(['department' => 'Operational']);
+            }
+        }
+        
+        \Illuminate\Support\Facades\Auth::login($user);
+        return redirect()->route('dashboard')->with('success', "Berhasil login sebagai {$user->name} ({$role})!");
+    })->name('dev.impersonate');
+}
+
 require __DIR__ . '/auth.php';
