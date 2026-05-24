@@ -19,7 +19,7 @@ class InitialUserSeeder extends Seeder
                 'email' => 'ika.maxy.academy@gmail.com', 
                 'department' => 'Operational', 
                 'division' => 'Head of Operational',
-                'role' => 'c_level', // Di set sebagai C-Level agar bisa melihat dashboard semua tim
+                'role' => 'leader', // Diubah menjadi Leader sesuai hierarki Manager of Operational
                 'is_management' => true
             ],
             // Staff
@@ -98,7 +98,7 @@ class InitialUserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            User::firstOrCreate(
+            User::updateOrCreate(
                 ['email' => $userData['email']],
                 $userData
             );
