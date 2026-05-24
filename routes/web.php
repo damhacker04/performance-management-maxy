@@ -89,4 +89,23 @@ Route::get('/migrate-now', function() {
     return 'Database migrated and seeded successfully! You can now log in.';
 });
 
+// Developer Login Route (Local Only)
+if (app()->environment('local')) {
+    Route::get('/dev/impersonate/{role}', function ($role) {
+        $user = \App\Models\User::where('role', $role)->first();
+        if (!$user) {
+            // Jika user tidak ada, coba buatkan dummy sementara agar tidak error
+            $user = \App\Models\User::create([
+                'name' => ucfirst($role) . ' Dummy',
+                'email' => $role . '@maxy.academy',
+                'password' => bcrypt('password'),
+                'role' => $role,
+                'department' => 'product_it', // default department
+            ]);
+        }
+        \Illuminate\Support\Facades\Auth::login($user);
+        return redirect()->route('dashboard')->with('success', "Berhasil login sebagai {$role}!");
+    })->name('dev.impersonate');
+}
+
 require __DIR__ . '/auth.php';
