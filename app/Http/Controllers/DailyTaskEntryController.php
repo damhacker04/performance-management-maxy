@@ -88,6 +88,10 @@ class DailyTaskEntryController extends Controller
             })
             ->where('month', now()->month)
             ->where('year', now()->year)
+            ->where(function($q) use ($user) {
+                $q->whereNull('assigned_to')
+                  ->orWhere('assigned_to', $user->id);
+            })
             ->orderBy('week_number')
             ->get();
 
@@ -148,6 +152,10 @@ class DailyTaskEntryController extends Controller
             })
             ->where('month', now()->month)
             ->where('year', now()->year)
+            ->where(function($q) use ($user) {
+                $q->whereNull('assigned_to')
+                  ->orWhere('assigned_to', $user->id);
+            })
             ->orderBy('week_number')
             ->get();
 

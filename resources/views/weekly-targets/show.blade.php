@@ -49,6 +49,12 @@
             @else
                 <span class="chip chip-neutral">Kualitatif</span>
             @endif
+            
+            @if($weeklyTarget->assigned_to)
+                <span class="chip chip-warning">Ditugaskan: {{ $weeklyTarget->assignee->name ?? 'Staf' }}</span>
+            @else
+                <span class="chip chip-neutral">Target Umum</span>
+            @endif
         </div>
         @if($weeklyTarget->description)
             <p style="font-size:13px;color:var(--fg-2);line-height:1.5;margin:0;">
