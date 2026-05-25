@@ -49,7 +49,12 @@ class StaffTargetController extends Controller
         abort_if($monthlyTarget->user?->role !== 'leader', 403,
             'Target ini bukan target dari Leader Anda.');
 
-        $monthlyTarget->load(['weeklyTargets' => fn($q) => $q->orderBy('week_number')]);
+        $monthlyTarget->load(['weeklyTargets' => function($q) use ($user) {
+            $q->where(function($query) use ($user) {
+                $query->whereNull('assigned_to')
+                      ->orWhere('assigned_to', $user->id);
+            })->orderBy('week_number');
+        }]);
 
         // Semua daily task saya yang terkait monthly target ini, digroup per weekly_target_id
         $dailyTasksByWeek = DailyTaskEntry::where('user_id', $user->id)

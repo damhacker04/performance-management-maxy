@@ -13,6 +13,7 @@ class WeeklyTarget extends Model
         'monthly_target_id',
         'category',          // 'planned' | 'other' — sesuai notul rapat 12 Mei 2026
         'user_id',
+        'assigned_to',
         'title',
         'description',
         'target_type',
@@ -61,6 +62,11 @@ class WeeklyTarget extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function dailyTaskEntries()

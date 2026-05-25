@@ -118,8 +118,11 @@
                                 @endphp
                                 <optgroup label="{{ Str::limit($groupLabel, 80) }}">
                                     @foreach($wTargets as $wt)
+                                        @php
+                                            $indicator = $wt->assigned_to ? '🎯 Pribadi' : '🏢 Umum';
+                                        @endphp
                                         <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
-                                            Minggu {{ $wt->week_number }} — {{ Str::limit($wt->title, 60) }}
+                                            [{{ $indicator }}] Minggu {{ $wt->week_number }} — {{ Str::limit($wt->title, 50) }}
                                         </option>
                                     @endforeach
                                 </optgroup>

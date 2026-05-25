@@ -58,12 +58,17 @@ class WeeklyTargetController extends Controller
         $cLevelTargets = $cLevelTargetsQuery->get();
         $teamTargets   = $teamTargetsQuery->get();
 
+        $staffList = \App\Models\User::where('department', $user->department)
+            ->whereIn('role', ['staff', 'leader'])
+            ->orderBy('name')
+            ->get();
+
         $preSelected = $request->filled('monthly_target_id')
             ? (int) $request->monthly_target_id
             : null;
 
         return view('weekly-targets.create', compact(
-            'cLevelTargets', 'teamTargets', 'preSelected', 'context'
+            'cLevelTargets', 'teamTargets', 'preSelected', 'context', 'staffList'
         ));
     }
 
@@ -77,10 +82,12 @@ class WeeklyTargetController extends Controller
             'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'assigned_to'       => 'nullable|exists:users,id',
         ], [
             'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
+            'assigned_to.exists'         => 'Staf yang dipilih tidak valid.',
         ]);
 
         // Authorize: leader hanya boleh ke monthly miliknya
@@ -97,6 +104,7 @@ class WeeklyTargetController extends Controller
             'target_value'      => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
             'target_unit'       => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
             'week_number'       => $validated['week_number'],
+            'assigned_to'       => $validated['assigned_to'] ?? null,
             'month'             => $monthlyTarget->month,
             'year'              => $monthlyTarget->year,
         ]);
@@ -180,7 +188,12 @@ class WeeklyTargetController extends Controller
             $context       = 'team';
         }
 
-        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context'));
+        $staffList = \App\Models\User::where('department', $user->department)
+            ->whereIn('role', ['staff', 'leader'])
+            ->orderBy('name')
+            ->get();
+
+        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context', 'staffList'));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)
@@ -195,10 +208,12 @@ class WeeklyTargetController extends Controller
             'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'assigned_to'       => 'nullable|exists:users,id',
         ], [
             'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
+            'assigned_to.exists'         => 'Staf yang dipilih tidak valid.',
         ]);
 
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
@@ -213,6 +228,7 @@ class WeeklyTargetController extends Controller
             'target_value'      => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
             'target_unit'       => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
             'week_number'       => $validated['week_number'],
+            'assigned_to'       => $validated['assigned_to'] ?? null,
         ]);
 
         return redirect()->route('monthly-targets.show', $monthlyTarget)

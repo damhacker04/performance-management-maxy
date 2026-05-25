@@ -96,6 +96,23 @@
                 @error('week_number')<span class="err">{{ $message }}</span>@enderror
             </div>
 
+            <!-- Ditugaskan Kepada (Opsional) -->
+            <div class="field">
+                <label for="assigned_to">Ditugaskan Kepada <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
+                <div class="select-wrap">
+                    <select id="assigned_to" name="assigned_to"
+                            class="m-select {{ $errors->has('assigned_to') ? 'err' : '' }}">
+                        <option value="">-- Umum (Semua staf di departemen dapat mengambil target ini) --</option>
+                        @foreach($staffList as $staff)
+                            <option value="{{ $staff->id }}" {{ old('assigned_to', $weeklyTarget->assigned_to) == $staff->id ? 'selected' : '' }}>
+                                {{ $staff->name }} ({{ $staff->role == 'leader' ? 'Leader' : 'Staff' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
+            </div>
+
             <!-- Judul -->
             <div class="field">
                 <label for="title">Judul Target <span style="color:var(--danger);">*</span></label>
