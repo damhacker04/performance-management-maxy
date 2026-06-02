@@ -18,7 +18,7 @@ class LeaderTargetController extends Controller
         // Hanya tampilkan monthly target yang DIBUAT oleh C-Level untuk dept leader ini
         $targets = MonthlyTarget::with(['weeklyTargets'])
             ->where('department', $user->department)
-            ->whereHas('user', fn($q) => $q->where('role', 'c_level'))
+            ->whereHas('user', fn($q) => $q->whereIn('role', ['c_level', 'super_admin']))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
