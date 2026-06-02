@@ -140,6 +140,12 @@ class DailyTaskEntry extends Model
         // Laporan yang sudah approved tidak bisa diedit sama sekali
         if ($this->verification_status === 'approved') return false;
 
+        // Pengecualian khusus: jika diminta revisi oleh leader, staf TETAP BISA mengedit
+        // meskipun statusnya sudah 'selesai' (asalkan masih dalam batas waktu revisi).
+        if ($this->verification_status === 'revision') {
+            return $this->canBeRevised();
+        }
+
         return $this->status !== 'selesai';
     }
 
