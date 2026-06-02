@@ -61,6 +61,10 @@
                              ->whereHas('user', fn($uq) => $uq->where('department', $user->department));
                       });
                 })
+                ->where(function ($q) use ($user) {
+                    $q->whereNull('assigned_to')
+                      ->orWhere('assigned_to', $user->id);
+                })
                 ->where('month', now()->month)
                 ->where('year', now()->year)
                 ->where('week_number', $currentWeek)
@@ -333,6 +337,25 @@
                 ->todayUnread()
                 ->orderByDesc('created_at')
                 ->get();
+
+            $baseQuery = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
+                ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->orderByDesc('task_date')
+                ->orderByDesc('updated_at');
+
+            // Laporan yang terhubung ke target (mingguan atau bulanan)
+            $pendingWithTarget = (clone $baseQuery)
+                ->where(fn($q) => $q->whereNotNull('weekly_target_id')->orWhereNotNull('monthly_target_id'))
+                ->get();
+
+            // Laporan tugas tambahan / mendadak (tidak terhubung target apapun)
+            $pendingAdHoc = (clone $baseQuery)
+                ->whereNull('weekly_target_id')
+                ->whereNull('monthly_target_id')
+                ->get();
+
+            $totalPending = $pendingWithTarget->count() + $pendingAdHoc->count();
         @endphp
 
         {{-- Stat cards: pada desktop jadi 3 kolom (dt-stat-row), mobile tetap 2 kolom (kpi-grid) --}}
@@ -510,26 +533,6 @@
         {{-- ═══════════════════════════════════════════════════════════════ --}}
 
         {{-- Section: Menunggu Review — dibagi 2: dengan target & tugas tambahan --}}
-        @php
-            $baseQuery = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
-                ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
-                ->whereIn('verification_status', ['pending', 'revision'])
-                ->orderByDesc('task_date')
-                ->orderByDesc('updated_at');
-
-            // Laporan yang terhubung ke target (mingguan atau bulanan)
-            $pendingWithTarget = (clone $baseQuery)
-                ->where(fn($q) => $q->whereNotNull('weekly_target_id')->orWhereNotNull('monthly_target_id'))
-                ->get();
-
-            // Laporan tugas tambahan / mendadak (tidak terhubung target apapun)
-            $pendingAdHoc = (clone $baseQuery)
-                ->whereNull('weekly_target_id')
-                ->whereNull('monthly_target_id')
-                ->get();
-
-            $totalPending = $pendingWithTarget->count() + $pendingAdHoc->count();
-        @endphp
 
         {{-- ── Review Section: 2 kolom berdampingan di desktop ── --}}
         <div class="dt-col2">
@@ -700,13 +703,12 @@
     @else
         {{-- C-Level --}}
         @php
-            $depts = [
-                'sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product & IT',
-                'operational'=>'Operational','ceo_office'=>'CEO Office',
-            ];
+            $depts = \App\Models\User::DEPARTMENTS;
             $deptColors = [
-                'sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571',
-                'operational'=>'#E89B2A','ceo_office'=>'#1D4ED8',
+                'sales' => '#2F6BD6', 'marketing' => '#B43BB7', 'product_it' => '#16A571',
+                'operational' => '#E89B2A', 'hr' => '#DC2626', 'finance' => '#059669',
+                'ga' => '#D97706', 'creative' => '#7C3AED', 'customer_support' => '#2563EB',
+                'ceo_office' => '#1D4ED8' // Fallback
             ];
             $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
             $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
@@ -739,11 +741,12 @@
                         $count      = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $key))->whereDate('task_date', today())->count();
                         $staffCount = \App\Models\User::where('department', $key)->where('role', 'staff')->count();
                         $pct        = $staffCount > 0 ? min(round($count / $staffCount * 100), 100) : 0;
+                        $color      = $deptColors[$key] ?? '#1D4ED8';
                     @endphp
                     <div class="dept-row">
                         <div class="dept-row-header">
                             <div class="dn">
-                                <span class="dept-dot" style="background:{{ $deptColors[$key] }};"></span>
+                                <span class="dept-dot" style="background:{{ $color }};"></span>
                                 {{ $label }}
                             </div>
                             <div class="dd">
@@ -751,7 +754,7 @@
                                 <span style="font-size:13px;font-weight:600;color:var(--fg-2);">{{ $pct }}%</span>
                             </div>
                         </div>
-                        <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $deptColors[$key] }};"></i></div>
+                        <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $color }};"></i></div>
                     </div>
                 @endforeach
             </div>

@@ -113,11 +113,14 @@ class MonthlyTargetController extends Controller
 
     public function edit(MonthlyTarget $monthlyTarget)
     {
+        $this->authorizeEdit($monthlyTarget);
         return view('monthly-targets.edit', compact('monthlyTarget'));
     }
 
     public function update(Request $request, MonthlyTarget $monthlyTarget)
     {
+        $this->authorizeEdit($monthlyTarget);
+
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -133,9 +136,21 @@ class MonthlyTargetController extends Controller
 
     public function destroy(MonthlyTarget $monthlyTarget)
     {
+        $this->authorizeEdit($monthlyTarget);
+
         $monthlyTarget->delete();
 
         return redirect()->route('monthly-targets.index')
             ->with('success', 'Target bulanan berhasil dihapus.');
+    }
+
+    private function authorizeEdit(MonthlyTarget $monthlyTarget)
+    {
+        $user = auth()->user();
+        if (in_array($user->role, ['c_level', 'super_admin'])) {
+            return;
+        }
+
+        abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses untuk mengubah target departemen ini.');
     }
 }
