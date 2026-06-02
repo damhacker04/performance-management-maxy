@@ -83,6 +83,11 @@ class MonthlyTargetController extends Controller
 
     public function show(MonthlyTarget $monthlyTarget)
     {
+        $user = auth()->user();
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
+        }
+
         $monthlyTarget->load([
             'user',
             'weeklyTargets' => fn($q) => $q->orderBy('week_number'),
@@ -98,10 +103,10 @@ class MonthlyTargetController extends Controller
                 ],
             ]);
 
-        // Untuk C-Level: laporan leader per weekly target, digroup [weekly_id][user_id]
+        // Untuk C-Level & Super Admin: laporan leader per weekly target, digroup [weekly_id][user_id]
         // Data sudah ter-eager load via dailyTaskEntries.user — tidak ada query tambahan
         $leaderEntriesByWeek = [];
-        if (auth()->user()->role === 'c_level') {
+        if (in_array($user->role, ['c_level', 'super_admin'])) {
             foreach ($monthlyTarget->weeklyTargets as $wt) {
                 $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries
                     ->groupBy('user_id');

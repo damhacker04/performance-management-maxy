@@ -70,8 +70,8 @@ class WeeklyTargetController extends Controller
             }
         }
 
-        $staffList = \App\Models\User::where('department', $targetDepartment)
-            ->whereIn('role', ['staff', 'leader'])
+        $staffList = \App\Models\User::whereIn('role', ['staff', 'leader'])
+            ->when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
             ->orderBy('name')
             ->get();
 
@@ -195,7 +195,9 @@ class WeeklyTargetController extends Controller
             $context       = 'team';
         }
 
-        $staffList = \App\Models\User::where('department', $user->department)
+        $targetDepartment = $currentMonthly ? $currentMonthly->department : $user->department;
+
+        $staffList = \App\Models\User::where('department', $targetDepartment)
             ->whereIn('role', ['staff', 'leader'])
             ->orderBy('name')
             ->get();
