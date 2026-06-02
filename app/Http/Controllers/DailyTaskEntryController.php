@@ -227,6 +227,12 @@ class DailyTaskEntryController extends Controller
         $weeklyTarget    = !empty($validated['weekly_target_id'])
             ? WeeklyTarget::find($validated['weekly_target_id'])
             : null;
+
+        if ($weeklyTarget && $weeklyTarget->assigned_to !== null && $weeklyTarget->assigned_to !== $user->id) {
+            return back()->withInput()
+                ->withErrors(['weekly_target_id' => 'Target ini tidak ditugaskan kepada Anda.']);
+        }
+
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
         // Handle upload file bukti (jika ada file baru, hapus yang lama)
@@ -361,6 +367,12 @@ class DailyTaskEntryController extends Controller
         $weeklyTarget    = !empty($validated['weekly_target_id'])
             ? WeeklyTarget::find($validated['weekly_target_id'])
             : null;
+
+        if ($weeklyTarget && $weeklyTarget->assigned_to !== null && $weeklyTarget->assigned_to !== $user->id) {
+            return back()->withInput()
+                ->withErrors(['weekly_target_id' => 'Target ini tidak ditugaskan kepada Anda.']);
+        }
+
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
         // Handle upload file bukti
@@ -518,8 +530,8 @@ class DailyTaskEntryController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['leader', 'c_level'])) {
-            abort(403, 'Hanya Leader atau C-Level yang dapat memverifikasi laporan.');
+        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            abort(403, 'Hanya Leader, C-Level, atau Super Admin yang dapat memverifikasi laporan.');
         }
 
         // Leader hanya bisa review laporan dari dept-nya sendiri (kecuali C-Level)
