@@ -36,8 +36,8 @@
                 <div class="field">
                     <label>Departemen</label>
                     <div class="m-input" style="display:flex;align-items:center;background:var(--neutral-50);color:var(--fg-2);cursor:default;">
-                        <span class="chip chip-dept-{{ str_replace('_','-', auth()->user()->department ?? 'ceo') }}" style="pointer-events:none;">
-                            {{ ucfirst(str_replace('_', ' ', auth()->user()->department ?? 'CEO Office')) }}
+                        <span class="chip chip-dept-{{ str_replace('_','-', auth()->user()->department ?? 'neutral') }}" style="pointer-events:none;">
+                            {{ auth()->user()->department ? ucfirst(str_replace('_', ' ', auth()->user()->department)) : 'Tanpa Departemen' }}
                         </span>
                     </div>
                 </div>

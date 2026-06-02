@@ -36,7 +36,11 @@
         <div>
             <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Target</h1>
             <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">
-                {{ ucfirst(str_replace('_',' ', auth()->user()->department ?? 'CEO Office')) }}
+                @if(auth()->user()->department)
+                    {{ ucfirst(str_replace('_',' ', auth()->user()->department)) }}
+                @else
+                    {{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Semua Departemen' }}
+                @endif
             </p>
         </div>
         <a href="{{ route('monthly-targets.create') }}" class="btn btn-primary btn-sm">
