@@ -53,9 +53,11 @@ class StaffTargetController extends Controller
     {
         $user = auth()->user();
 
-        // Staff hanya boleh lihat target dept-nya sendiri
-        abort_if($monthlyTarget->department !== $user->department, 403,
-            'Anda tidak memiliki akses untuk melihat target ini.');
+        // Staff hanya boleh lihat target dept-nya sendiri (kecuali c_level / super_admin)
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if($monthlyTarget->department !== $user->department, 403,
+                'Anda tidak memiliki akses untuk melihat target ini.');
+        }
 
         // Target boleh dibuat oleh leader ATAU super_admin
         // (super_admin bisa membuat dan assign target langsung ke staff)

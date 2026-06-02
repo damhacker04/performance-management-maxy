@@ -70,8 +70,8 @@ class WeeklyTargetController extends Controller
             }
         }
 
-        $staffList = \App\Models\User::where('department', $targetDepartment)
-            ->whereIn('role', ['staff', 'leader'])
+        $staffList = \App\Models\User::whereIn('role', ['staff', 'leader'])
+            ->when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
             ->orderBy('name')
             ->get();
 
