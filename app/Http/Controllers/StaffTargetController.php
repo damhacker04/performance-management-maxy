@@ -14,12 +14,24 @@ class StaffTargetController extends Controller
     {
         $user = auth()->user();
 
-        $targets = MonthlyTarget::with(['weeklyTargets'])
+        // Hanya tampilkan target dari leader (bukan C-Level/super_admin)
+        // Dan filter weekly targets agar hanya menampilkan yang relevan untuk user ini
+        $targets = MonthlyTarget::with(['weeklyTargets' => function($q) use ($user) {
+            // Hanya muat weekly target yang null (untuk semua) ATAU yang di-assign khusus ke user ini
+            $q->where(function($query) use ($user) {
+                $query->whereNull('assigned_to')
+                      ->orWhere('assigned_to', $user->id);
+            })->orderBy('week_number');
+        }])
             ->where('department', $user->department)
             ->whereHas('user', fn($q) => $q->where('role', 'leader'))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
+
+        // Setelah filter, hapus monthly target yang tidak punya weekly target relevan
+        // (artinya semua weekly target-nya di-assign ke orang lain, bukan user ini)
+        $targets = $targets->filter(fn($t) => $t->weeklyTargets->isNotEmpty());
 
         // Hitung progres laporan saya per monthly target (PHP-side agar kompatibel SQLite & MySQL)
         $myEntries = DailyTaskEntry::where('user_id', $user->id)
@@ -45,9 +57,11 @@ class StaffTargetController extends Controller
         abort_if($monthlyTarget->department !== $user->department, 403,
             'Anda tidak memiliki akses untuk melihat target ini.');
 
-        // Pastikan target dibuat oleh leader, bukan C-Level
-        abort_if($monthlyTarget->user?->role !== 'leader', 403,
-            'Target ini bukan target dari Leader Anda.');
+        // Target boleh dibuat oleh leader ATAU super_admin
+        // (super_admin bisa membuat dan assign target langsung ke staff)
+        $allowedCreatorRoles = ['leader', 'super_admin'];
+        abort_if(!in_array($monthlyTarget->user?->role, $allowedCreatorRoles), 403,
+            'Target ini tidak dapat diakses.');
 
         $monthlyTarget->load(['weeklyTargets' => function($q) use ($user) {
             $q->where(function($query) use ($user) {

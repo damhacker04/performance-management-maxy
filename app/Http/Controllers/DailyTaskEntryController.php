@@ -55,9 +55,9 @@ class DailyTaskEntryController extends Controller
 
         // Pemilik: boleh lihat laporan sendiri
         // Leader: boleh lihat laporan staff se-departemen
-        // C-Level: boleh lihat semua laporan
+        // C-Level & Super Admin: boleh lihat semua laporan
         $canView = $dailyTask->user_id === $user->id
-            || $user->role === 'c_level'
+            || in_array($user->role, ['c_level', 'super_admin'])
             || ($user->role === 'leader' && $dailyTask->user->department === $user->department);
 
         if (!$canView) {
