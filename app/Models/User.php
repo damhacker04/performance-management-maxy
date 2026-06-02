@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'department', 'division', 'is_management', 'google_id', 'avatar'])]
+#[Fillable(['name', 'email', 'password', 'role', 'department', 'division', 'is_management', 'is_active', 'google_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,9 +34,10 @@ class User extends Authenticatable
     ];
 
     public const ROLES = [
-        'staff'      => 'Staff',
-        'leader'     => 'Leader',
-        'c_level'    => 'C-Level',
+        'staff'       => 'Staff',
+        'leader'      => 'Leader',
+        'c_level'     => 'C-Level',
+        'super_admin' => 'Super Admin',
     ];
 
     /**
@@ -49,7 +50,12 @@ class User extends Authenticatable
      */
     public function canExport(): bool
     {
-        return $this->role === 'c_level' || (bool) $this->is_management;
+        return in_array($this->role, ['c_level', 'super_admin']) || (bool) $this->is_management;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
     }
 
     public function isManagement(): bool

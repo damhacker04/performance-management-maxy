@@ -12,10 +12,8 @@ class MonthlyTargetController extends Controller
         $user = auth()->user();
 
         $targets = MonthlyTarget::with(['user', 'weeklyTargets', 'weeklyTargets.dailyTaskEntries'])
-            ->when($user->role === 'leader', fn($q) => $q->where('user_id', $user->id))
-            ->when($user->role === 'staff', fn($q) => 
+            ->when($user->role === 'leader' || $user->role === 'staff', fn($q) => 
                 $q->where('department', $user->department)
-                  ->whereHas('user', fn($uq) => $uq->where('role', 'leader'))
             )
             ->orderByDesc('year')
             ->orderByDesc('month')
@@ -39,19 +37,39 @@ class MonthlyTargetController extends Controller
             'year'        => 'required|integer|min:2024|max:2030',
         ];
 
-        // C-Level wajib pilih departemen dari dropdown
-        if ($user->role === 'c_level') {
-            $rules['department'] = 'required|string|in:sales,marketing,product_it,operational,ceo_office';
+        // C-Level dan Super Admin wajib pilih departemen dari dropdown
+        if (in_array($user->role, ['c_level', 'super_admin'])) {
+            $deptKeys = implode(',', array_keys(\App\Models\User::DEPARTMENTS));
+            $rules['department'] = 'required|string|in:' . $deptKeys;
         }
 
         $validated = $request->validate($rules);
 
-        $department = $user->role === 'c_level'
+        $department = in_array($user->role, ['c_level', 'super_admin'])
             ? $validated['department']
             : ($user->department ?? 'ceo_office');
 
+        // Tentukan pemilik target (user_id)
+        $targetUserId = $user->id;
+        
+        if ($user->role === 'super_admin') {
+            // Cari Leader di departemen tersebut
+            $leader = \App\Models\User::where('department', $department)
+                ->where('role', 'leader')
+                ->where('is_active', true)
+                ->first();
+                
+            if ($leader) {
+                $targetUserId = $leader->id;
+            } else {
+                // Jika tidak ada leader, fallback ke C-Level (CEO)
+                $cLevel = \App\Models\User::where('role', 'c_level')->where('is_active', true)->first();
+                $targetUserId = $cLevel ? $cLevel->id : $user->id;
+            }
+        }
+
         MonthlyTarget::create([
-            'user_id'     => $user->id,
+            'user_id'     => $targetUserId,
             'department'  => $department,
             'title'       => $validated['title'],
             'description' => $validated['description'] ?? null,

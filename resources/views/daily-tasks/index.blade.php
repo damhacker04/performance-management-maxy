@@ -3,16 +3,41 @@
     <div class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;width:100%;">
             <div style="min-width:200px;">
-                <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Tugas Saya</h1>
+                <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">
+                    {{ $tab === 'review' ? 'Menunggu Review' : 'Tugas Saya' }}
+                </h1>
                 <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">{{ $entries->count() }} laporan tercatat</p>
             </div>
+            @if($tab !== 'review')
             <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
                 <svg class="lucide sm" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" />
                 </svg>
                 Tambah Task
             </a>
+            @endif
         </div>
+
+        {{-- Navigation Tabs --}}
+        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        <div style="display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;">
+            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+                      background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'mine' ? '#fff' : 'var(--fg-2)' }};">
+                📝 Tugas Saya
+            </a>
+            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:{{ $tab === 'review' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'review' ? '#fff' : 'var(--fg-2)' }};">
+                👀 Menunggu Review
+                @if($pendingReviewCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                @endif
+            </a>
+        </div>
+        @endif
 
         @if($entries->isEmpty())
             <div class="m-card">
@@ -46,12 +71,50 @@
                     <a href="{{ route('daily-tasks.show', $entry->id) }}"
                        class="m-card" style="text-decoration:none;color:inherit;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:10px;">
                         {{-- Header card --}}
-                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-                            <div style="flex:1;min-width:0;">
-                                <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;
-                                            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                                    {{ $entry->task_description }}
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+                                
+                                @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                    {{-- Target Mingguan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Mingguan</div>
+                                        <div style="font-size:13px; font-weight:600; color:var(--fg-2); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @elseif($entry->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Tugas Tambahan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Tipe Tugas</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            Tugas Tambahan
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Laporan --}}
+                                <div>
+                                    <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Laporan Dikirim</div>
+                                    <div style="font-size:12px; font-weight:400; color:var(--fg-2); line-height:1.4;">
+                                        {{ $entry->task_description }}
+                                    </div>
                                 </div>
+
                             </div>
                             <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" style="flex-shrink:0;" aria-hidden="true">
                                 @if($entry->status === 'selesai')
@@ -83,19 +146,6 @@
                             <span>{{ \Carbon\Carbon::parse($entry->task_date)->format('d M Y') }}</span>
                             <span>{{ $entry->duration_label }}</span>
                         </div>
-                        @if($entry->weeklyTarget)
-                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                📋 {{ Str::limit($entry->weeklyTarget->title, 36) }}
-                            </div>
-                        @elseif($entry->monthlyTarget)
-                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                📋 {{ Str::limit($entry->monthlyTarget->title, 36) }}
-                            </div>
-                        @else
-                            <div style="font-size:11px;color:#B45309;background:#FEF3C7;padding:4px 8px;border-radius:6px;">
-                                📌 Tugas Tambahan
-                            </div>
-                        @endif
                     </a>
                 @endforeach
             </div>

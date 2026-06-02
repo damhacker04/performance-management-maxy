@@ -17,7 +17,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Ika', 
                 'email' => 'ika.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'Head of Operational',
                 'role' => 'leader', // Diubah menjadi Leader sesuai hierarki Manager of Operational
                 'is_management' => true
@@ -26,7 +26,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Alifia', 
                 'email' => 'alifia.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'General Affair',
                 'role' => 'staff', 
                 'is_management' => false
@@ -34,7 +34,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Brigitha', 
                 'email' => 'brigithap.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'Corporate Legal',
                 'role' => 'staff', 
                 'is_management' => false
@@ -42,7 +42,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Indah', 
                 'email' => 'indah.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'Finance',
                 'role' => 'staff', 
                 'is_management' => false
@@ -50,7 +50,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Dwi Isma', 
                 'email' => 'dwiisma.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'PA of Manager Ops',
                 'role' => 'staff', 
                 'is_management' => false
@@ -58,7 +58,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Anisa', 
                 'email' => 'anisasukmawati.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'Talent Placement',
                 'role' => 'staff', 
                 'is_management' => false
@@ -66,7 +66,7 @@ class InitialUserSeeder extends Seeder
             [
                 'name' => 'Eka', 
                 'email' => 'eka.maxy.academy@gmail.com', 
-                'department' => 'Operational', 
+                'department' => 'operational', 
                 'division' => 'Talent Placement',
                 'role' => 'staff', 
                 'is_management' => false

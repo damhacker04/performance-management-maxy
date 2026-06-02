@@ -237,22 +237,63 @@
                         <a href="{{ route('daily-tasks.show', $entry->id) }}"
                            class="row-body"
                            style="text-decoration:none;color:inherit;cursor:pointer;">
-                            <div class="row-title">
-                                {{ $entry->task_description }}
-                                @if($entry->is_overdue)
-                                    <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                            <div class="row-title" style="display:flex;flex-direction:column;gap:10px;">
+                                @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                    {{-- Target Mingguan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Mingguan</div>
+                                        <div style="font-size:13px; font-weight:600; color:var(--fg-2); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @elseif($entry->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Tugas Tambahan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Tipe Tugas</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            Tugas Tambahan
+                                        </div>
+                                    </div>
                                 @endif
+                                
+                                {{-- Laporan --}}
+                                <div>
+                                    <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Laporan Dikirim</div>
+                                    <div style="font-size:12px; font-weight:400; color:var(--fg-2); line-height:1.4;">
+                                        {{ $entry->task_description }}
+                                        @if($entry->is_overdue)
+                                            <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
                                 @if($entry->priority !== 'medium')
                                     <span class="chip chip-{{ $priorityChip }}">{{ $entry->priority_label }}</span>
                                 @endif
-                                @if($entry->weeklyTarget)
-                                    <span>· {{ Str::limit($entry->weeklyTarget->title, 24) }}</span>
-                                @elseif($entry->monthlyTarget)
-                                    <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
-                                @endif
+                                <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
+                                    @if($entry->verification_status === 'approved') ✅
+                                    @elseif($entry->verification_status === 'revision') ↩
+                                    @elseif($entry->verification_status === 'rejected') ❌
+                                    @else ⏳
+                                    @endif
+                                </span>
                                 <span>· {{ $entry->duration_label }}</span>
                             </div>
                         </a>
@@ -276,7 +317,7 @@
 
     @elseif ($user->role === 'leader')
         @php
-            $targets     = \App\Models\MonthlyTarget::where('user_id', $user->id)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
+            $targets     = \App\Models\MonthlyTarget::where('department', $user->department)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
             $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
             $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
 
@@ -495,11 +536,14 @@
 
             {{-- Card 1: Task Target --}}
             <div class="m-card" style="padding:0;">
-                <div class="section-head">
-                    <span class="overline-label">📋 Menunggu Review — Task Target</span>
-                    @if($pendingWithTarget->count() > 0)
-                        <span class="chip chip-warning" style="font-size:11px;">{{ $pendingWithTarget->count() }}</span>
-                    @endif
+                <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="overline-label">📋 Menunggu Review — Task Target</span>
+                        @if($pendingWithTarget->count() > 0)
+                            <span class="chip chip-warning" style="font-size:11px;">{{ $pendingWithTarget->count() }}</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:var(--maxy-navy);text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
                 <div style="padding:0 16px 8px;">
                     @forelse($pendingWithTarget as $entry)
@@ -536,11 +580,14 @@
 
             {{-- Card 2: Task Other --}}
             <div class="m-card" style="padding:0;">
-                <div class="section-head" style="background:linear-gradient(90deg,#FFF7ED 0%,transparent 100%);">
-                    <span class="overline-label" style="color:#B45309;">📌 Menunggu Review — Task Other</span>
-                    @if($pendingAdHoc->count() > 0)
-                        <span class="chip" style="font-size:11px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">{{ $pendingAdHoc->count() }}</span>
-                    @endif
+                <div class="section-head" style="background:linear-gradient(90deg,#FFF7ED 0%,transparent 100%);display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="overline-label" style="color:#B45309;">📌 Menunggu Review — Task Other</span>
+                        @if($pendingAdHoc->count() > 0)
+                            <span class="chip" style="font-size:11px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">{{ $pendingAdHoc->count() }}</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:#B45309;text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
                 <div style="padding:0 16px 8px;">
                     @forelse($pendingAdHoc as $entry)

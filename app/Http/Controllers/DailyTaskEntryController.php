@@ -12,17 +12,41 @@ use Illuminate\Support\Facades\Storage;
 
 class DailyTaskEntryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $tab  = $request->query('tab', 'mine');
 
-        $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('task_date')
-            ->orderByDesc('id')
-            ->get();
+        if ($tab === 'review' && in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            // Laporan yang butuh review
+            $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget', 'user'])
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
+                )
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->orderByDesc('task_date')
+                ->orderByDesc('id')
+                ->get();
+        } else {
+            // Laporan milik sendiri (default)
+            $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
+                ->where('user_id', $user->id)
+                ->orderByDesc('task_date')
+                ->orderByDesc('id')
+                ->get();
+        }
 
-        return view('daily-tasks.index', compact('entries'));
+        // Hitung jumlah menunggu review untuk badge di UI Tab
+        $pendingReviewCount = 0;
+        if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            $pendingReviewCount = DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
+                )
+                ->count();
+        }
+
+        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount'));
     }
 
     public function show(DailyTaskEntry $dailyTask)
@@ -177,6 +201,7 @@ class DailyTaskEntryController extends Controller
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
             'notes'             => 'required|string|min:5',
+            'revision_response' => 'nullable|string|min:3',
             'proof_url'         => $isSales ? 'required_without:proof_file|nullable|url' : 'nullable|url',
             'proof_file'        => $isSales ? 'required_without:proof_url|nullable|file|mimes:jpg,jpeg,png,pdf|max:5120' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
@@ -237,7 +262,7 @@ class DailyTaskEntryController extends Controller
             $history = $dailyTask->revision_history ?? [];
             if (!empty($history)) {
                 $lastIdx = count($history) - 1;
-                $history[$lastIdx]['staff_response']    = $validated['notes'] ?? null;
+                $history[$lastIdx]['staff_response']    = $validated['revision_response'] ?? $validated['notes'] ?? null;
                 $history[$lastIdx]['staff_responded_at'] = now()->toDateTimeString();
                 $history[$lastIdx]['staff_name']        = $user->name;
             }
