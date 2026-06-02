@@ -97,7 +97,7 @@
 
                                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                                     <span class="chip chip-neutral">
-                                        {{ $weekCount }} minggu
+                                        {{ $weekCount }} target mingguan
                                     </span>
                                     @if($myTotal > 0)
                                         <span class="chip chip-neutral">{{ $myTotal }} laporan masuk</span>
