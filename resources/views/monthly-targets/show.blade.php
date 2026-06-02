@@ -59,7 +59,7 @@
         <div class="kpi-card">
             <div class="kc-header">
                 <span class="kc-title">Target Mingguan</span>
-                <span class="chip chip-neutral">{{ $monthlyTarget->weeklyTargets->count() }} minggu</span>
+                <span class="chip chip-neutral">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
             </div>
             <div class="kc-value">{{ $monthlyTarget->weeklyTargets->count() }}<span class="kc-sub"> target</span></div>
             <div class="progress-bar"><i style="width:{{ min($monthlyTarget->weeklyTargets->count() * 20, 100) }}%"></i></div>

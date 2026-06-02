@@ -93,28 +93,26 @@ class DailyTaskEntryController extends Controller
         // - Leader: HANYA weekly target dari monthly target yang dibuat C-Level untuk dept-nya
         // - C-Level: semua weekly target bulan ini lintas department
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->where(function ($q) use ($user) {
-                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
-                    $mq->where('month', now()->month)
-                       ->where('year', now()->year);
-                    if (!empty($user->department)) {
-                        $mq->where('department', $user->department);
-                    }
-                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
-                    if ($user->role === 'leader') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
-                    }
-                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
-                    if ($user->role === 'staff') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
-                    }
-                });
-            })
             ->where('month', now()->month)
             ->where('year', now()->year)
-            ->where(function($q) use ($user) {
-                $q->whereNull('assigned_to')
-                  ->orWhere('assigned_to', $user->id);
+            ->where(function ($q) use ($user) {
+                // 1. Yang eksplisit di-assign ke user ini (bisa lintas departemen)
+                $q->where('assigned_to', $user->id)
+                  // 2. ATAU yang assigned_to null TAPI departemennya cocok
+                  ->orWhere(function ($subQ) use ($user) {
+                      $subQ->whereNull('assigned_to');
+                      if (!empty($user->department)) {
+                          $subQ->whereHas('monthlyTarget', function ($mq) use ($user) {
+                              $mq->where('department', $user->department);
+                              if ($user->role === 'leader') {
+                                  $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                              }
+                              if ($user->role === 'staff') {
+                                  $mq->whereHas('user', fn($uq) => $uq->whereIn('role', ['leader', 'super_admin']));
+                              }
+                          });
+                      }
+                  });
             })
             ->orderBy('week_number')
             ->get();
@@ -157,28 +155,26 @@ class DailyTaskEntryController extends Controller
         $user = auth()->user();
 
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->where(function ($q) use ($user) {
-                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
-                    $mq->where('month', now()->month)
-                       ->where('year', now()->year);
-                    if (!empty($user->department)) {
-                        $mq->where('department', $user->department);
-                    }
-                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
-                    if ($user->role === 'leader') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
-                    }
-                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
-                    if ($user->role === 'staff') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
-                    }
-                });
-            })
             ->where('month', now()->month)
             ->where('year', now()->year)
-            ->where(function($q) use ($user) {
-                $q->whereNull('assigned_to')
-                  ->orWhere('assigned_to', $user->id);
+            ->where(function ($q) use ($user) {
+                // 1. Yang eksplisit di-assign ke user ini (bisa lintas departemen)
+                $q->where('assigned_to', $user->id)
+                  // 2. ATAU yang assigned_to null TAPI departemennya cocok
+                  ->orWhere(function ($subQ) use ($user) {
+                      $subQ->whereNull('assigned_to');
+                      if (!empty($user->department)) {
+                          $subQ->whereHas('monthlyTarget', function ($mq) use ($user) {
+                              $mq->where('department', $user->department);
+                              if ($user->role === 'leader') {
+                                  $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                              }
+                              if ($user->role === 'staff') {
+                                  $mq->whereHas('user', fn($uq) => $uq->whereIn('role', ['leader', 'super_admin']));
+                              }
+                          });
+                      }
+                  });
             })
             ->orderBy('week_number')
             ->get();
