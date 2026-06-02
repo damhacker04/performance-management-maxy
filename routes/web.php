@@ -112,21 +112,16 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
 });
 
 
-Route::get('/migrate-now', function() {
-    \Illuminate\Support\Facades\Artisan::call('migrate:fresh', [
-        '--seed' => true,
+// Route rahasia untuk menjalankan migration & seeder dengan aman di production (tanpa menghapus data)
+Route::get('/deploy-update', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate', [
         '--force' => true
     ]);
-    return 'Database migrated and seeded successfully! You can now log in.';
-});
-
-// Route rahasia untuk mengupdate Role Bu Ika menjadi Leader di Railway tanpa menghapus data
-Route::get('/update-user-roles', function() {
     \Illuminate\Support\Facades\Artisan::call('db:seed', [
-        '--class' => 'InitialUserSeeder',
+        '--class' => 'SuperAdminSeeder',
         '--force' => true
     ]);
-    return 'Berhasil memperbarui Role User di Railway! Bu Ika sekarang adalah Leader.';
+    return 'Database berhasil di-migrate dan akun Super Admin berhasil ditambahkan!';
 });
 
 // Developer Login Route (Local Only)
