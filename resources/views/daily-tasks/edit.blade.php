@@ -172,6 +172,23 @@
                 @error('notes')<span class="err">{{ $message }}</span>@enderror
             </div>
 
+            @if($dailyTask->verification_status === 'revision')
+            <div class="field" style="background:#FFF8E8;padding:12px;border:1px solid #FDE68A;border-radius:10px;">
+                <label for="revision_response" style="color:#B45309;display:flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    Balasan Revisi untuk Leader
+                    <span style="color:var(--danger);">*</span>
+                </label>
+                <textarea id="revision_response" name="revision_response"
+                          class="m-textarea {{ $errors->has('revision_response') ? 'err' : '' }}"
+                          style="min-height:80px;border-color:#FBB041;background:#fff;"
+                          placeholder="Tuliskan balasan atau konfirmasi bahwa revisi sudah dilakukan..."
+                          required>{{ old('revision_response') }}</textarea>
+                <small style="color:#8B5A00;font-size:11px;">Catatan ini akan muncul langsung di Activity Log saat membalas revisi leader.</small>
+                @error('revision_response')<span class="err">{{ $message }}</span>@enderror
+            </div>
+            @endif
+
             <!-- Bukti Laporan -->
             <div class="field">
                 @php $isSales = auth()->user()->department === 'sales'; @endphp

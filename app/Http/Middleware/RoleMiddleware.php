@@ -14,6 +14,11 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
+        // Super admin memiliki akses ke semua route tanpa perlu dicantumkan satu per satu
+        if (auth()->user()->role === 'super_admin') {
+            return $next($request);
+        }
+
         if (!in_array(auth()->user()->role, $roles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }

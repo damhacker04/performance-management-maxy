@@ -46,7 +46,6 @@ class WeeklyTargetController extends Controller
             $cLevelTargetsQuery->where('department', $user->department);
             $teamTargetsQuery
                 ->where('department', $user->department)
-                ->where('user_id', $user->id) // hanya buatan leader ini
                 ->where('month', now()->month)
                 ->where('year',  now()->year);
         } elseif ($user->role === 'c_level') {
@@ -58,14 +57,23 @@ class WeeklyTargetController extends Controller
         $cLevelTargets = $cLevelTargetsQuery->get();
         $teamTargets   = $teamTargetsQuery->get();
 
-        $staffList = \App\Models\User::where('department', $user->department)
-            ->whereIn('role', ['staff', 'leader'])
-            ->orderBy('name')
-            ->get();
-
         $preSelected = $request->filled('monthly_target_id')
             ? (int) $request->monthly_target_id
             : null;
+
+        // Tentukan departemen target (berguna untuk super_admin / c_level yang tidak punya departemen tetap)
+        $targetDepartment = $user->department;
+        if ($preSelected) {
+            $monthlyTarget = \App\Models\MonthlyTarget::find($preSelected);
+            if ($monthlyTarget) {
+                $targetDepartment = $monthlyTarget->department;
+            }
+        }
+
+        $staffList = \App\Models\User::where('department', $targetDepartment)
+            ->whereIn('role', ['staff', 'leader'])
+            ->orderBy('name')
+            ->get();
 
         return view('weekly-targets.create', compact(
             'cLevelTargets', 'teamTargets', 'preSelected', 'context', 'staffList'
@@ -179,8 +187,7 @@ class WeeklyTargetController extends Controller
 
             if ($user->role === 'leader') {
                 $teamTargetsQuery
-                    ->where('department', $user->department)
-                    ->where('user_id', $user->id);
+                    ->where('department', $user->department);
             }
 
             $teamTargets   = $teamTargetsQuery->get();
@@ -258,8 +265,8 @@ class WeeklyTargetController extends Controller
     private function authorizeMonthly(MonthlyTarget $monthlyTarget): void
     {
         $user = auth()->user();
-        if ($user->role === 'c_level') return;
-        if ($user->role === 'leader' && $monthlyTarget->user_id === $user->id) return;
+        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->role === 'leader' && $monthlyTarget->department === $user->department) return;
 
         abort(403, 'Anda tidak memiliki akses ke target ini.');
     }
@@ -272,7 +279,7 @@ class WeeklyTargetController extends Controller
     private function authorizeWeekly(WeeklyTarget $weeklyTarget): void
     {
         $user = auth()->user();
-        if ($user->role === 'c_level') return;
+        if (in_array($user->role, ['c_level', 'super_admin'])) return;
 
         if ($weeklyTarget->monthly_target_id) {
             $this->authorizeMonthly($weeklyTarget->monthlyTarget);

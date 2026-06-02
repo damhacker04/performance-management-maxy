@@ -2,8 +2,8 @@
 @php
     $user = auth()->user();
     $initials = collect(explode(' ', $user->name))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-    $deptLabel = ucfirst(str_replace('_', ' ', $user->department ?? 'CEO Office'));
-    $roleLabel = ['staff'=>'Staff','leader'=>'Leader','c_level'=>'C-Level'][$user->role] ?? $user->role;
+    $deptLabel = $user->department ? ucfirst(str_replace('_', ' ', $user->department)) : ($user->role === 'super_admin' ? 'Super Admin' : 'Tanpa Departemen');
+    $roleLabel = ['staff'=>'Staff','leader'=>'Leader','c_level'=>'C-Level','super_admin'=>'Super Admin'][$user->role] ?? $user->role;
 @endphp
 
 <div class="page">
@@ -12,7 +12,7 @@
         <div class="av-lg">{{ $initials }}</div>
         <h2 style="margin-top:12px;font-size:18px;font-weight:700;">{{ $user->name }}</h2>
         <p style="font-size:13px;color:var(--fg-3);margin-top:2px;">{{ $roleLabel }} · {{ $deptLabel }}</p>
-        <span class="chip chip-dept-{{ str_replace('_','-', $user->department ?? 'ceo') }}" style="margin-top:10px;">
+        <span class="chip chip-dept-{{ str_replace('_','-', $user->department ?? 'neutral') }}" style="margin-top:10px;">
             {{ $deptLabel }}
         </span>
     </div>

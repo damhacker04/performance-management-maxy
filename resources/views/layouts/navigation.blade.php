@@ -15,6 +15,15 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if (Auth::user()->role === 'super_admin')
+                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                            👤 Kelola Pengguna
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.target-assignment.index')" :active="request()->routeIs('admin.target-assignment.*')">
+                            🎯 Assign Target
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +79,15 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if (Auth::user()->role === 'super_admin')
+                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                    👤 Kelola Pengguna
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.target-assignment.index')" :active="request()->routeIs('admin.target-assignment.*')">
+                    🎯 Assign Target
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
