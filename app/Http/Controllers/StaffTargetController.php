@@ -24,7 +24,7 @@ class StaffTargetController extends Controller
             })->orderBy('week_number');
         }])
             ->where('department', $user->department)
-            ->whereHas('user', fn($q) => $q->where('role', 'leader'))
+            ->whereHas('user', fn($q) => $q->whereIn('role', ['leader', 'super_admin']))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
