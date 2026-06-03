@@ -24,10 +24,12 @@ class AppNotification extends Model
     ];
 
     // Tipe-tipe notifikasi
-    const TYPE_REVISION_REQUESTED = 'revision_requested'; // leader → staff: perlu revisi
-    const TYPE_REVISION_SUBMITTED = 'revision_submitted'; // staff → leader: revisi selesai
-    const TYPE_AUTO_REJECTED      = 'auto_rejected';      // sistem → leader: timeout auto-reject
-    const TYPE_NOT_SUBMITTED      = 'not_submitted';      // sistem → leader: staff tidak kumpul
+    const TYPE_REVISION_REQUESTED  = 'revision_requested'; // leader → staff: perlu revisi
+    const TYPE_REVISION_SUBMITTED  = 'revision_submitted'; // staff → leader: revisi selesai
+    const TYPE_AUTO_REJECTED       = 'auto_rejected';      // sistem → leader: timeout auto-reject
+    const TYPE_NOT_SUBMITTED       = 'not_submitted';      // sistem → leader: staff tidak kumpul
+    const TYPE_BACKDATE_REQUESTED  = 'backdate_requested'; // staff → leader: minta izin backdating
+    const TYPE_BACKDATE_REVIEWED   = 'backdate_reviewed';  // leader → staff: hasil review backdating
 
     // Relasi ke user penerima
     public function user()

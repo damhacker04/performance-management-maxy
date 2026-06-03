@@ -100,24 +100,68 @@ class NotificationHelper
     }
 
     /**
-     * Kirim notifikasi ke LEADER: staff tidak mengumpulkan laporan hari ini.
-     * Dipanggil secara manual atau dari scheduler.
+     * Kirim notifikasi ke LEADER: staf mengajukan permintaan backdating.
      */
-    public static function notSubmitted(User $staff, User $leader): void
+    public static function backdateRequested(\App\Models\BackdateRequest $req): void
     {
+        $staff = $req->user;
+
+        // Kirim ke semua leader + c_level + super_admin di departemen yang sama
+        $leaders = User::whereIn('role', ['leader', 'c_level', 'super_admin'])
+            ->where(function ($q) use ($staff) {
+                $q->where('department', $staff->department)
+                  ->orWhereIn('role', ['c_level', 'super_admin']);
+            })
+            ->get()
+            ->unique('id');
+
+        foreach ($leaders as $leader) {
+            AppNotification::create([
+                'user_id'    => $leader->id,
+                'type'       => AppNotification::TYPE_BACKDATE_REQUESTED,
+                'title'      => $staff->name . ' Minta Izin Backdating',
+                'body'       => $staff->name . ' mengajukan izin untuk mengisi laporan tanggal ' .
+                                \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMMM YYYY') .
+                                '. Alasan: ' . \Str::limit($req->reason, 80),
+                'related_id' => $req->id,
+                'meta'       => [
+                    'staff_name'     => $staff->name,
+                    'requested_date' => $req->requested_date->toDateString(),
+                    'reason'         => $req->reason,
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * Kirim notifikasi ke STAF: permintaan backdating sudah direview leader.
+     */
+    public static function backdateReviewed(\App\Models\BackdateRequest $req): void
+    {
+        $isApproved = $req->status === 'approved';
+
         AppNotification::create([
-            'user_id'    => $leader->id,
-            'type'       => AppNotification::TYPE_NOT_SUBMITTED,
-            'title'      => $staff->name . ' Belum Kumpul Laporan',
-            'body'       => $staff->name . ' belum mengumpulkan laporan tugas hari ini (' .
-                            now()->isoFormat('D MMMM YYYY') . ').',
-            'related_id' => null,
+            'user_id'    => $req->user_id,
+            'type'       => AppNotification::TYPE_BACKDATE_REVIEWED,
+            'title'      => $isApproved
+                ? '✅ Permintaan Backdating Disetujui'
+                : '❌ Permintaan Backdating Ditolak',
+            'body'       => $isApproved
+                ? 'Kamu diizinkan mengisi laporan untuk tanggal ' .
+                  \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMMM YYYY') .
+                  '. Segera isi laporanmu (berlaku 24 jam).'
+                : 'Permintaan backdating tanggal ' .
+                  \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMMM YYYY') .
+                  ' ditolak. Alasan: ' . ($req->rejection_note ?? '-'),
+            'related_id' => $req->id,
             'meta'       => [
-                'staff_name'  => $staff->name,
-                'staff_id'    => $staff->id,
-                'date'        => today()->toDateString(),
-                'department'  => $staff->department,
+                'status'         => $req->status,
+                'requested_date' => $req->requested_date->toDateString(),
+                'reviewer_name'  => $req->reviewer?->name,
+                'rejection_note' => $req->rejection_note,
+                'approval_token' => $req->approval_token,
             ],
         ]);
     }
 }
+

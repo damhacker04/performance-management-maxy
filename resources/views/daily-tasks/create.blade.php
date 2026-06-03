@@ -11,6 +11,34 @@
         </div>
     </div>
 
+    {{-- Banner info: mode normal atau mode backdating --}}
+    @if(isset($backdateRequest) && $backdateRequest)
+        {{-- Mode Backdating: token valid --}}
+        <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
+            <svg class="lucide" style="width:15px;height:15px;flex-shrink:0;color:#B45309;margin-top:1px;" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+            <div style="flex:1;font-size:12px;color:#8B5A00;line-height:1.6;">
+                📅 <strong>Mode Backdating</strong> — Laporan ini akan tercatat untuk tanggal
+                <strong>{{ \Carbon\Carbon::parse($backdateRequest->requested_date)->isoFormat('dddd, D MMMM YYYY') }}</strong>
+                (disetujui oleh {{ $backdateRequest->reviewer?->name ?? 'Leader' }}).
+                Token berlaku hingga <strong>{{ $backdateRequest->token_expires_at?->isoFormat('D MMM, HH:mm') }}</strong>.
+                <input type="hidden" name="backdate_token" value="{{ $backdateRequest->approval_token }}">
+            </div>
+        </div>
+    @else
+        {{-- Mode Normal --}}
+        <div style="background:#F8FAFF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:flex-start;">
+            <svg class="lucide" style="width:15px;height:15px;flex-shrink:0;color:#1D4ED8;margin-top:1px;" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+            <div style="flex:1;font-size:12px;color:#1E3A8A;line-height:1.6;">
+                Laporan ini otomatis tercatat untuk <strong>hari ini</strong>.
+                Perlu mengisi laporan untuk tanggal kemarin atau sebelumnya?
+                <a href="{{ route('backdate-requests.create') }}" style="color:var(--maxy-navy);font-weight:700;text-decoration:underline;">
+                    Ajukan Izin Backdating →
+                </a>
+            </div>
+        </div>
+    @endif
+
+
     {{-- Section: Lanjutkan dari hari sebelumnya (cuma muncul kalau ada task belum selesai) --}}
     @if(!$continueFrom && $continuableTasks->isNotEmpty())
         @php
@@ -77,6 +105,10 @@
                   enctype="multipart/form-data"
                   style="display:flex;flex-direction:column;gap:16px;">
                 @csrf
+                {{-- Hidden token untuk mode backdating --}}
+                @if(isset($backdateRequest) && $backdateRequest)
+                    <input type="hidden" name="backdate_token" value="{{ $backdateRequest->approval_token }}">
+                @endif
 
                 {{-- Banner ketika user pilih "lanjutkan dari kemarin" --}}
                 @if($continueFrom)

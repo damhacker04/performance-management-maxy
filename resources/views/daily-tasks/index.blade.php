@@ -36,7 +36,21 @@
                 <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
                 @endif
             </a>
+            @php
+                $backdatePendingCount = \App\Models\BackdateRequest::when(auth()->user()->role === 'leader', fn($q) =>
+                    $q->whereHas('user', fn($uq) => $uq->where('department', auth()->user()->department))
+                )->where('status', 'pending')->count();
+            @endphp
+            <a href="{{ route('backdate-requests.index') }}"
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:var(--bg-2);color:var(--fg-2);">
+                📅 Izin Backdating
+                @if($backdatePendingCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $backdatePendingCount }}</span>
+                @endif
+            </a>
         </div>
+
         @endif
 
         @if($entries->isEmpty())
