@@ -53,6 +53,40 @@
 
         @endif
 
+        {{-- Banner Laporan Disetujui (Opsi 1) --}}
+        @if($tab === 'mine' && isset($recentApproved) && $recentApproved->isNotEmpty())
+        <div class="m-card" style="border:1px solid #16A571; background:#E8F7F4; margin-bottom:16px; border-radius:10px; padding:0;">
+            <div style="padding:12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="document.getElementById('approved-accordion-body').classList.toggle('hidden')">
+                <div style="font-size:12px; font-weight:700; color:#0F7A50;">
+                    ✅ Laporan Baru Disetujui (3 hari terakhir)
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:10px; background:#16A571; color:#fff; padding:2px 8px; border-radius:99px;">
+                        {{ $recentApproved->count() }} laporan
+                    </span>
+                    <svg class="lucide" style="width:16px; height:16px; color:#0F7A50;" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+            </div>
+
+            <div id="approved-accordion-body" class="hidden" style="padding:0 16px 12px; display:flex; flex-direction:column; gap:8px;">
+                @foreach($recentApproved as $approvedEntry)
+                    <a href="{{ route('daily-tasks.show', $approvedEntry->id) }}" style="background:#fff; border:1px solid #D1FAE5; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; text-decoration:none;">
+                        <div>
+                            <div style="font-size:13px; font-weight:600; color:var(--fg-1);">{{ Str::limit($approvedEntry->task_description, 60) }}</div>
+                            <div style="font-size:11px; color:var(--fg-3);">
+                                {{ $approvedEntry->updated_at->format('d M') }} · Disetujui
+                            </div>
+                        </div>
+                        <svg class="lucide" style="width:14px; height:14px; color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        <style>
+            .hidden { display: none !important; }
+        </style>
+        @endif
+
         @if($entries->isEmpty())
             <div class="m-card">
                 <div class="empty-state">

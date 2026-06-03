@@ -46,7 +46,18 @@ class DailyTaskEntryController extends Controller
                 ->count();
         }
 
-        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount'));
+        // Ambil laporan yang baru disetujui (3 hari terakhir) untuk notifikasi staf
+        $recentApproved = collect();
+        if ($tab === 'mine') {
+            $recentApproved = DailyTaskEntry::with(['weeklyTarget', 'monthlyTarget'])
+                ->where('user_id', $user->id)
+                ->where('verification_status', 'approved')
+                ->where('updated_at', '>=', now()->subDays(3))
+                ->orderByDesc('updated_at')
+                ->get();
+        }
+
+        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount', 'recentApproved'));
     }
 
     public function show(DailyTaskEntry $dailyTask)
