@@ -90,31 +90,81 @@ class MonthlyTargetController extends Controller
 
         $monthlyTarget->load([
             'user',
-            'weeklyTargets' => fn($q) => $q->orderBy('week_number'),
+            'weeklyTargets'                        => fn($q) => $q->orderBy('week_number')->orderBy('id'),
+            'weeklyTargets.assignee',
             'weeklyTargets.dailyTaskEntries.user',
         ]);
 
-        // Statistik laporan per weekly target
+        // ── Statistik laporan per weekly target ───────────────────────────────
         $entriesByWeek = $monthlyTarget->weeklyTargets
             ->mapWithKeys(fn($wt) => [
                 $wt->id => [
-                    'total' => $wt->dailyTaskEntries->count(),
-                    'done'  => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
+                    'total'          => $wt->dailyTaskEntries->count(),
+                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
+                    'pending_review' => $wt->dailyTaskEntries
+                                          ->where('status', 'selesai')
+                                          ->where('verification_status', 'pending')
+                                          ->count(),
                 ],
             ]);
 
-        // Untuk C-Level & Super Admin: laporan leader per weekly target, digroup [weekly_id][user_id]
-        // Data sudah ter-eager load via dailyTaskEntries.user — tidak ada query tambahan
+        // ── Group weekly targets PER ORANG (untuk accordion) ─────────────────
+        // Key = user_id (int) atau 'umum' (null assigned_to)
+        $byPerson = $monthlyTarget->weeklyTargets
+            ->groupBy(fn($wt) => $wt->assigned_to ?? 'umum');
+
+        // Ambil data user untuk semua assignee, diurutkan abjad
+        $assigneeIds = $monthlyTarget->weeklyTargets
+            ->pluck('assigned_to')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $assignees = \App\Models\User::whereIn('id', $assigneeIds)
+            ->orderBy('name')
+            ->get()
+            ->keyBy('id');
+
+        // Urutkan byPerson: abjad berdasarkan nama, 'umum' selalu di paling bawah
+        $byPersonSorted = collect();
+        foreach ($assignees as $uid => $person) {
+            if ($byPerson->has($uid)) {
+                $byPersonSorted->put($uid, $byPerson->get($uid));
+            }
+        }
+        if ($byPerson->has('umum')) {
+            $byPersonSorted->put('umum', $byPerson->get('umum'));
+        }
+
+        // ── Sibling monthly targets (bulan & tahun sama) untuk dropdown dept ─
+        // Hanya diisi untuk C-Level & Super Admin
+        $siblingMonthlyTargets = collect();
+        if (in_array($user->role, ['c_level', 'super_admin'])) {
+            $siblingMonthlyTargets = MonthlyTarget::where('month', $monthlyTarget->month)
+                ->where('year', $monthlyTarget->year)
+                ->where('id', '!=', $monthlyTarget->id)
+                ->orderBy('department')
+                ->get();
+        }
+
+        // ── Laporan per weekly target digroup per user (untuk C-Level view) ──
         $leaderEntriesByWeek = [];
         if (in_array($user->role, ['c_level', 'super_admin'])) {
             foreach ($monthlyTarget->weeklyTargets as $wt) {
-                $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries
-                    ->groupBy('user_id');
+                $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries->groupBy('user_id');
             }
         }
 
-        return view('monthly-targets.show', compact('monthlyTarget', 'entriesByWeek', 'leaderEntriesByWeek'));
+        return view('monthly-targets.show', compact(
+            'monthlyTarget',
+            'entriesByWeek',
+            'byPersonSorted',
+            'assignees',
+            'siblingMonthlyTargets',
+            'leaderEntriesByWeek'
+        ));
     }
+
 
     public function edit(MonthlyTarget $monthlyTarget)
     {

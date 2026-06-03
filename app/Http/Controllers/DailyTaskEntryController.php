@@ -142,7 +142,17 @@ class DailyTaskEntryController extends Controller
             ? (int) $request->weekly_target_id
             : null;
 
-        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom', 'preSelectedWeeklyId'));
+        // Backdating context: cek apakah ada token valid dari approved backdate request
+        $backdateRequest = null;
+        if ($request->filled('backdate_token')) {
+            $backdateRequest = \App\Models\BackdateRequest::findValidByToken($request->backdate_token);
+            // Token harus milik user yang login
+            if ($backdateRequest && $backdateRequest->user_id !== $user->id) {
+                $backdateRequest = null;
+            }
+        }
+
+        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom', 'preSelectedWeeklyId', 'backdateRequest'));
     }
 
     /**
@@ -377,6 +387,25 @@ class DailyTaskEntryController extends Controller
             $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
         }
 
+        // ── Grace Period & Backdate Logic ─────────────────────────────────────
+        // Tentukan tanggal laporan:
+        // 1. Jika ada backdate token yang valid → gunakan tanggal yang disetujui.
+        // 2. Jika sebelum jam 03:00 pagi → otomatis izinkan tanggal kemarin (grace period).
+        // 3. Default: hari ini.
+        $taskDate = today()->toDateString();
+
+        if ($request->filled('backdate_token')) {
+            $bdReq = \App\Models\BackdateRequest::findValidByToken($request->backdate_token);
+            if ($bdReq && $bdReq->user_id === $user->id) {
+                $taskDate = $bdReq->requested_date->toDateString();
+                // Invalidate token setelah digunakan (satu kali pakai)
+                $bdReq->update(['token_expires_at' => now()]);
+            }
+        } elseif (now()->hour < 3) {
+            // Grace period: sebelum jam 03:00 pagi → anggap laporan untuk kemarin
+            $taskDate = today()->subDay()->toDateString();
+        }
+
         $entry = DailyTaskEntry::create([
             'user_id'           => auth()->id(),
             'monthly_target_id' => $monthlyTargetId,
@@ -386,7 +415,7 @@ class DailyTaskEntryController extends Controller
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
-            'task_date'         => now()->toDateString(),
+            'task_date'         => $taskDate,
             'proof_url'         => $validated['proof_url'] ?? null,
             'proof_file'        => $proofFilePath,
         ]);

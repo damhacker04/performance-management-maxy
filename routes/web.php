@@ -8,6 +8,7 @@ use App\Http\Controllers\StaffTargetController;
 use App\Http\Controllers\LeaderTargetController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\BackdateRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -78,6 +79,23 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/export',               [ExportController::class, 'index'])->name('export.index');
     Route::get('/export/download-excel',[ExportController::class, 'downloadExcel'])->name('export.download-excel');
     Route::get('/export/print',         [ExportController::class, 'printView'])->name('export.print');
+
+    // ── Backdating Request ────────────────────────────────────────────────────
+    // Staf: ajukan permintaan izin backdating
+    Route::get('/backdate-requests/create', [BackdateRequestController::class, 'create'])
+        ->name('backdate-requests.create');
+    Route::post('/backdate-requests', [BackdateRequestController::class, 'store'])
+        ->name('backdate-requests.store');
+
+    // Leader/C-Level/Super Admin: review permintaan
+    Route::middleware('role:leader,c_level,super_admin')->group(function () {
+        Route::get('/backdate-requests', [BackdateRequestController::class, 'index'])
+            ->name('backdate-requests.index');
+        Route::patch('/backdate-requests/{backdateRequest}/approve', [BackdateRequestController::class, 'approve'])
+            ->name('backdate-requests.approve');
+        Route::patch('/backdate-requests/{backdateRequest}/reject', [BackdateRequestController::class, 'reject'])
+            ->name('backdate-requests.reject');
+    });
 });
 
 // ============================================================
