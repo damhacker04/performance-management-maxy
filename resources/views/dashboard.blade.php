@@ -42,6 +42,13 @@
                 ->orderByDesc('updated_at')
                 ->get();
 
+            // Laporan yang baru saja disetujui (3 hari terakhir)
+            $recentApproved = \App\Models\DailyTaskEntry::where('user_id', $user->id)
+                ->where('verification_status', 'approved')
+                ->where('updated_at', '>=', now()->subDays(3))
+                ->orderByDesc('updated_at')
+                ->get();
+
             // Tentukan minggu aktif berdasarkan tanggal hari ini
             $today = now()->day;
             $currentWeek = match(true) {
@@ -71,8 +78,45 @@
                 ->get();
         @endphp
 
-        {{-- ===================== NOTIFIKASI REVISI ===================== --}}
-        {{-- Card merah: laporan yang HARUS direvisi --}}
+        {{-- ===================== NOTIFIKASI ===================== --}}
+        
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+            {{-- Banner hijau: Laporan yang BARU DISETUJUI --}}
+            @if($recentApproved->isNotEmpty())
+                <div style="background:#E8F7F4;border:1.5px solid #16A571;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">✅</span>
+                            <span style="font-size:12px;font-weight:700;color:#0F7A50;">Laporan Baru Disetujui</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#16A571;color:#fff;font-size:10px;border:none;">{{ $recentApproved->count() }} laporan</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#0F7A50;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="approved-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($recentApproved as $appr)
+                            <a href="{{ route('daily-tasks.show', $appr->id) }}"
+                               style="display:flex;align-items:center;justify-content:space-between;
+                                      background:#fff;border:1px solid #D1FAE5;border-radius:8px;
+                                      padding:8px 10px;text-decoration:none;color:inherit;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
+                                        {{ Str::limit($appr->task_description, 38) }}
+                                    </div>
+                                    <div style="font-size:11px;color:#0D6A44;">
+                                        {{ \Carbon\Carbon::parse($appr->updated_at)->isoFormat('D MMM') }} · Disetujui oleh Leader
+                                    </div>
+                                </div>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:#0F7A50;"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Card merah: laporan yang HARUS direvisi --}}
         @if($revisionEntries->isNotEmpty())
             <div style="background:#FFF8E8;border:1.5px solid #FBB041;border-radius:12px;padding:14px 16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -137,6 +181,7 @@
                 </div>
             </div>
         @endif
+        </div>
         {{-- ============================================================ --}}
 
         <!-- KPI grid -->
