@@ -49,6 +49,14 @@
                 ->orderByDesc('updated_at')
                 ->get();
 
+            // Tugas yang belum selesai lebih dari 14 hari
+            $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
+                ->where('user_id', $user->id)
+                ->whereNotIn('status', ['selesai'])
+                ->whereDate('task_date', '<=', today()->subDays(14))
+                ->orderByDesc('task_date')
+                ->get();
+
             // Tentukan minggu aktif berdasarkan tanggal hari ini
             $today = now()->day;
             $currentWeek = match(true) {
@@ -81,6 +89,42 @@
         {{-- ===================== NOTIFIKASI ===================== --}}
         
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+            {{-- Banner oranye: Tugas BELUM SELESAI >2 minggu --}}
+            @if($overdueUnfinished->isNotEmpty())
+                <div style="background:#FFF3E8;border:1.5px solid #F97316;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('overdue-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">⏰</span>
+                            <span style="font-size:12px;font-weight:700;color:#C2410C;">Tugas Belum Selesai (&gt;2 Minggu)</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#F97316;color:#fff;font-size:10px;border:none;">{{ $overdueUnfinished->count() }} tugas</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#C2410C;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="overdue-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($overdueUnfinished as $od)
+                            <a href="{{ route('daily-tasks.show', $od->id) }}"
+                               style="display:flex;align-items:center;justify-content:space-between;
+                                      background:#fff;border:1px solid #FED7AA;border-radius:8px;
+                                      padding:8px 10px;text-decoration:none;color:inherit;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
+                                        {{ Str::limit($od->task_description, 38) }}
+                                    </div>
+                                    <div style="font-size:11px;color:#C2410C;">
+                                        {{ \Carbon\Carbon::parse($od->task_date)->isoFormat('D MMM') }}
+                                        · {{ $od->status_label }}
+                                        · {{ \Carbon\Carbon::parse($od->task_date)->diffForHumans() }}
+                                    </div>
+                                </div>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:#F97316;"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- Banner hijau: Laporan yang BARU DISETUJUI --}}
             @if($recentApproved->isNotEmpty())
                 <div style="background:#E8F7F4;border:1.5px solid #16A571;border-radius:12px;padding:14px 16px;">

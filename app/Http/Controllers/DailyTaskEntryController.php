@@ -385,6 +385,13 @@ class DailyTaskEntryController extends Controller
         $proofFilePath = null;
         if ($request->hasFile('proof_file')) {
             $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
+        } elseif ($request->filled('clipboard_proof_file')) {
+            // Gunakan file yang sudah di-upload via paste clipboard
+            $clipPath = $request->input('clipboard_proof_file');
+            // Pastikan file memang ada di storage dan milik folder proofs (security check)
+            if (str_starts_with($clipPath, 'proofs/') && \Illuminate\Support\Facades\Storage::disk('public')->exists($clipPath)) {
+                $proofFilePath = $clipPath;
+            }
         }
 
         // ── Grace Period & Backdate Logic ─────────────────────────────────────
@@ -406,8 +413,19 @@ class DailyTaskEntryController extends Controller
             $taskDate = today()->subDay()->toDateString();
         }
 
+        // Resolve parent_entry_id jika ini adalah lanjutan dari task sebelumnya
+        $parentEntryId = null;
+        if ($request->filled('continue_from')) {
+            $parentEntry = DailyTaskEntry::where('user_id', $user->id)
+                ->where('id', $request->continue_from)
+                ->whereNotIn('status', ['selesai'])
+                ->first();
+            $parentEntryId = $parentEntry?->id;
+        }
+
         $entry = DailyTaskEntry::create([
             'user_id'           => auth()->id(),
+            'parent_entry_id'   => $parentEntryId,
             'monthly_target_id' => $monthlyTargetId,
             'weekly_target_id'  => $weeklyTarget?->id,
             'task_description'  => $validated['task_description'],
@@ -543,6 +561,63 @@ class DailyTaskEntryController extends Controller
 
         return redirect()->route('daily-tasks.show', $dailyTask)
             ->with('error', '❌ Laporan telah ditolak secara permanen.');
+    }
+
+    /**
+     * Terima gambar dari clipboard (base64) → konversi ke JPEG → simpan ke storage.
+     * Digunakan oleh fitur paste screenshot di form bukti laporan.
+     */
+    public function uploadClipboard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|string', // base64 data URL
+        ]);
+
+        try {
+            $dataUrl = $request->input('image');
+
+            // Validasi format: harus data URL gambar
+            if (!preg_match('/^data:image\/(png|jpeg|jpg|gif|webp);base64,/', $dataUrl, $matches)) {
+                return response()->json(['error' => 'Format gambar tidak valid.'], 422);
+            }
+
+            // Decode base64
+            $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $dataUrl);
+            $imageData = base64_decode($base64);
+
+            if (!$imageData) {
+                return response()->json(['error' => 'Gagal decode gambar.'], 422);
+            }
+
+            // Simpan sebagai JPEG dengan nama unik
+            $fileName = 'proofs/clipboard_' . auth()->id() . '_' . now()->format('Ymd_His') . '_' . uniqid() . '.jpg';
+
+            // Konversi ke JPEG menggunakan GD jika tersedia, fallback simpan langsung
+            if (function_exists('imagecreatefromstring')) {
+                $img = imagecreatefromstring($imageData);
+                if ($img) {
+                    ob_start();
+                    imagejpeg($img, null, 85);
+                    $jpegData = ob_get_clean();
+                    imagedestroy($img);
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $jpegData);
+                } else {
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $imageData);
+                }
+            } else {
+                \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $imageData);
+            }
+
+            $url = \Illuminate\Support\Facades\Storage::disk('public')->url($fileName);
+
+            return response()->json([
+                'path' => $fileName,
+                'url'  => $url,
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Gagal menyimpan gambar: ' . $e->getMessage()], 500);
+        }
     }
 
     /**

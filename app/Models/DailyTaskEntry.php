@@ -13,6 +13,7 @@ class DailyTaskEntry extends Model
         'user_id',
         'monthly_target_id',
         'weekly_target_id',
+        'parent_entry_id',
         'task_description',
         'priority',
         'duration_minutes',
@@ -179,5 +180,44 @@ class DailyTaskEntry extends Model
             'rejected' => 'danger',
             default    => 'neutral',
         };
+    }
+
+    // ── Relasi progress multi-hari ────────────────────────────────────────────
+
+    /** Entri induk (jika ini adalah lanjutan dari hari sebelumnya) */
+    public function parentEntry()
+    {
+        return $this->belongsTo(DailyTaskEntry::class, 'parent_entry_id');
+    }
+
+    /** Entri-entri lanjutan dari entri ini */
+    public function childEntries()
+    {
+        return $this->hasMany(DailyTaskEntry::class, 'parent_entry_id')->orderBy('task_date');
+    }
+
+    /**
+     * Mengembalikan seluruh rantai progress multi-hari untuk entri ini,
+     * dari entri paling awal (root) hingga entri paling baru,
+     * diurutkan ascending berdasarkan tanggal.
+     */
+    public function progressHistory(): \Illuminate\Support\Collection
+    {
+        // Naik ke root
+        $root = $this;
+        while ($root->parent_entry_id) {
+            $root = $root->parentEntry()->first();
+            if (!$root) break;
+        }
+        if (!$root) return collect([$this]);
+
+        // Kumpulkan semua dalam satu rantai
+        $chain = collect();
+        $current = $root;
+        while ($current) {
+            $chain->push($current);
+            $current = $current->childEntries()->first();
+        }
+        return $chain;
     }
 }

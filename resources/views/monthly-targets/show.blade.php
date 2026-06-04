@@ -259,7 +259,12 @@
                         $wtTotal      = $stats['total'];
                         $wtDone       = $stats['done'];
                         $wtPending    = $stats['pending_review'];
-                        $isActiveWeek = $isCurrentMonth && $wt->week_number == $currentWeek;
+                        $isActiveWeek   = $isCurrentMonth && $wt->week_number == $currentWeek;
+                        // Cek apakah ada laporan overdue >2 minggu di target ini
+                        $hasOverdue2w   = $wt->dailyTaskEntries()
+                            ->whereNotIn('status', ['selesai'])
+                            ->whereDate('task_date', '<=', today()->subDays(14))
+                            ->exists();
                     @endphp
                     <div class="wt-row" data-week="{{ $wt->week_number }}"
                          data-search-text="{{ strtolower($wt->title . ' ' . $wt->description . ' ' . ($person?->name ?? '')) }}">
@@ -275,6 +280,9 @@
                                 <span style="font-size:10px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }}</span>
                                 @if($isActiveWeek)
                                     <span class="chip chip-success" style="font-size:10px;">Minggu ini</span>
+                                @endif
+                                @if($hasOverdue2w)
+                                    <span class="chip" style="font-size:10px;background:#F97316;color:#fff;border:none;">⏰ &gt;2 minggu</span>
                                 @endif
                                 @if($wt->target_type === 'quantitative')
                                     <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>

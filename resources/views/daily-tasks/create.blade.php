@@ -314,6 +314,38 @@
                            style="display:none;"
                            onchange="document.getElementById('proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
                     @error('proof_file')<span class="err">{{ $message }}</span>@enderror
+
+                    {{-- Divider paste --}}
+                    <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-top:8px;margin-bottom:8px;">
+                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                        atau paste screenshot (Ctrl+V)
+                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
+                    </div>
+
+                    {{-- Paste Zone --}}
+                    <div id="clipboard-paste-zone"
+                         tabindex="0"
+                         style="border:2px dashed var(--bg-3);border-radius:10px;padding:16px;
+                                text-align:center;color:var(--fg-4);font-size:12px;
+                                background:var(--bg-2);cursor:pointer;outline:none;
+                                transition:border-color .2s,background .2s;"
+                         title="Klik di sini lalu tekan Ctrl+V untuk paste screenshot">
+                        <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
+                        Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
+                    </div>
+
+                    {{-- Preview gambar dari clipboard --}}
+                    <div id="clipboard-preview" style="display:none;margin-top:8px;position:relative;">
+                        <img id="clipboard-img" src="" alt="Preview"
+                             style="width:100%;border-radius:8px;border:1px solid var(--bg-3);max-height:220px;object-fit:contain;background:var(--bg-2);">
+                        <button type="button" onclick="clearClipboardImage()"
+                                style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;
+                                       border:none;border-radius:50%;width:24px;height:24px;font-size:14px;
+                                       cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+                        <div id="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;">Menyimpan…</div>
+                    </div>
+                    {{-- Hidden field untuk path gambar clipboard --}}
+                    <input type="hidden" id="clipboard_proof_file" name="clipboard_proof_file" value="">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">
@@ -323,4 +355,86 @@
         </div>
     @endif
 </div>
+
+<script>
+(function () {
+    const zone       = document.getElementById('clipboard-paste-zone');
+    const preview    = document.getElementById('clipboard-preview');
+    const img        = document.getElementById('clipboard-img');
+    const status     = document.getElementById('clipboard-status');
+    const hiddenPath = document.getElementById('clipboard_proof_file');
+    const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    if (!zone) return;
+
+    // Focus/blur styling
+    zone.addEventListener('focus', () => zone.style.borderColor = 'var(--maxy-navy)');
+    zone.addEventListener('blur',  () => zone.style.borderColor = 'var(--bg-3)');
+    zone.addEventListener('click', () => zone.focus());
+
+    // Global paste listener (aktif saat zone difokus ATAU tidak ada input lain yang aktif)
+    document.addEventListener('paste', function (e) {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active.id !== 'clipboard-paste-zone') return;
+
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (!item.type.startsWith('image/')) continue;
+
+            const blob = item.getAsFile();
+            if (!blob) continue;
+
+            const reader = new FileReader();
+            reader.onload = async function (ev) {
+                const dataUrl = ev.target.result;
+
+                // Tampilkan preview
+                img.src = dataUrl;
+                preview.style.display = 'block';
+                status.textContent = 'Menyimpan ke server…';
+                status.style.color = 'var(--fg-3)';
+                hiddenPath.value = '';
+
+                // Upload ke server
+                try {
+                    const resp = await fetch('{{ route("daily-tasks.upload-clipboard") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ image: dataUrl }),
+                    });
+
+                    const data = await resp.json();
+
+                    if (resp.ok && data.path) {
+                        hiddenPath.value = data.path;
+                        status.textContent = '✅ Gambar berhasil disimpan — akan dilampirkan saat submit.';
+                        status.style.color = '#16A571';
+                    } else {
+                        status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
+                        status.style.color = 'var(--danger)';
+                    }
+                } catch (err) {
+                    status.textContent = '⚠️ Gagal terhubung ke server.';
+                    status.style.color = 'var(--danger)';
+                }
+            };
+            reader.readAsDataURL(blob);
+            break; // Hanya proses gambar pertama
+        }
+    });
+
+    window.clearClipboardImage = function () {
+        img.src = '';
+        preview.style.display = 'none';
+        hiddenPath.value = '';
+    };
+})();
+</script>
 </x-app-layout>
+

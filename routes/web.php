@@ -58,6 +58,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('daily-tasks.revision');
     Route::patch('/daily-tasks/{dailyTask}/reject',    [DailyTaskEntryController::class, 'reject'])
         ->name('daily-tasks.reject');
+    Route::post('/daily-tasks/upload-clipboard', [DailyTaskEntryController::class, 'uploadClipboard'])
+        ->name('daily-tasks.upload-clipboard');
 
     // Target view khusus Staff (read-only: lihat target bulanan & mingguan dept-nya)
     Route::middleware(['role:staff'])->group(function () {

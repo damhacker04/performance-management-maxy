@@ -342,6 +342,59 @@
             </div>
         @endif
 
+        {{-- ── Timeline Progress Multi-Hari ─────────────────────────────────── --}}
+        @php
+            $progressHistory = $dailyTask->progressHistory();
+        @endphp
+        @if($progressHistory->count() > 1)
+            <div style="height:1px;background:var(--bg-3);"></div>
+            <div>
+                <div class="overline-label" style="margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Riwayat Progress ({{ $progressHistory->count() }} hari)
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0;">
+                    @foreach($progressHistory as $i => $ph)
+                        @php
+                            $isThis   = $ph->id === $dailyTask->id;
+                            $isLast   = $loop->last;
+                            $phStatus = ['belum_mulai'=>'neutral','dalam_proses'=>'warning','terhambat'=>'danger','selesai'=>'success'][$ph->status] ?? 'neutral';
+                            $dotColor = match($ph->status) {
+                                'selesai'      => '#16A571',
+                                'dalam_proses' => '#F59E0B',
+                                'terhambat'    => 'var(--danger)',
+                                default        => 'var(--fg-4)',
+                            };
+                        @endphp
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                            {{-- Timeline dot & line --}}
+                            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;">
+                                <div style="width:10px;height:10px;border-radius:50%;background:{{ $dotColor }};border:2px solid {{ $isThis ? $dotColor : 'var(--bg-3)' }};flex-shrink:0;"></div>
+                                @if(!$isLast)
+                                    <div style="width:2px;flex:1;min-height:24px;background:var(--bg-3);margin:2px 0;"></div>
+                                @endif
+                            </div>
+                            {{-- Content --}}
+                            <div style="flex:1;padding-bottom:{{ $isLast ? '0' : '10px' }};{{ $isThis ? 'background:var(--bg-2);border-radius:8px;padding:8px 10px;border-left:3px solid var(--maxy-navy);' : '' }}">
+                                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                                    <span style="font-size:11px;font-weight:700;color:var(--fg-2);">
+                                        {{ \Carbon\Carbon::parse($ph->task_date)->isoFormat('ddd, D MMM') }}
+                                    </span>
+                                    <span class="chip chip-{{ $phStatus }}" style="font-size:10px;">{{ $ph->status_label }}</span>
+                                    @if($isThis)
+                                        <span style="font-size:10px;color:var(--maxy-navy);font-weight:700;">← Ini</span>
+                                    @endif
+                                </div>
+                                @if($ph->notes)
+                                    <p style="font-size:12px;color:var(--fg-3);margin:0;line-height:1.4;">{{ Str::limit($ph->notes, 80) }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- Bukti Laporan --}}
         @if($dailyTask->proof_url || $dailyTask->proof_file)
             <div style="height:1px;background:var(--bg-3);"></div>
