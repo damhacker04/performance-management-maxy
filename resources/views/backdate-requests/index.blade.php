@@ -118,9 +118,9 @@
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-sm" style="background:#16A571;color:#fff;">✅ Setujui</button>
                                     </form>
-                                    <details style="position:relative;">
+                                    <details>
                                         <summary class="btn btn-sm" style="background:#EF4444;color:#fff;cursor:pointer;list-style:none;">❌ Tolak</summary>
-                                        <div style="position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--bg-3);border-radius:8px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);z-index:10;min-width:250px;text-align:left;">
+                                        <div style="margin-top:8px;background:#fff;border:1px solid var(--bg-3);border-radius:8px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);min-width:250px;text-align:left;">
                                             <form method="POST" action="{{ route('backdate-requests.reject', $req) }}">
                                                 @csrf @method('PATCH')
                                                 <div style="font-size:11px;font-weight:600;margin-bottom:6px;">Alasan Tolak:</div>
