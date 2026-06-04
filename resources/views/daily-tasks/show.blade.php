@@ -604,7 +604,7 @@
         );
     @endphp
 
-    <div class="m-card" style="display:flex;flex-direction:column;gap:0;padding:16px 16px 8px;">
+    <div class="m-card" style="display:flex;flex-direction:column;gap:0;padding:16px 16px 8px;margin-top:16px;">
         {{-- Header --}}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:6px;">
