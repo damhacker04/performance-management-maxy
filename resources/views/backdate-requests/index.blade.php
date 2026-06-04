@@ -39,7 +39,7 @@
         <style>
             @media (min-width: 768px) {
                 .br-mobile-cards { display: none !important; }
-                .br-desktop-table-container { display: block !important; overflow-x: auto; background: #fff; border-radius: 8px; border: 1px solid var(--bg-3); }
+                .br-desktop-table-container { display: block !important; background: #fff; border-radius: 8px; border: 1px solid var(--bg-3); }
             }
             @media (max-width: 767px) {
                 .br-desktop-table-container { display: none !important; }
@@ -113,14 +113,14 @@
                         @if($filter === 'pending')
                         <td style="text-align:right;">
                             @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-                                <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+                                <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
                                     <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" onsubmit="return confirm('Setujui permintaan ini?');">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-sm" style="background:#16A571;color:#fff;">✅ Setujui</button>
                                     </form>
-                                    <details>
+                                    <details style="position:relative;">
                                         <summary class="btn btn-sm" style="background:#EF4444;color:#fff;cursor:pointer;list-style:none;">❌ Tolak</summary>
-                                        <div style="margin-top:8px;background:#fff;border:1px solid var(--bg-3);border-radius:8px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);min-width:250px;text-align:left;">
+                                        <div style="position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--bg-3);border-radius:8px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:99;min-width:250px;text-align:left;">
                                             <form method="POST" action="{{ route('backdate-requests.reject', $req) }}">
                                                 @csrf @method('PATCH')
                                                 <div style="font-size:11px;font-weight:600;margin-bottom:6px;">Alasan Tolak:</div>
