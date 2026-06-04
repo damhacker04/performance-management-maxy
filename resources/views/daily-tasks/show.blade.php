@@ -81,7 +81,7 @@
     @endif
 
     {{-- Mulai grid desktop: kolom kiri = info & aksi, kolom kanan = activity log --}}
-    <div class="dt-detail-grid">
+    <div class="dt-detail-grid" style="gap:16px;">
     <div class="dt-detail-left" style="display:flex;flex-direction:column;gap:16px;">
 
     <!-- Status, Prioritas & Verifikasi -->
