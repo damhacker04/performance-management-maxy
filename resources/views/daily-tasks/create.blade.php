@@ -319,13 +319,12 @@
         </div>
 
         <div class="evidence-input-link">
-            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa menambahkan lebih dari 1 link</div>
             <div class="link-list" style="display:flex;flex-direction:column;gap:8px;">
                 <div style="display:flex;gap:8px;">
                     <input type="url" name="evidences[__INDEX__][path_or_url][]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;flex:1;" required>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="padding:0 12px;font-weight:bold;">+</button>
                 </div>
             </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="margin-top:8px; font-size:11px; padding:6px 12px; background:transparent; border:1px dashed var(--maxy-navy); color:var(--maxy-navy); border-radius:6px; cursor:pointer; font-weight:600;">+ Tambahkan Link</button>
         </div>
 
         <div class="evidence-input-file" style="display: none;">
@@ -426,13 +425,14 @@ function addEvidenceRow() {
 }
 
 function addLinkField(btn) {
-    const list = btn.closest('.link-list');
+    const linkDiv = btn.closest('.evidence-input-link');
+    const list = linkDiv.querySelector('.link-list');
     const name = list.querySelector('input').name;
     const div = document.createElement('div');
     div.style = 'display:flex;gap:8px;';
     div.innerHTML = `
         <input type="url" name="${name}" class="m-input" placeholder="https://..." style="font-size:13px;flex:1;" required>
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;font-weight:bold;">✖</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;font-weight:bold;cursor:pointer;">✖</button>
     `;
     list.appendChild(div);
 }
