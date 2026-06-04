@@ -36,10 +36,19 @@
         </div>
     @endif
 
-    <div class="m-card">
-        <form method="POST" action="{{ route('daily-tasks.update', $dailyTask) }}"
-              enctype="multipart/form-data"
-              style="display:flex;flex-direction:column;gap:16px;">
+    <div class="m-card p-4">
+        @if($errors->any())
+            <div style="background-color: #FEE2E2; border-left: 4px solid #EF4444; color: #991B1B; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                <strong>Gagal menyimpan perubahan!</strong>
+                <ul style="margin: 8px 0 0 20px; padding: 0; font-size: 13px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('daily-tasks.update', $dailyTask) }}" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:16px;">
             @csrf
             @method('PATCH')
 

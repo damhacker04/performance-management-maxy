@@ -101,6 +101,17 @@
         </div>
     @else
         <div class="m-card">
+            @if($errors->any())
+                <div style="background-color: #FEE2E2; border-left: 4px solid #EF4444; color: #991B1B; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                    <strong>Gagal menyimpan laporan!</strong>
+                    <ul style="margin: 8px 0 0 20px; padding: 0; font-size: 13px;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('daily-tasks.store') }}"
                   enctype="multipart/form-data"
                   style="display:flex;flex-direction:column;gap:16px;">
