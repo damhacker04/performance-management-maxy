@@ -44,6 +44,17 @@ class NotificationController extends Controller
 
         // Klik "Lihat laporan" → redirect ke laporan terkait
         if ($notification->related_id) {
+            // Jika notifikasi berkaitan dengan backdate
+            if (in_array($notification->type, [\App\Models\AppNotification::TYPE_BACKDATE_REQUESTED, \App\Models\AppNotification::TYPE_BACKDATE_REVIEWED])) {
+                // Jika disetujui, arahkan ke form tambah tugas
+                if (str_contains($notification->title, 'Disetujui')) {
+                    return redirect()->route('daily-tasks.create');
+                }
+                // Jika ditolak atau minta izin (untuk leader), arahkan ke halaman daftar permintaan
+                return redirect()->route('backdate-requests.index');
+            }
+
+            // Default: ke detail laporan
             return redirect()->route('daily-tasks.show', $notification->related_id);
         }
 

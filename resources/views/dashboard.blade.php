@@ -70,6 +70,13 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Token backdating yang sedang aktif (Disetujui dan belum kedaluwarsa)
+            $activeBackdateTokens = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('token_expires_at', '>', now())
+                ->orderByDesc('token_expires_at')
+                ->get();
+
             // Tugas yang belum selesai lebih dari 14 hari
             $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
                 ->where('user_id', $user->id)
@@ -207,6 +214,41 @@
                                         Alasan: {{ Str::limit($req->reason, 100) }}
                                     </div>
                                 </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner hijau: Token Backdating Aktif --}}
+            @if($activeBackdateTokens->isNotEmpty())
+                <div style="background:#F0FDF4;border:1.5px solid #22C55E;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">✅</span>
+                            <span style="font-size:12px;font-weight:700;color:#166534;">Izin Backdating Aktif</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#22C55E;color:#fff;font-size:10px;border:none;">{{ $activeBackdateTokens->count() }} disetujui</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#166534;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="approved-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($activeBackdateTokens as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #86EFAC;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#14532D;margin-bottom:2px;">
+                                        Isi laporan tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#166534;">
+                                        Disetujui oleh {{ $req->reviewer?->name ?? 'Leader' }}. Segera isi sebelum {{ \Carbon\Carbon::parse($req->token_expires_at)->isoFormat('HH:mm') }}!
+                                    </div>
+                                </div>
+                                <a href="{{ route('daily-tasks.create') }}" class="btn btn-sm" style="background:#22C55E;color:#fff;text-decoration:none;font-size:11px;padding:4px 12px;white-space:nowrap;">
+                                    Isi Sekarang
+                                </a>
                             </div>
                         @endforeach
                     </div>
