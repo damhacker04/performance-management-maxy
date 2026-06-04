@@ -216,13 +216,13 @@ class DailyTaskEntryController extends Controller
             'evidences.*.path_or_url' => 'nullable|array',
             'evidences.*.path_or_url.*' => 'nullable|string',
             'evidences.*.file'        => 'nullable|array|max:10',
-            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
             'notes.required'          => 'Catatan wajib diisi untuk semua status.',
             'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
             'evidences.*.label.required' => 'Judul bukti wajib diisi.',
             'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
-            'evidences.*.file.*.max'    => 'Ukuran file maksimal 5MB.',
+            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
         ]);
 
         $durationMinutes = $validated['duration_unit'] === 'jam'
@@ -438,13 +438,13 @@ class DailyTaskEntryController extends Controller
             'evidences.*.path_or_url' => 'nullable|array',
             'evidences.*.path_or_url.*' => 'nullable|string',
             'evidences.*.file'        => 'nullable|array|max:10',
-            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
             'notes.required'          => 'Catatan wajib diisi untuk semua status.',
             'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
             'evidences.*.label.required' => 'Judul bukti wajib diisi.',
             'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
-            'evidences.*.file.*.max'    => 'Ukuran file maksimal 5MB.',
+            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
         ]);
 
         // Konversi durasi -> menit
