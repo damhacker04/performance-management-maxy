@@ -56,6 +56,14 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Permintaan backdating yang ditolak (berdasarkan Notifikasi Lonceng)
+            $rejectedBackdateNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_BACKDATE_REVIEWED)
+                ->where('title', 'like', '%Ditolak%')
+                ->whereNull('read_at') // Hanya tampilkan jika belum dibaca dari lonceng
+                ->orderByDesc('created_at')
+                ->get();
+
             // Tugas yang belum selesai lebih dari 14 hari
             $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
                 ->where('user_id', $user->id)
@@ -127,6 +135,41 @@
                                 </div>
                                 <svg class="lucide sm" viewBox="0 0 24 24" style="color:#F97316;"><path d="M9 18l6-6-6-6"/></svg>
                             </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner merah: Permintaan Backdating Ditolak --}}
+            @if($rejectedBackdateNotifs->isNotEmpty())
+                <div style="background:#FFF1F2;border:1.5px solid #EF4444;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('rejected-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">❌</span>
+                            <span style="font-size:12px;font-weight:700;color:#B91C1C;">Izin Backdating Ditolak</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EF4444;color:#fff;font-size:10px;border:none;">{{ $rejectedBackdateNotifs->count() }} ditolak</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#B91C1C;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="rejected-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($rejectedBackdateNotifs as $notif)
+                            @php
+                                $metaDate = $notif->meta['requested_date'] ?? null;
+                            @endphp
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FECACA;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#991B1B;margin-bottom:2px;">
+                                        Tanggal {{ $metaDate ? \Carbon\Carbon::parse($metaDate)->isoFormat('D MMM YYYY') : '-' }}
+                                    </div>
+                                    <div style="font-size:11px;color:#B91C1C;">
+                                        {{ Str::limit($notif->body, 100) }}
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 </div>
