@@ -64,6 +64,12 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Permintaan backdating yang masih menunggu (pending)
+            $pendingBackdates = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->orderByDesc('created_at')
+                ->get();
+
             // Tugas yang belum selesai lebih dari 14 hari
             $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
                 ->where('user_id', $user->id)
@@ -167,6 +173,38 @@
                                     </div>
                                     <div style="font-size:11px;color:#B91C1C;">
                                         {{ Str::limit($notif->body, 100) }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner kuning: Permintaan Backdating Menunggu --}}
+            @if($pendingBackdates->isNotEmpty())
+                <div style="background:#FEFCE8;border:1.5px solid #EAB308;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('pending-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">⏳</span>
+                            <span style="font-size:12px;font-weight:700;color:#A16207;">Izin Backdating Menunggu Review</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EAB308;color:#fff;font-size:10px;border:none;">{{ $pendingBackdates->count() }} menunggu</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#A16207;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="pending-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($pendingBackdates as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FEF08A;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#854D0E;margin-bottom:2px;">
+                                        Tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#A16207;">
+                                        Alasan: {{ Str::limit($req->reason, 100) }}
                                     </div>
                                 </div>
                             </div>
