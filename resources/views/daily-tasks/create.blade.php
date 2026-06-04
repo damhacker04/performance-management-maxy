@@ -265,87 +265,30 @@
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
-                <!-- Bukti Laporan -->
+                <!-- Bukti Laporan Dinamis -->
                 <div class="field">
                     @php $isSales = auth()->user()->department === 'sales'; @endphp
-                    <label style="display:flex;align-items:center;gap:6px;">
-                        <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
-                        Bukti Laporan
-                        @if($isSales)
-                            <span style="color:var(--danger);">*</span>
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib untuk Sales)</span>
-                        @else
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
-                        @endif
+                    <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
+                            Bukti Laporan (Multi)
+                            @if($isSales)
+                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
+                            @else
+                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                            @endif
+                        </div>
                     </label>
 
-                    {{-- Link URL bukti --}}
-                    <div style="margin-bottom:8px;">
-                        <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;font-weight:600;">Link Bukti (Google Sheets, CRM, Drive, dll.)</div>
-                        <input type="url" id="proof_url" name="proof_url"
-                               class="m-input {{ $errors->has('proof_url') ? 'err' : '' }}"
-                               value="{{ old('proof_url') }}"
-                               placeholder="https://docs.google.com/…">
-                        @error('proof_url')<span class="err">{{ $message }}</span>@enderror
+                    <div id="evidences-container">
+                        <!-- Dynamic rows will be added here -->
                     </div>
 
-                    {{-- Divider --}}
-                    <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-bottom:8px;">
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                        atau upload file
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                    </div>
-
-                    {{-- Upload file --}}
-                    <label for="proof_file"
-                           style="display:flex;align-items:center;justify-content:center;gap:8px;
-                                  border:2px dashed var(--bg-3);border-radius:10px;padding:16px;
-                                  cursor:pointer;color:var(--fg-3);font-size:13px;
-                                  background:var(--bg-2);transition:border-color .2s;"
-                           id="proof_file_label"
-                           ondragover="this.style.borderColor='var(--maxy-navy)'"
-                           ondragleave="this.style.borderColor='var(--bg-3)'">
-                        <svg class="lucide" style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span id="proof_file_text">JPG, PNG, atau PDF — maks. 5MB</span>
-                    </label>
-                    <input type="file" id="proof_file" name="proof_file"
-                           accept=".jpg,.jpeg,.png,.pdf"
-                           class="{{ $errors->has('proof_file') ? 'err' : '' }}"
-                           style="display:none;"
-                           onchange="document.getElementById('proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
-                    @error('proof_file')<span class="err">{{ $message }}</span>@enderror
-
-                    {{-- Divider paste --}}
-                    <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-top:8px;margin-bottom:8px;">
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                        atau paste screenshot (Ctrl+V)
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                    </div>
-
-                    {{-- Paste Zone --}}
-                    <div id="clipboard-paste-zone"
-                         tabindex="0"
-                         style="border:2px dashed var(--bg-3);border-radius:10px;padding:16px;
-                                text-align:center;color:var(--fg-4);font-size:12px;
-                                background:var(--bg-2);cursor:pointer;outline:none;
-                                transition:border-color .2s,background .2s;"
-                         title="Klik di sini lalu tekan Ctrl+V untuk paste screenshot">
-                        <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
-                        Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
-                    </div>
-
-                    {{-- Preview gambar dari clipboard --}}
-                    <div id="clipboard-preview" style="display:none;margin-top:8px;position:relative;">
-                        <img id="clipboard-img" src="" alt="Preview"
-                             style="width:100%;border-radius:8px;border:1px solid var(--bg-3);max-height:220px;object-fit:contain;background:var(--bg-2);">
-                        <button type="button" onclick="clearClipboardImage()"
-                                style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;
-                                       border:none;border-radius:50%;width:24px;height:24px;font-size:14px;
-                                       cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
-                        <div id="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;">Menyimpan…</div>
-                    </div>
-                    {{-- Hidden field untuk path gambar clipboard --}}
-                    <input type="hidden" id="clipboard_proof_file" name="clipboard_proof_file" value="">
+                    <button type="button" onclick="addEvidenceRow()" 
+                            style="width:100%; border:1px dashed var(--maxy-navy); background:rgba(29,78,216,0.05); color:var(--maxy-navy); padding:10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <svg class="lucide" style="width:16px;height:16px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Tambah Bukti Baru
+                    </button>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">
@@ -356,48 +299,141 @@
     @endif
 </div>
 
+<!-- Template Bukti Laporan -->
+<template id="evidence-template">
+    <div class="evidence-row" style="border: 1px solid var(--bg-3); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: var(--bg-1); position:relative;">
+        <button type="button" onclick="this.closest('.evidence-row').remove()" style="position:absolute; top: 12px; right: 12px; color: var(--danger); border: none; background: transparent; cursor: pointer; font-size:12px; font-weight:600;">Hapus ✖</button>
+        
+        <div style="display:flex; gap: 12px; margin-bottom: 8px; padding-right: 50px;">
+            <div style="flex:1;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Tipe Bukti</label>
+                <select name="evidences[__INDEX__][type]" class="m-input" onchange="changeEvidenceType(this)" style="padding: 6px; font-size:13px; height:auto;">
+                    <option value="link">🔗 Link URL</option>
+                    <option value="file">📄 Upload File (PDF/Image)</option>
+                    <option value="image">🖼️ Screenshot (Ctrl+V)</option>
+                </select>
+            </div>
+            <div style="flex:2;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Judul Bukti <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="evidences[__INDEX__][label]" class="m-input" placeholder="Contoh: Draft Proposal" style="padding: 6px; font-size:13px; height:auto;" required>
+            </div>
+        </div>
+
+        <div class="evidence-input-link">
+            <input type="url" name="evidences[__INDEX__][path_or_url]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;" required>
+        </div>
+
+        <div class="evidence-input-file" style="display: none;">
+            <input type="file" name="evidences[__INDEX__][file]" class="m-input" accept=".jpg,.jpeg,.png,.pdf" style="font-size:13px; padding:6px;" disabled>
+        </div>
+
+        <div class="evidence-input-image" style="display: none;">
+            <input type="hidden" name="evidences[__INDEX__][path_or_url]" class="image-path-input" disabled>
+            
+            <div class="paste-zone" tabindex="0"
+                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
+                 title="Klik di sini lalu tekan Ctrl+V">
+                <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
+                Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
+            </div>
+            
+            <div class="clipboard-preview" style="display:none;margin-top:8px;position:relative;">
+                <img class="clipboard-img" src="" alt="Preview" style="width:100%;border-radius:8px;border:1px solid var(--bg-3);max-height:150px;object-fit:contain;background:var(--bg-2);">
+                <button type="button" onclick="clearRowImage(this)" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+                <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
 <script>
+let evidenceCount = 0;
+
+function addEvidenceRow() {
+    const container = document.getElementById('evidences-container');
+    const template = document.getElementById('evidence-template').innerHTML;
+    const html = template.replace(/__INDEX__/g, evidenceCount);
+    
+    // Add to container
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    container.appendChild(div.firstElementChild);
+    
+    evidenceCount++;
+}
+
+function changeEvidenceType(select) {
+    const row = select.closest('.evidence-row');
+    const type = select.value;
+
+    const linkDiv = row.querySelector('.evidence-input-link');
+    const fileDiv = row.querySelector('.evidence-input-file');
+    const imgDiv = row.querySelector('.evidence-input-image');
+
+    linkDiv.style.display = type === 'link' ? 'block' : 'none';
+    fileDiv.style.display = type === 'file' ? 'block' : 'none';
+    imgDiv.style.display = type === 'image' ? 'block' : 'none';
+
+    linkDiv.querySelector('input').disabled = type !== 'link';
+    fileDiv.querySelector('input').disabled = type !== 'file';
+    imgDiv.querySelector('input').disabled = type !== 'image';
+
+    linkDiv.querySelector('input').required = type === 'link';
+    fileDiv.querySelector('input').required = type === 'file';
+}
+
+function clearRowImage(btn) {
+    const row = btn.closest('.evidence-row');
+    row.querySelector('.clipboard-img').src = '';
+    row.querySelector('.clipboard-preview').style.display = 'none';
+    row.querySelector('.image-path-input').value = '';
+}
+
 (function () {
-    const zone       = document.getElementById('clipboard-paste-zone');
-    const preview    = document.getElementById('clipboard-preview');
-    const img        = document.getElementById('clipboard-img');
-    const status     = document.getElementById('clipboard-status');
-    const hiddenPath = document.getElementById('clipboard_proof_file');
-    const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    if (!zone) return;
+    // Global focus for paste zones
+    document.addEventListener('focusin', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--maxy-navy)';
+            e.target.style.background = 'rgba(29,78,216,0.05)';
+        }
+    });
+    document.addEventListener('focusout', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--bg-3)';
+            e.target.style.background = 'var(--bg-2)';
+        }
+    });
 
-    // Focus/blur styling
-    zone.addEventListener('focus', () => zone.style.borderColor = 'var(--maxy-navy)');
-    zone.addEventListener('blur',  () => zone.style.borderColor = 'var(--bg-3)');
-    zone.addEventListener('click', () => zone.focus());
-
-    // Global paste listener (aktif saat zone difokus ATAU tidak ada input lain yang aktif)
+    // Global paste listener
     document.addEventListener('paste', function (e) {
         const active = document.activeElement;
-        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active.id !== 'clipboard-paste-zone') return;
+        if (!active || !active.classList.contains('paste-zone')) return;
 
+        const row = active.closest('.evidence-row');
         const items = e.clipboardData?.items;
         if (!items) return;
 
         for (const item of items) {
             if (!item.type.startsWith('image/')) continue;
-
             const blob = item.getAsFile();
             if (!blob) continue;
 
             const reader = new FileReader();
             reader.onload = async function (ev) {
                 const dataUrl = ev.target.result;
+                const img = row.querySelector('.clipboard-img');
+                const preview = row.querySelector('.clipboard-preview');
+                const status = row.querySelector('.clipboard-status');
+                const pathInput = row.querySelector('.image-path-input');
 
-                // Tampilkan preview
                 img.src = dataUrl;
                 preview.style.display = 'block';
                 status.textContent = 'Menyimpan ke server…';
                 status.style.color = 'var(--fg-3)';
-                hiddenPath.value = '';
+                pathInput.value = '';
 
-                // Upload ke server
                 try {
                     const resp = await fetch('{{ route("daily-tasks.upload-clipboard") }}', {
                         method: 'POST',
@@ -410,10 +446,9 @@
                     });
 
                     const data = await resp.json();
-
                     if (resp.ok && data.path) {
-                        hiddenPath.value = data.path;
-                        status.textContent = '✅ Gambar berhasil disimpan — akan dilampirkan saat submit.';
+                        pathInput.value = data.path;
+                        status.textContent = '✅ Gambar berhasil disimpan.';
                         status.style.color = '#16A571';
                     } else {
                         status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
@@ -425,15 +460,14 @@
                 }
             };
             reader.readAsDataURL(blob);
-            break; // Hanya proses gambar pertama
+            break; 
         }
     });
 
-    window.clearClipboardImage = function () {
-        img.src = '';
-        preview.style.display = 'none';
-        hiddenPath.value = '';
-    };
+    // Otomatis tambahkan 1 baris saat pertama kali load jika sales
+    @if(auth()->user()->department === 'sales')
+        addEvidenceRow();
+    @endif
 })();
 </script>
 </x-app-layout>

@@ -189,72 +189,30 @@
             </div>
             @endif
 
-            <!-- Bukti Laporan -->
+            <!-- Bukti Laporan Dinamis -->
             <div class="field">
                 @php $isSales = auth()->user()->department === 'sales'; @endphp
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
-                    Bukti Laporan
-                    @if($isSales)
-                        <span style="color:var(--danger);">*</span>
-                        <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib untuk Sales)</span>
-                    @else
-                        <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
-                    @endif
-                </label>
-
-                {{-- Preview bukti yang sudah ada --}}
-                @if($dailyTask->proof_url || $dailyTask->proof_file)
-                    <div style="background:#F0F7FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;">
-                        <div style="font-weight:600;color:var(--maxy-navy);margin-bottom:4px;">📎 Bukti terlampir sebelumnya:</div>
-                        @if($dailyTask->proof_url)
-                            <div style="margin-bottom:2px;">
-                                🔗 <a href="{{ $dailyTask->proof_url }}" target="_blank"
-                                      style="color:var(--maxy-navy);word-break:break-all;">{{ Str::limit($dailyTask->proof_url, 60) }}</a>
-                            </div>
-                        @endif
-                        @if($dailyTask->proof_file)
-                            <div>
-                                📄 <a href="{{ Storage::url($dailyTask->proof_file) }}" target="_blank"
-                                      style="color:var(--maxy-navy);">{{ basename($dailyTask->proof_file) }}</a>
-                                <span style="color:var(--fg-4);font-size:10px;"> — Upload file baru di bawah untuk mengganti</span>
-                            </div>
+                <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
+                        Bukti Laporan (Multi)
+                        @if($isSales)
+                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
+                        @else
+                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
                         @endif
                     </div>
-                @endif
-
-                {{-- Link URL bukti --}}
-                <div style="margin-bottom:8px;">
-                    <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;font-weight:600;">Link Bukti (Google Sheets, CRM, Drive, dll.)</div>
-                    <input type="url" id="proof_url" name="proof_url"
-                           class="m-input {{ $errors->has('proof_url') ? 'err' : '' }}"
-                           value="{{ old('proof_url', $dailyTask->proof_url) }}"
-                           placeholder="https://docs.google.com/…">
-                    @error('proof_url')<span class="err">{{ $message }}</span>@enderror
-                </div>
-
-                {{-- Divider --}}
-                <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-bottom:8px;">
-                    <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                    atau upload file baru
-                    <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                </div>
-
-                {{-- Upload file --}}
-                <label for="proof_file"
-                       style="display:flex;align-items:center;justify-content:center;gap:8px;
-                              border:2px dashed var(--bg-3);border-radius:10px;padding:14px;
-                              cursor:pointer;color:var(--fg-3);font-size:13px;
-                              background:var(--bg-2);transition:border-color .2s;">
-                    <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span id="edit_proof_file_text">{{ $dailyTask->proof_file ? 'Ganti: '.basename($dailyTask->proof_file) : 'JPG, PNG, atau PDF — maks. 5MB' }}</span>
                 </label>
-                <input type="file" id="proof_file" name="proof_file"
-                       accept=".jpg,.jpeg,.png,.pdf"
-                       class="{{ $errors->has('proof_file') ? 'err' : '' }}"
-                       style="display:none;"
-                       onchange="document.getElementById('edit_proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
-                @error('proof_file')<span class="err">{{ $message }}</span>@enderror
+
+                <div id="evidences-container">
+                    <!-- Dynamic rows will be added here -->
+                </div>
+
+                <button type="button" onclick="addEvidenceRow()" 
+                        style="width:100%; border:1px dashed var(--maxy-navy); background:rgba(29,78,216,0.05); color:var(--maxy-navy); padding:10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <svg class="lucide" style="width:16px;height:16px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Tambah Bukti Baru
+                </button>
             </div>
 
             <div style="display:flex;gap:10px;">
@@ -270,4 +228,224 @@
         </form>
     </div>
 </div>
-</x-app-layout>
+
+<!-- Template Bukti Laporan -->
+<template id="evidence-template">
+    <div class="evidence-row" style="border: 1px solid var(--bg-3); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: var(--bg-1); position:relative;">
+        <button type="button" onclick="this.closest('.evidence-row').remove()" style="position:absolute; top: 12px; right: 12px; color: var(--danger); border: none; background: transparent; cursor: pointer; font-size:12px; font-weight:600;">Hapus ✖</button>
+        
+        <div style="display:flex; gap: 12px; margin-bottom: 8px; padding-right: 50px;">
+            <div style="flex:1;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Tipe Bukti</label>
+                <select name="evidences[__INDEX__][type]" class="m-input evidence-type-select" onchange="changeEvidenceType(this)" style="padding: 6px; font-size:13px; height:auto;">
+                    <option value="link">🔗 Link URL</option>
+                    <option value="file">📄 Upload File (PDF/Image)</option>
+                    <option value="image">🖼️ Screenshot (Ctrl+V)</option>
+                </select>
+            </div>
+            <div style="flex:2;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Judul Bukti <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="evidences[__INDEX__][label]" class="m-input evidence-label-input" placeholder="Contoh: Draft Proposal" style="padding: 6px; font-size:13px; height:auto;" required>
+            </div>
+        </div>
+
+        <div class="evidence-input-link">
+            <input type="url" name="evidences[__INDEX__][path_or_url]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;" required>
+        </div>
+
+        <div class="evidence-input-file" style="display: none;">
+            <input type="file" name="evidences[__INDEX__][file]" class="m-input" accept=".jpg,.jpeg,.png,.pdf" style="font-size:13px; padding:6px;" disabled>
+        </div>
+
+        <div class="evidence-input-image" style="display: none;">
+            <input type="hidden" name="evidences[__INDEX__][path_or_url]" class="image-path-input" disabled>
+            
+            <div class="paste-zone" tabindex="0"
+                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
+                 title="Klik di sini lalu tekan Ctrl+V">
+                <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
+                Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
+            </div>
+            
+            <div class="clipboard-preview" style="display:none;margin-top:8px;position:relative;">
+                <img class="clipboard-img" src="" alt="Preview" style="width:100%;border-radius:8px;border:1px solid var(--bg-3);max-height:150px;object-fit:contain;background:var(--bg-2);">
+                <button type="button" onclick="clearRowImage(this)" class="clipboard-clear-btn" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+                <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+let evidenceCount = 0;
+
+function addEvidenceRow(existingData = null) {
+    const container = document.getElementById('evidences-container');
+    const template = document.getElementById('evidence-template').innerHTML;
+    const html = template.replace(/__INDEX__/g, evidenceCount);
+    
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const row = div.firstElementChild;
+    container.appendChild(row);
+    
+    if (existingData) {
+        // Add hidden ID field
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = `evidences[${evidenceCount}][id]`;
+        idInput.value = existingData.id;
+        row.appendChild(idInput);
+
+        const select = row.querySelector('.evidence-type-select');
+        select.value = existingData.type;
+        
+        // Lock type change for existing files to prevent complex UX states
+        if (existingData.type !== 'link') {
+            select.style.pointerEvents = 'none';
+            select.style.opacity = '0.7';
+        }
+
+        row.querySelector('.evidence-label-input').value = existingData.label;
+
+        changeEvidenceType(select);
+
+        if (existingData.type === 'link') {
+            row.querySelector('.evidence-input-link input').value = existingData.path_or_url;
+        } else if (existingData.type === 'file') {
+            const fileDiv = row.querySelector('.evidence-input-file');
+            const filename = existingData.path_or_url.split('/').pop();
+            fileDiv.innerHTML = `<div style="font-size:12px;color:var(--fg-3);margin-bottom:4px;">📄 File tersimpan: <a href="/storage/${existingData.path_or_url}" target="_blank" style="color:var(--maxy-navy);font-weight:600;">${filename}</a></div>
+                                 <input type="hidden" name="evidences[${evidenceCount}][path_or_url]" value="${existingData.path_or_url}">
+                                 <div style="font-size:11px;color:var(--fg-4);">(Hapus baris ini untuk mengganti file)</div>`;
+        } else if (existingData.type === 'image') {
+            const imgDiv = row.querySelector('.evidence-input-image');
+            imgDiv.querySelector('.paste-zone').style.display = 'none';
+            imgDiv.querySelector('.clipboard-preview').style.display = 'block';
+            imgDiv.querySelector('.clipboard-img').src = `/storage/${existingData.path_or_url}`;
+            imgDiv.querySelector('.clipboard-clear-btn').style.display = 'none'; // dont allow clear for existing, just delete row
+            imgDiv.querySelector('.clipboard-status').textContent = 'Gambar tersimpan. (Hapus baris ini untuk mengganti)';
+            imgDiv.querySelector('.image-path-input').value = existingData.path_or_url;
+            imgDiv.querySelector('.image-path-input').disabled = false;
+        }
+    }
+
+    evidenceCount++;
+}
+
+function changeEvidenceType(select) {
+    const row = select.closest('.evidence-row');
+    const type = select.value;
+
+    const linkDiv = row.querySelector('.evidence-input-link');
+    const fileDiv = row.querySelector('.evidence-input-file');
+    const imgDiv = row.querySelector('.evidence-input-image');
+
+    linkDiv.style.display = type === 'link' ? 'block' : 'none';
+    fileDiv.style.display = type === 'file' ? 'block' : 'none';
+    imgDiv.style.display = type === 'image' ? 'block' : 'none';
+
+    // Disable inputs that are not active so they don't get submitted
+    const linkInput = linkDiv.querySelector('input');
+    const fileInput = fileDiv.querySelector('input');
+    const imgInput  = imgDiv.querySelector('input');
+
+    if (linkInput) linkInput.disabled = type !== 'link';
+    if (fileInput) fileInput.disabled = type !== 'file';
+    if (imgInput)  imgInput.disabled  = type !== 'image';
+
+    if (linkInput) linkInput.required = type === 'link';
+    if (fileInput) fileInput.required = type === 'file';
+}
+
+function clearRowImage(btn) {
+    const row = btn.closest('.evidence-row');
+    row.querySelector('.clipboard-img').src = '';
+    row.querySelector('.clipboard-preview').style.display = 'none';
+    row.querySelector('.image-path-input').value = '';
+}
+
+(function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    // Load existing evidences
+    const existingEvidences = @json($dailyTask->evidences);
+    if (existingEvidences && existingEvidences.length > 0) {
+        existingEvidences.forEach(ev => addEvidenceRow(ev));
+    } else {
+        @if(auth()->user()->department === 'sales')
+            addEvidenceRow();
+        @endif
+    }
+
+    document.addEventListener('focusin', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--maxy-navy)';
+            e.target.style.background = 'rgba(29,78,216,0.05)';
+        }
+    });
+    document.addEventListener('focusout', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--bg-3)';
+            e.target.style.background = 'var(--bg-2)';
+        }
+    });
+
+    document.addEventListener('paste', function (e) {
+        const active = document.activeElement;
+        if (!active || !active.classList.contains('paste-zone')) return;
+
+        const row = active.closest('.evidence-row');
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (!item.type.startsWith('image/')) continue;
+            const blob = item.getAsFile();
+            if (!blob) continue;
+
+            const reader = new FileReader();
+            reader.onload = async function (ev) {
+                const dataUrl = ev.target.result;
+                const img = row.querySelector('.clipboard-img');
+                const preview = row.querySelector('.clipboard-preview');
+                const status = row.querySelector('.clipboard-status');
+                const pathInput = row.querySelector('.image-path-input');
+
+                img.src = dataUrl;
+                preview.style.display = 'block';
+                status.textContent = 'Menyimpan ke server…';
+                status.style.color = 'var(--fg-3)';
+                pathInput.value = '';
+
+                try {
+                    const resp = await fetch('{{ route("daily-tasks.upload-clipboard") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ image: dataUrl }),
+                    });
+
+                    const data = await resp.json();
+                    if (resp.ok && data.path) {
+                        pathInput.value = data.path;
+                        status.textContent = '✅ Gambar berhasil disimpan.';
+                        status.style.color = '#16A571';
+                    } else {
+                        status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
+                        status.style.color = 'var(--danger)';
+                    }
+                } catch (err) {
+                    status.textContent = '⚠️ Gagal terhubung ke server.';
+                    status.style.color = 'var(--danger)';
+                }
+            };
+            reader.readAsDataURL(blob);
+            break; 
+        }
+    });
+})();
+</script>

@@ -89,6 +89,12 @@ class DailyTaskEntry extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    // Relasi ke Bukti Laporan (Multi-Evidence)
+    public function evidences()
+    {
+        return $this->hasMany(DailyTaskEvidence::class, 'daily_task_entry_id');
+    }
+
     /**
      * Apakah task terlambat? task_date sudah lewat tapi belum selesai.
      */
@@ -194,6 +200,12 @@ class DailyTaskEntry extends Model
     public function childEntries()
     {
         return $this->hasMany(DailyTaskEntry::class, 'parent_entry_id')->orderBy('task_date');
+    }
+
+    /** Bukti laporan (dinamis) */
+    public function evidences()
+    {
+        return $this->hasMany(DailyTaskEvidence::class, 'daily_task_entry_id');
     }
 
     /**

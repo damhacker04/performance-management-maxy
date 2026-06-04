@@ -208,16 +208,19 @@ class DailyTaskEntryController extends Controller
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
             'notes'             => 'required|string|min:5',
             'revision_response' => 'nullable|string|min:3',
-            'proof_url'         => $isSales ? 'required_without:proof_file|nullable|url' : 'nullable|url',
-            'proof_file'        => $isSales ? 'required_without:proof_url|nullable|file|mimes:jpg,jpeg,png,pdf|max:5120' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            // Multi-evidence
+            'evidences'               => 'nullable|array|max:10',
+            'evidences.*.id'          => 'nullable|exists:daily_task_evidences,id',
+            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
+            'evidences.*.label'       => 'required|string|max:100',
+            'evidences.*.path_or_url' => 'nullable|string',
+            'evidences.*.file'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
-            'notes.required'              => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'                   => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'proof_url.required_without'  => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_file.required_without' => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_url.url'               => 'Format link tidak valid. Pastikan diawali dengan http:// atau https://',
-            'proof_file.mimes'            => 'File harus berformat JPG, PNG, atau PDF.',
-            'proof_file.max'              => 'Ukuran file maksimal 5MB.',
+            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
+            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
+            'evidences.*.file.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
+            'evidences.*.file.max'    => 'Ukuran file maksimal 5MB.',
         ]);
 
         $durationMinutes = $validated['duration_unit'] === 'jam'
@@ -241,14 +244,21 @@ class DailyTaskEntryController extends Controller
 
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
-        // Handle upload file bukti (jika ada file baru, hapus yang lama)
-        $proofFilePath = $dailyTask->proof_file; // pertahankan file lama jika tidak ada upload baru
-        if ($request->hasFile('proof_file')) {
-            // Hapus file lama
-            if ($dailyTask->proof_file) {
-                Storage::disk('public')->delete($dailyTask->proof_file);
+        // Validasi tambahan: Pastikan ada path_or_url atau file yang diisi untuk tipe tertentu pada evidence BARU
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $index => $ev) {
+                if (empty($ev['id'])) {
+                    if ($ev['type'] === 'link' && empty($ev['path_or_url'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'URL wajib diisi untuk tipe Link.']);
+                    }
+                    if ($ev['type'] === 'image' && empty($ev['path_or_url'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'Gambar gagal di-upload.']);
+                    }
+                    if ($ev['type'] === 'file' && empty($ev['file'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.file" => 'File wajib diunggah untuk tipe File.']);
+                    }
+                }
             }
-            $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
         }
 
         $wasRevision = $dailyTask->verification_status === 'revision';
@@ -261,8 +271,6 @@ class DailyTaskEntryController extends Controller
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
-            'proof_url'         => $validated['proof_url'] ?? $dailyTask->proof_url,
-            'proof_file'        => $proofFilePath,
         ];
 
         // Jika laporan sedang revision dan staff menyimpan → kembalikan ke pending
@@ -282,6 +290,53 @@ class DailyTaskEntryController extends Controller
         }
 
         $dailyTask->update($updateData);
+
+        // ── Sinkronisasi Evidences ────────────────────────────────────────────
+        $submittedIds = [];
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $ev) {
+                if (!empty($ev['id'])) {
+                    // Update existing evidence
+                    $evidence = $dailyTask->evidences()->find($ev['id']);
+                    if ($evidence) {
+                        $upd = [
+                            'label' => $ev['label'],
+                            'type'  => $ev['type'],
+                        ];
+                        // Jika diubah menjadi link, update path_or_url-nya
+                        if ($ev['type'] === 'link' && !empty($ev['path_or_url'])) {
+                            $upd['path_or_url'] = $ev['path_or_url'];
+                        }
+                        $evidence->update($upd);
+                        $submittedIds[] = $evidence->id;
+                    }
+                } else {
+                    // Create new evidence
+                    $pathOrUrl = $ev['path_or_url'] ?? null;
+                    if ($ev['type'] === 'file' && isset($ev['file'])) {
+                        $pathOrUrl = $ev['file']->store('proofs', 'public');
+                    }
+                    if ($pathOrUrl) {
+                        $newEv = $dailyTask->evidences()->create([
+                            'type'        => $ev['type'],
+                            'label'       => $ev['label'],
+                            'path_or_url' => $pathOrUrl,
+                        ]);
+                        $submittedIds[] = $newEv->id;
+                    }
+                }
+            }
+        }
+
+        // Hapus evidences yang tidak ada di list form (dihapus user)
+        $evidencesToDelete = $dailyTask->evidences()->whereNotIn('id', $submittedIds)->get();
+        foreach ($evidencesToDelete as $delEv) {
+            // Hapus file dari storage jika berupa file/image
+            if (in_array($delEv->type, ['file', 'image']) && str_starts_with($delEv->path_or_url, 'proofs/')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($delEv->path_or_url);
+            }
+            $delEv->delete();
+        }
 
         // Kirim notifikasi ke leader bahwa revisi sudah dikirim
         if ($wasRevision) {
@@ -344,17 +399,18 @@ class DailyTaskEntryController extends Controller
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
             'notes'             => 'required|string|min:5',
-            // Bukti laporan: wajib untuk sales (salah satu harus diisi), opsional untuk lainnya
-            'proof_url'         => $isSales ? 'required_without:proof_file|nullable|url' : 'nullable|url',
-            'proof_file'        => $isSales ? 'required_without:proof_url|nullable|file|mimes:jpg,jpeg,png,pdf|max:5120' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            // Multi-evidence
+            'evidences'               => 'nullable|array|max:10',
+            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
+            'evidences.*.label'       => 'required|string|max:100',
+            'evidences.*.path_or_url' => 'nullable|string',
+            'evidences.*.file'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
-            'notes.required'         => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'              => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'proof_url.required_without' => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_file.required_without'=> 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_url.url'          => 'Format link tidak valid. Pastikan diawali dengan http:// atau https://',
-            'proof_file.mimes'       => 'File harus berformat JPG, PNG, atau PDF.',
-            'proof_file.max'         => 'Ukuran file maksimal 5MB.',
+            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
+            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
+            'evidences.*.file.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
+            'evidences.*.file.max'    => 'Ukuran file maksimal 5MB.',
         ]);
 
         // Konversi durasi -> menit
@@ -381,16 +437,18 @@ class DailyTaskEntryController extends Controller
 
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
-        // Handle upload file bukti
-        $proofFilePath = null;
-        if ($request->hasFile('proof_file')) {
-            $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
-        } elseif ($request->filled('clipboard_proof_file')) {
-            // Gunakan file yang sudah di-upload via paste clipboard
-            $clipPath = $request->input('clipboard_proof_file');
-            // Pastikan file memang ada di storage dan milik folder proofs (security check)
-            if (str_starts_with($clipPath, 'proofs/') && \Illuminate\Support\Facades\Storage::disk('public')->exists($clipPath)) {
-                $proofFilePath = $clipPath;
+        // Validasi tambahan: Pastikan ada path_or_url atau file yang diisi untuk setiap evidence
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $index => $ev) {
+                if ($ev['type'] === 'link' && empty($ev['path_or_url'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'URL wajib diisi untuk tipe Link.']);
+                }
+                if ($ev['type'] === 'image' && empty($ev['path_or_url'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'Gambar gagal di-upload.']);
+                }
+                if ($ev['type'] === 'file' && empty($ev['file'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.file" => 'File wajib diunggah untuk tipe File.']);
+                }
             }
         }
 
@@ -434,9 +492,27 @@ class DailyTaskEntryController extends Controller
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
             'task_date'         => $taskDate,
-            'proof_url'         => $validated['proof_url'] ?? null,
-            'proof_file'        => $proofFilePath,
         ]);
+
+        // Simpan Bukti (Multi-Evidence)
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $ev) {
+                $pathOrUrl = $ev['path_or_url'] ?? null;
+                
+                // Jika ini adalah upload file
+                if ($ev['type'] === 'file' && isset($ev['file'])) {
+                    $pathOrUrl = $ev['file']->store('proofs', 'public');
+                }
+
+                if ($pathOrUrl) {
+                    $entry->evidences()->create([
+                        'type'        => $ev['type'],
+                        'label'       => $ev['label'],
+                        'path_or_url' => $pathOrUrl,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('daily-tasks.show', $entry)
             ->with('success', '✅ Laporan berhasil dikirim!');

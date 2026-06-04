@@ -396,7 +396,7 @@
         @endif
 
         {{-- Bukti Laporan --}}
-        @if($dailyTask->proof_url || $dailyTask->proof_file)
+        @if($dailyTask->evidences->count() > 0 || $dailyTask->proof_url || $dailyTask->proof_file)
             <div style="height:1px;background:var(--bg-3);"></div>
             <div>
                 <div class="overline-label" style="margin-bottom:8px;display:flex;align-items:center;gap:6px;">
@@ -404,56 +404,107 @@
                     Bukti Laporan
                 </div>
 
-                @if($dailyTask->proof_url)
-                    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
-                                border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
-                                margin-bottom:6px;">
-                        <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:10px;color:var(--fg-4);margin-bottom:2px;">Link Bukti</div>
-                            <a href="{{ $dailyTask->proof_url }}" target="_blank"
-                               style="font-size:12px;color:var(--maxy-navy);font-weight:600;
-                                      word-break:break-all;text-decoration:none;"
-                               rel="noopener noreferrer">
-                                {{ Str::limit($dailyTask->proof_url, 55) }}
-                                <svg class="lucide" style="width:11px;height:11px;vertical-align:middle;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
-                @if($dailyTask->proof_file)
-                    @php
-                        $ext      = strtolower(pathinfo($dailyTask->proof_file, PATHINFO_EXTENSION));
-                        $isImage  = in_array($ext, ['jpg', 'jpeg', 'png']);
-                        $fileUrl  = Storage::url($dailyTask->proof_file);
-                        $fileName = basename($dailyTask->proof_file);
-                    @endphp
-
-                    @if($isImage)
-                        <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
-                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer">
-                                <img src="{{ $fileUrl }}" alt="Bukti laporan"
-                                     style="width:100%;max-height:220px;object-fit:cover;display:block;">
-                            </a>
-                            <div style="padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);">
-                                📸 {{ $fileName }} · <a href="{{ $fileUrl }}" target="_blank" style="color:var(--maxy-navy);">Buka penuh</a>
-                            </div>
-                        </div>
-                    @else
-                        <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
-                           style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
-                                  border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
-                                  text-decoration:none;color:inherit;">
-                            <svg class="lucide" style="width:20px;height:20px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    {{-- Old Evidence Fallback --}}
+                    @if($dailyTask->proof_url)
+                        <div style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
+                                    border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;">
+                            <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $fileName }}</div>
-                                <div style="font-size:10px;color:var(--fg-4);">PDF · Tap untuk membuka</div>
+                                <div style="font-size:10px;color:var(--fg-4);margin-bottom:2px;">Link Bukti (Legacy)</div>
+                                <a href="{{ $dailyTask->proof_url }}" target="_blank"
+                                   style="font-size:12px;color:var(--maxy-navy);font-weight:600;
+                                          word-break:break-all;text-decoration:none;"
+                                   rel="noopener noreferrer">
+                                    {{ Str::limit($dailyTask->proof_url, 55) }}
+                                </a>
                             </div>
-                            <svg class="lucide" style="width:14px;height:14px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>
+                        </div>
                     @endif
-                @endif
+
+                    @if($dailyTask->proof_file)
+                        @php
+                            $ext      = strtolower(pathinfo($dailyTask->proof_file, PATHINFO_EXTENSION));
+                            $isImage  = in_array($ext, ['jpg', 'jpeg', 'png']);
+                            $fileUrl  = Storage::url($dailyTask->proof_file);
+                            $fileName = basename($dailyTask->proof_file);
+                        @endphp
+
+                        @if($isImage)
+                            <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
+                                <div style="padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);border-bottom:1px solid var(--bg-3);">
+                                    📸 Bukti File (Legacy)
+                                </div>
+                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ $fileUrl }}" alt="Bukti laporan"
+                                         style="width:100%;max-height:220px;object-fit:cover;display:block;">
+                                </a>
+                            </div>
+                        @else
+                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
+                               style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
+                                      border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
+                                      text-decoration:none;color:inherit;">
+                                <svg class="lucide" style="width:20px;height:20px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $fileName }}</div>
+                                    <div style="font-size:10px;color:var(--fg-4);">PDF (Legacy)</div>
+                                </div>
+                            </a>
+                        @endif
+                    @endif
+
+                    {{-- New Multi Evidence --}}
+                    @if($dailyTask->evidences->count() > 0)
+                        @foreach($dailyTask->evidences as $ev)
+                            @if($ev->type === 'link')
+                                <div style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
+                                            border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;">
+                                    <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:12px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">{{ $ev->label }}</div>
+                                        <a href="{{ $ev->path_or_url }}" target="_blank"
+                                           style="font-size:11px;color:var(--maxy-navy);word-break:break-all;text-decoration:none;"
+                                           rel="noopener noreferrer">
+                                            {{ Str::limit($ev->path_or_url, 60) }}
+                                        </a>
+                                    </div>
+                                </div>
+                            @elseif($ev->type === 'file' || $ev->type === 'image')
+                                @php
+                                    $ext = strtolower(pathinfo($ev->path_or_url, PATHINFO_EXTENSION));
+                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']) || $ev->type === 'image';
+                                    $fileUrl = Storage::url($ev->path_or_url);
+                                    $fileName = basename($ev->path_or_url);
+                                @endphp
+
+                                @if($isImage)
+                                    <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
+                                        <div style="padding:8px 12px;font-size:12px;font-weight:600;color:var(--fg-1);background:var(--bg-2);border-bottom:1px solid var(--bg-3);display:flex;align-items:center;gap:6px;">
+                                            <svg class="lucide" style="width:14px;height:14px;color:var(--fg-3);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                            {{ $ev->label }}
+                                        </div>
+                                        <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" style="display:block;background:var(--bg-1);">
+                                            <img src="{{ $fileUrl }}" alt="{{ $ev->label }}"
+                                                 style="width:100%;max-height:300px;object-fit:contain;display:block;">
+                                        </a>
+                                    </div>
+                                @else
+                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
+                                       style="display:flex;align-items:center;gap:10px;background:var(--bg-2);
+                                              border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
+                                              text-decoration:none;color:inherit;">
+                                        <svg class="lucide" style="width:24px;height:24px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <div style="flex:1;min-width:0;">
+                                            <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $ev->label }}</div>
+                                            <div style="font-size:11px;color:var(--fg-4);margin-top:2px;">{{ $fileName }}</div>
+                                        </div>
+                                    </a>
+                                @endif
+                            @endif
+                        @endforeach
+                    @endif
+                </div>
             </div>
         @endif
     </div>
