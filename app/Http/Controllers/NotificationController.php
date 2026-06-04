@@ -46,8 +46,12 @@ class NotificationController extends Controller
         if ($notification->related_id) {
             // Jika notifikasi berkaitan dengan backdate
             if (in_array($notification->type, [\App\Models\AppNotification::TYPE_BACKDATE_REQUESTED, \App\Models\AppNotification::TYPE_BACKDATE_REVIEWED])) {
-                // Jika disetujui, arahkan ke form tambah tugas
+                // Jika disetujui, arahkan ke form tambah tugas beserta tokennya
                 if (str_contains($notification->title, 'Disetujui')) {
+                    $backdateReq = \App\Models\BackdateRequest::find($notification->related_id);
+                    if ($backdateReq && $backdateReq->approval_token) {
+                        return redirect()->route('daily-tasks.create', ['backdate_token' => $backdateReq->approval_token]);
+                    }
                     return redirect()->route('daily-tasks.create');
                 }
                 // Jika ditolak atau minta izin (untuk leader), arahkan ke halaman daftar permintaan

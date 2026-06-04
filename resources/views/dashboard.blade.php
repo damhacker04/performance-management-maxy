@@ -246,7 +246,7 @@
                                         Disetujui oleh {{ $req->reviewer?->name ?? 'Leader' }}. Segera isi sebelum {{ \Carbon\Carbon::parse($req->token_expires_at)->isoFormat('HH:mm') }}!
                                     </div>
                                 </div>
-                                <a href="{{ route('daily-tasks.create') }}" class="btn btn-sm" style="background:#22C55E;color:#fff;text-decoration:none;font-size:11px;padding:4px 12px;white-space:nowrap;">
+                                <a href="{{ route('daily-tasks.create', ['backdate_token' => $req->approval_token]) }}" class="btn btn-sm" style="background:#22C55E;color:#fff;text-decoration:none;font-size:11px;padding:4px 12px;white-space:nowrap;">
                                     Isi Sekarang
                                 </a>
                             </div>
