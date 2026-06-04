@@ -324,7 +324,9 @@
                     <input type="url" name="evidences[__INDEX__][path_or_url][]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;flex:1;" required>
                 </div>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="margin-top:8px; font-size:11px; padding:6px 12px; background:transparent; border:1px dashed var(--maxy-navy); color:var(--maxy-navy); border-radius:6px; cursor:pointer; font-weight:600;">+ Tambahkan Link</button>
+            <div style="text-align: center; margin-top: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="font-size:11px; padding:6px 12px; background:transparent; border:1px dashed var(--maxy-navy); color:var(--maxy-navy); border-radius:6px; cursor:pointer; font-weight:600;">+ Tambahkan Link</button>
+            </div>
         </div>
 
         <div class="evidence-input-file" style="display: none;">
