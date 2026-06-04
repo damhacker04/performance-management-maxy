@@ -254,7 +254,8 @@
         </div>
 
         <div class="evidence-input-file" style="display: none;">
-            <input type="file" name="evidences[__INDEX__][file]" class="m-input" accept=".jpg,.jpeg,.png,.pdf" style="font-size:13px; padding:6px;" disabled>
+            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa pilih lebih dari 1 file sekaligus</div>
+            <input type="file" name="evidences[__INDEX__][file][]" multiple class="m-input" accept=".jpg,.jpeg,.png,.pdf" style="font-size:13px; padding:6px;" disabled>
         </div>
 
         <div class="evidence-input-image" style="display: none;">
