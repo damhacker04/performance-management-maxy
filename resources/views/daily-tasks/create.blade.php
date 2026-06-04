@@ -302,7 +302,6 @@
 <!-- Template Bukti Laporan -->
 <template id="evidence-template">
     <div class="evidence-row" style="border: 1px solid var(--bg-3); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: var(--bg-1); position:relative;">
-        <button type="button" onclick="this.closest('.evidence-row').remove()" style="position:absolute; top: 12px; right: 12px; color: var(--danger); border: none; background: transparent; cursor: pointer; font-size:12px; font-weight:600;">Hapus ✖</button>
         
         <div style="display:flex; gap: 12px; margin-bottom: 8px; padding-right: 50px;">
             <div style="flex:1;">
@@ -349,6 +348,10 @@
             <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
             
             <div class="clipboard-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"></div>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; margin-top:12px; padding-top:12px; border-top:1px dashed var(--bg-3);">
+            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:10px;">✖</span></button>
         </div>
     </div>
 </template>
