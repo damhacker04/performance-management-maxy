@@ -163,5 +163,43 @@ class NotificationHelper
             ],
         ]);
     }
+    /**
+     * Kirim notifikasi ke STAF: Laporan disetujui leader.
+     */
+    public static function reportApproved(DailyTaskEntry $dailyTask, User $leader): void
+    {
+        AppNotification::create([
+            'user_id'    => $dailyTask->user_id,
+            'type'       => AppNotification::TYPE_REPORT_APPROVED,
+            'title'      => '✅ Laporan Disetujui',
+            'body'       => 'Laporan "' . \Str::limit($dailyTask->task_description, 50) . '" telah disetujui oleh ' . $leader->name . '.',
+            'related_id' => $dailyTask->id,
+            'meta'       => [
+                'leader_name' => $leader->name,
+                'task_desc'   => \Str::limit($dailyTask->task_description, 60),
+                'task_date'   => $dailyTask->task_date,
+            ],
+        ]);
+    }
+
+    /**
+     * Kirim notifikasi ke STAF: Laporan ditolak permanen.
+     */
+    public static function reportRejected(DailyTaskEntry $dailyTask, User $leader): void
+    {
+        AppNotification::create([
+            'user_id'    => $dailyTask->user_id,
+            'type'       => AppNotification::TYPE_REPORT_REJECTED,
+            'title'      => '❌ Laporan Ditolak',
+            'body'       => 'Laporan "' . \Str::limit($dailyTask->task_description, 50) . '" ditolak permanen oleh ' . $leader->name . '. Alasan: ' . \Str::limit($dailyTask->rejection_note, 80),
+            'related_id' => $dailyTask->id,
+            'meta'       => [
+                'leader_name'    => $leader->name,
+                'task_desc'      => \Str::limit($dailyTask->task_description, 60),
+                'task_date'      => $dailyTask->task_date,
+                'rejection_note' => $dailyTask->rejection_note,
+            ],
+        ]);
+    }
 }
 

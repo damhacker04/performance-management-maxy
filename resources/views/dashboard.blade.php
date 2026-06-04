@@ -4,6 +4,9 @@
 @endphp
 
 <div class="page">
+    <style>
+        .rotate-180 { transform: rotate(180deg); }
+    </style>
     <!-- Hero greeting -->
     <div class="hero-greeting">
         <img src="{{ asset('images/m-logo.png') }}" class="watermark" alt="" />
@@ -42,11 +45,14 @@
                 ->orderByDesc('updated_at')
                 ->get();
 
-            // Laporan yang baru saja disetujui (3 hari terakhir)
-            $recentApproved = \App\Models\DailyTaskEntry::where('user_id', $user->id)
-                ->where('verification_status', 'approved')
-                ->where('updated_at', '>=', now()->subDays(3))
-                ->orderByDesc('updated_at')
+            // Laporan yang baru saja disetujui (berdasarkan Notifikasi Lonceng)
+            $recentApprovedNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', 'report_approved')
+                ->where(function($q) {
+                    $q->whereNull('read_at') // Tampilkan selamanya sampai dibaca
+                      ->orWhere('created_at', '>=', now()->subDays(2)); // Kalau sudah dibaca, tahan selama 2 hari di dashboard
+                })
+                ->orderByDesc('created_at')
                 ->get();
 
             // Tugas yang belum selesai lebih dari 14 hari
@@ -126,34 +132,49 @@
             @endif
 
             {{-- Banner hijau: Laporan yang BARU DISETUJUI --}}
-            @if($recentApproved->isNotEmpty())
-                <div style="background:#E8F7F4;border:1.5px solid #16A571;border-radius:12px;padding:14px 16px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-accordion-body').classList.toggle('hidden')">
+            @if($recentApprovedNotifs->isNotEmpty())
+                @php
+                    $unreadCount = $recentApprovedNotifs->filter(fn($n) => !$n->isRead())->count();
+                    $hasUnread = $unreadCount > 0;
+                    $mainBg = $hasUnread ? '#E8F7F4' : '#F8FAFC';
+                    $mainBorder = $hasUnread ? '#16A571' : '#E2E8F0';
+                    $mainText = $hasUnread ? '#0F7A50' : '#64748B';
+                    $chipBg = $hasUnread ? '#16A571' : '#94A3B8';
+                @endphp
+                <div style="background:{{ $mainBg }};border:1.5px solid {{ $mainBorder }};border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-accordion-body').classList.toggle('hidden'); document.getElementById('approved-chevron').classList.toggle('rotate-180');">
                         <div style="display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:15px;">✅</span>
-                            <span style="font-size:12px;font-weight:700;color:#0F7A50;">Laporan Baru Disetujui</span>
+                            <span style="font-size:15px;">{{ $hasUnread ? '✅' : '✔️' }}</span>
+                            <span style="font-size:12px;font-weight:700;color:{{ $mainText }};">Laporan Baru Disetujui</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <span class="chip" style="background:#16A571;color:#fff;font-size:10px;border:none;">{{ $recentApproved->count() }} laporan</span>
-                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#0F7A50;"><path d="M6 9l6 6 6-6"/></svg>
+                            <span class="chip" style="background:{{ $chipBg }};color:#fff;font-size:10px;border:none;">{{ $unreadCount > 0 ? $unreadCount.' baru' : $recentApprovedNotifs->count().' laporan' }}</span>
+                            <svg id="approved-chevron" class="lucide sm" viewBox="0 0 24 24" style="color:{{ $mainText }};transition: transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
                         </div>
                     </div>
                     
                     <div id="approved-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
-                        @foreach($recentApproved as $appr)
-                            <a href="{{ route('daily-tasks.show', $appr->id) }}"
+                        @foreach($recentApprovedNotifs as $appr)
+                            @php
+                                $isRead = $appr->isRead();
+                                $itemBg = $isRead ? '#F8FAFC' : '#fff';
+                                $itemBorder = $isRead ? '#E2E8F0' : '#D1FAE5';
+                                $itemTitle = $isRead ? '#64748B' : 'var(--fg-1)';
+                                $itemSub = $isRead ? '#94A3B8' : '#0D6A44';
+                            @endphp
+                            <a href="{{ route('notifications.read', $appr->id) }}"
                                style="display:flex;align-items:center;justify-content:space-between;
-                                      background:#fff;border:1px solid #D1FAE5;border-radius:8px;
+                                      background:{{ $itemBg }};border:1px solid {{ $itemBorder }};border-radius:8px;
                                       padding:8px 10px;text-decoration:none;color:inherit;">
                                 <div>
-                                    <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
-                                        {{ Str::limit($appr->task_description, 38) }}
+                                    <div style="font-size:13px;font-weight:{{ $isRead ? '500' : '600' }};color:{{ $itemTitle }};margin-bottom:2px;">
+                                        {{ $appr->getMeta('task_desc') }}
                                     </div>
-                                    <div style="font-size:11px;color:#0D6A44;">
-                                        {{ \Carbon\Carbon::parse($appr->updated_at)->isoFormat('D MMM') }} · Disetujui oleh Leader
+                                    <div style="font-size:11px;color:{{ $itemSub }};">
+                                        {{ \Carbon\Carbon::parse($appr->created_at)->isoFormat('D MMM') }} · Disetujui oleh {{ explode(' ', $appr->getMeta('leader_name'))[0] ?? 'Leader' }}
                                     </div>
                                 </div>
-                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:#0F7A50;"><path d="M9 18l6-6-6-6"/></svg>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:{{ $itemSub }};"><path d="M9 18l6-6-6-6"/></svg>
                             </a>
                         @endforeach
                     </div>

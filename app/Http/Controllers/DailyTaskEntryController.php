@@ -612,6 +612,8 @@ class DailyTaskEntryController extends Controller
             'rejection_note'      => null,
         ]);
 
+        \App\Helpers\NotificationHelper::reportApproved($dailyTask, auth()->user());
+
         return redirect()->route('daily-tasks.show', $dailyTask)
             ->with('success', '✅ Laporan berhasil diverifikasi dan disetujui.');
     }
@@ -678,6 +680,8 @@ class DailyTaskEntryController extends Controller
             'rejection_note'      => $request->rejection_note,
             'reviewed_at'         => now(),
         ]);
+
+        \App\Helpers\NotificationHelper::reportRejected($dailyTask, auth()->user());
 
         return redirect()->route('daily-tasks.show', $dailyTask)
             ->with('error', '❌ Laporan telah ditolak secara permanen.');
