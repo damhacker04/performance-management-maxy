@@ -320,7 +320,13 @@
         </div>
 
         <div class="evidence-input-link">
-            <input type="url" name="evidences[__INDEX__][path_or_url]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;" required>
+            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa menambahkan lebih dari 1 link</div>
+            <div class="link-list" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;gap:8px;">
+                    <input type="url" name="evidences[__INDEX__][path_or_url][]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;flex:1;" required>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="padding:0 12px;font-weight:bold;">+</button>
+                </div>
+            </div>
         </div>
 
         <div class="evidence-input-file" style="display: none;">
@@ -333,20 +339,16 @@
         </div>
 
         <div class="evidence-input-image" style="display: none;">
-            <input type="hidden" name="evidences[__INDEX__][path_or_url]" class="image-path-input" disabled>
-            
+            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa paste lebih dari 1 screenshot secara berurutan</div>
             <div class="paste-zone" tabindex="0"
                  style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
                  title="Klik di sini lalu tekan Ctrl+V">
                 <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
                 Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
             </div>
+            <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
             
-            <div class="clipboard-preview" style="display:none;margin-top:8px;position:relative;">
-                <img class="clipboard-img" src="" alt="Preview" style="width:100%;border-radius:8px;border:1px solid var(--bg-3);max-height:150px;object-fit:contain;background:var(--bg-2);">
-                <button type="button" onclick="clearRowImage(this)" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
-                <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
-            </div>
+            <div class="clipboard-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"></div>
         </div>
     </div>
 </template>
@@ -420,6 +422,18 @@ function addEvidenceRow() {
     evidenceCount++;
 }
 
+function addLinkField(btn) {
+    const list = btn.closest('.link-list');
+    const name = list.querySelector('input').name;
+    const div = document.createElement('div');
+    div.style = 'display:flex;gap:8px;';
+    div.innerHTML = `
+        <input type="url" name="${name}" class="m-input" placeholder="https://..." style="font-size:13px;flex:1;" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;font-weight:bold;">✖</button>
+    `;
+    list.appendChild(div);
+}
+
 function changeEvidenceType(select) {
     const row = select.closest('.evidence-row');
     const type = select.value;
@@ -432,12 +446,17 @@ function changeEvidenceType(select) {
     fileDiv.style.display = type === 'file' ? 'block' : 'none';
     imgDiv.style.display = type === 'image' ? 'block' : 'none';
 
-    linkDiv.querySelector('input').disabled = type !== 'link';
-    fileDiv.querySelector('input').disabled = type !== 'file';
-    imgDiv.querySelector('input').disabled = type !== 'image';
+    // Disable inputs that are not active so they don't get submitted
+    const linkInputs = linkDiv.querySelectorAll('input');
+    const fileInput = fileDiv.querySelector('input');
+    const imgInputs  = imgDiv.querySelectorAll('input');
 
-    linkDiv.querySelector('input').required = type === 'link';
-    fileDiv.querySelector('input').required = type === 'file';
+    linkInputs.forEach(inp => inp.disabled = type !== 'link');
+    if (fileInput) fileInput.disabled = type !== 'file';
+    imgInputs.forEach(inp => inp.disabled = type !== 'image');
+
+    linkInputs.forEach(inp => inp.required = type === 'link');
+    if (fileInput) fileInput.required = type === 'file';
 }
 
 function clearRowImage(btn) {
@@ -481,16 +500,12 @@ function clearRowImage(btn) {
             const reader = new FileReader();
             reader.onload = async function (ev) {
                 const dataUrl = ev.target.result;
-                const img = row.querySelector('.clipboard-img');
-                const preview = row.querySelector('.clipboard-preview');
                 const status = row.querySelector('.clipboard-status');
-                const pathInput = row.querySelector('.image-path-input');
+                const list = row.querySelector('.clipboard-list');
+                const inputName = `evidences[${row.querySelector('.evidence-type-select').name.match(/\d+/)[0]}][path_or_url][]`;
 
-                img.src = dataUrl;
-                preview.style.display = 'block';
                 status.textContent = 'Menyimpan ke server…';
                 status.style.color = 'var(--fg-3)';
-                pathInput.value = '';
 
                 try {
                     const resp = await fetch('{{ route("daily-tasks.upload-clipboard") }}', {
@@ -505,9 +520,19 @@ function clearRowImage(btn) {
 
                     const data = await resp.json();
                     if (resp.ok && data.path) {
-                        pathInput.value = data.path;
                         status.textContent = '✅ Gambar berhasil disimpan.';
                         status.style.color = '#16A571';
+                        
+                        const div = document.createElement('div');
+                        div.style = 'position:relative;border:1px solid var(--bg-3);border-radius:8px;padding:4px;background:var(--bg-1);';
+                        div.innerHTML = `
+                            <input type="hidden" name="${inputName}" value="${data.path}">
+                            <img src="${dataUrl}" style="width:100%;max-height:100px;object-fit:cover;border-radius:4px;">
+                            <button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+                        `;
+                        list.appendChild(div);
+                        
+                        setTimeout(() => status.textContent = '', 3000);
                     } else {
                         status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
                         status.style.color = 'var(--danger)';

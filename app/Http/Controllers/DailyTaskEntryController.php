@@ -213,7 +213,8 @@ class DailyTaskEntryController extends Controller
             'evidences.*.id'          => 'nullable|exists:daily_task_evidences,id',
             'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
             'evidences.*.label'       => 'required|string|max:100',
-            'evidences.*.path_or_url' => 'nullable|string',
+            'evidences.*.path_or_url' => 'nullable|array',
+            'evidences.*.path_or_url.*' => 'nullable|string',
             'evidences.*.file'        => 'nullable|array|max:10',
             'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
@@ -304,12 +305,29 @@ class DailyTaskEntryController extends Controller
                             'label' => $ev['label'],
                             'type'  => $ev['type'],
                         ];
-                        // Jika diubah menjadi link, update path_or_url-nya
-                        if ($ev['type'] === 'link' && !empty($ev['path_or_url'])) {
-                            $upd['path_or_url'] = $ev['path_or_url'];
+                        
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        $firstUrl = array_shift($urls);
+                        if (in_array($ev['type'], ['link', 'image']) && $firstUrl) {
+                            $upd['path_or_url'] = $firstUrl;
                         }
+                        
                         $evidence->update($upd);
                         $submittedIds[] = $evidence->id;
+                        
+                        // Jika ditambah link/gambar baru pada row yang sudah ada
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $newEv = $dailyTask->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                                $submittedIds[] = $newEv->id;
+                            }
+                        }
                     }
                 } else {
                     // Create new evidence
@@ -324,14 +342,18 @@ class DailyTaskEntryController extends Controller
                             $submittedIds[] = $newEv->id;
                         }
                     } else {
-                        $pathOrUrl = $ev['path_or_url'] ?? null;
-                        if ($pathOrUrl) {
-                            $newEv = $dailyTask->evidences()->create([
-                                'type'        => $ev['type'],
-                                'label'       => $ev['label'],
-                                'path_or_url' => $pathOrUrl,
-                            ]);
-                            $submittedIds[] = $newEv->id;
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $newEv = $dailyTask->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                                $submittedIds[] = $newEv->id;
+                            }
                         }
                     }
                 }
@@ -413,7 +435,8 @@ class DailyTaskEntryController extends Controller
             'evidences'               => 'nullable|array|max:10',
             'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
             'evidences.*.label'       => 'required|string|max:100',
-            'evidences.*.path_or_url' => 'nullable|string',
+            'evidences.*.path_or_url' => 'nullable|array',
+            'evidences.*.path_or_url.*' => 'nullable|string',
             'evidences.*.file'        => 'nullable|array|max:10',
             'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:5120',
         ], [
@@ -519,14 +542,18 @@ class DailyTaskEntryController extends Controller
                         ]);
                     }
                 } else {
-                    $pathOrUrl = $ev['path_or_url'] ?? null;
-                    if ($pathOrUrl) {
-                        $entry->evidences()->create([
-                            'type'        => $ev['type'],
-                            'label'       => $ev['label'],
-                            'path_or_url' => $pathOrUrl,
-                        ]);
-                    }
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $entry->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                            }
+                        }
                 }
             }
         }
