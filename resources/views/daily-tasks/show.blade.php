@@ -82,7 +82,7 @@
 
     {{-- Mulai grid desktop: kolom kiri = info & aksi, kolom kanan = activity log --}}
     <div class="dt-detail-grid">
-    <div class="dt-detail-left">
+    <div class="dt-detail-left" style="display:flex;flex-direction:column;gap:16px;">
 
     <!-- Status, Prioritas & Verifikasi -->
     <div class="m-card" style="display:flex;flex-direction:column;gap:10px;">
@@ -535,18 +535,7 @@
         @endif
     </div>
 
-    <!-- Quick action: mark as done (jika belum) -->
-    @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
-        <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
-              onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
-            @csrf
-            @method('PATCH')
-            <button type="submit" class="btn btn-primary btn-block">
-                <svg class="lucide sm" viewBox="0 0 24 24" style="margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>
-                Tandai Selesai
-            </button>
-        </form>
-    @endif
+
     </div>{{-- end dt-detail-left --}}
 
     {{-- Kolom kanan: Activity Log ──────────────────────────── --}}
@@ -715,6 +704,21 @@
 
     </div>{{-- end dt-detail-right --}}
     </div>{{-- end dt-detail-grid --}}
+
+    <!-- Quick action: mark as done (jika belum) -->
+    @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
+        <div style="margin-top:20px;">
+            <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
+                  onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;box-shadow:0 4px 12px rgba(245,158,11,0.2);">
+                    <svg class="lucide sm" viewBox="0 0 24 24" style="margin-right:6px;"><path d="M5 13l4 4L19 7"/></svg>
+                    Tandai Selesai
+                </button>
+            </form>
+        </div>
+    @endif
 
 </div>
 </x-app-layout>
