@@ -6,6 +6,7 @@
 <div class="page">
     <style>
         .rotate-180 { transform: rotate(180deg); }
+        .hidden { display: none !important; }
     </style>
     <!-- Hero greeting -->
     <div class="hero-greeting">
