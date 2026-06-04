@@ -243,4 +243,16 @@
         </div>
     @endif
 </div>
+
+<script>
+    document.addEventListener('click', function(event) {
+        const detailsElements = document.querySelectorAll('details');
+        detailsElements.forEach(function(details) {
+            // Jika details terbuka dan klik terjadi di luar area details tersebut
+            if (details.hasAttribute('open') && !details.contains(event.target)) {
+                details.removeAttribute('open');
+            }
+        });
+    });
+</script>
 </x-app-layout>
