@@ -30,6 +30,8 @@ class AppNotification extends Model
     const TYPE_NOT_SUBMITTED       = 'not_submitted';      // sistem → leader: staff tidak kumpul
     const TYPE_BACKDATE_REQUESTED  = 'backdate_requested'; // staff → leader: minta izin backdating
     const TYPE_BACKDATE_REVIEWED   = 'backdate_reviewed';  // leader → staff: hasil review backdating
+    const TYPE_REPORT_APPROVED     = 'report_approved';    // leader → staff: laporan disetujui
+    const TYPE_REPORT_REJECTED     = 'report_rejected';    // leader → staff: laporan ditolak permanen
 
     // Relasi ke user penerima
     public function user()

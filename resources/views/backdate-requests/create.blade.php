@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    @if($availableDates->isEmpty() ?? count($availableDates) === 0)
+    @if(count($availableDates) === 0)
         <div class="m-card">
             <div class="empty-state">
                 <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

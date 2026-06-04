@@ -101,6 +101,17 @@
         </div>
     @else
         <div class="m-card">
+            @if($errors->any())
+                <div style="background-color: #FEE2E2; border-left: 4px solid #EF4444; color: #991B1B; padding: 12px; border-radius: 4px; margin-bottom: 20px;">
+                    <strong>Gagal menyimpan laporan!</strong>
+                    <ul style="margin: 8px 0 0 20px; padding: 0; font-size: 13px;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('daily-tasks.store') }}"
                   enctype="multipart/form-data"
                   style="display:flex;flex-direction:column;gap:16px;">
@@ -265,55 +276,30 @@
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
-                <!-- Bukti Laporan -->
+                <!-- Bukti Laporan Dinamis -->
                 <div class="field">
                     @php $isSales = auth()->user()->department === 'sales'; @endphp
-                    <label style="display:flex;align-items:center;gap:6px;">
-                        <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
-                        Bukti Laporan
-                        @if($isSales)
-                            <span style="color:var(--danger);">*</span>
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib untuk Sales)</span>
-                        @else
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
-                        @endif
+                    <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
+                            Bukti Laporan (Multi)
+                            @if($isSales)
+                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
+                            @else
+                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                            @endif
+                        </div>
                     </label>
 
-                    {{-- Link URL bukti --}}
-                    <div style="margin-bottom:8px;">
-                        <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;font-weight:600;">Link Bukti (Google Sheets, CRM, Drive, dll.)</div>
-                        <input type="url" id="proof_url" name="proof_url"
-                               class="m-input {{ $errors->has('proof_url') ? 'err' : '' }}"
-                               value="{{ old('proof_url') }}"
-                               placeholder="https://docs.google.com/…">
-                        @error('proof_url')<span class="err">{{ $message }}</span>@enderror
+                    <div id="evidences-container">
+                        <!-- Dynamic rows will be added here -->
                     </div>
 
-                    {{-- Divider --}}
-                    <div style="display:flex;align-items:center;gap:8px;color:var(--fg-4);font-size:11px;margin-bottom:8px;">
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                        atau upload file
-                        <div style="flex:1;height:1px;background:var(--bg-3);"></div>
-                    </div>
-
-                    {{-- Upload file --}}
-                    <label for="proof_file"
-                           style="display:flex;align-items:center;justify-content:center;gap:8px;
-                                  border:2px dashed var(--bg-3);border-radius:10px;padding:16px;
-                                  cursor:pointer;color:var(--fg-3);font-size:13px;
-                                  background:var(--bg-2);transition:border-color .2s;"
-                           id="proof_file_label"
-                           ondragover="this.style.borderColor='var(--maxy-navy)'"
-                           ondragleave="this.style.borderColor='var(--bg-3)'">
-                        <svg class="lucide" style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        <span id="proof_file_text">JPG, PNG, atau PDF — maks. 5MB</span>
-                    </label>
-                    <input type="file" id="proof_file" name="proof_file"
-                           accept=".jpg,.jpeg,.png,.pdf"
-                           class="{{ $errors->has('proof_file') ? 'err' : '' }}"
-                           style="display:none;"
-                           onchange="document.getElementById('proof_file_text').textContent = this.files[0]?.name ?? 'JPG, PNG, atau PDF — maks. 5MB';">
-                    @error('proof_file')<span class="err">{{ $message }}</span>@enderror
+                    <button type="button" onclick="addEvidenceRow()" 
+                            style="width:100%; border:1px dashed var(--maxy-navy); background:rgba(29,78,216,0.05); color:var(--maxy-navy); padding:10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <svg class="lucide" style="width:16px;height:16px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Tambah Bukti Baru
+                    </button>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="margin-top:4px;">
@@ -323,4 +309,276 @@
         </div>
     @endif
 </div>
+
+<!-- Template Bukti Laporan -->
+<template id="evidence-template">
+    <div class="evidence-row" style="border: 1px solid var(--bg-3); border-radius: 8px; padding: 12px; margin-bottom: 12px; background: var(--bg-1); position:relative;">
+        
+        <div style="display:flex; gap: 12px; margin-bottom: 8px; padding-right: 50px;">
+            <div style="flex:1;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Tipe Bukti</label>
+                <select name="evidences[__INDEX__][type]" class="m-input" onchange="changeEvidenceType(this)" style="padding: 6px; font-size:13px; height:auto;">
+                    <option value="link">🔗 Link URL</option>
+                    <option value="file">📄 Upload File (PDF/Image)</option>
+                    <option value="image">🖼️ Screenshot (Ctrl+V)</option>
+                </select>
+            </div>
+            <div style="flex:2;">
+                <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Judul Bukti <span style="color:var(--danger)">*</span></label>
+                <input type="text" name="evidences[__INDEX__][label]" class="m-input" placeholder="Contoh: Draft Proposal" style="padding: 6px; font-size:13px; height:auto;" required>
+            </div>
+        </div>
+
+        <div class="evidence-input-link">
+            <div class="link-list" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;gap:8px;">
+                    <input type="url" name="evidences[__INDEX__][path_or_url][]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;flex:1;" required>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="font-size:11px; padding:6px 12px; background:transparent; border:1px dashed var(--maxy-navy); color:var(--maxy-navy); border-radius:6px; cursor:pointer; font-weight:600;">+ Tambahkan Link</button>
+            </div>
+        </div>
+
+        <div class="evidence-input-file" style="display: none;">
+            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa pilih lebih dari 1 file sekaligus</div>
+            <div class="custom-file-wrapper" style="border:1px dashed var(--bg-3);border-radius:8px;padding:12px;text-align:center;background:var(--bg-2);">
+                <input type="file" name="evidences[__INDEX__][file][]" multiple class="m-input real-file-input" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" disabled>
+                <button type="button" class="btn btn-secondary btn-sm trigger-file-btn" style="background:#fff;border:1px solid #D1D5DB;color:#374151;font-size:12px;padding:4px 10px;">Pilih File...</button>
+                <div class="file-list" style="margin-top:8px;text-align:left;display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
+        </div>
+
+        <div class="evidence-input-image" style="display: none;">
+            <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa paste lebih dari 1 screenshot secara berurutan</div>
+            <div class="paste-zone" tabindex="0"
+                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
+                 title="Klik di sini lalu tekan Ctrl+V">
+                <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
+                Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
+            </div>
+            <div class="clipboard-status" style="font-size:11px;color:var(--fg-3);margin-top:4px;text-align:center;"></div>
+            
+            <div class="clipboard-list" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;"></div>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; margin-top:12px; padding-top:12px; border-top:1px dashed var(--bg-3);">
+            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:10px;">✖</span></button>
+        </div>
+    </div>
+</template>
+
+<script>
+let evidenceCount = 0;
+
+function addEvidenceRow() {
+    const container = document.getElementById('evidences-container');
+    const template = document.getElementById('evidence-template').innerHTML;
+    const html = template.replace(/__INDEX__/g, evidenceCount);
+    
+    // Add to container
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const rowNode = div.firstElementChild;
+    container.appendChild(rowNode);
+    
+    // Bind Custom File Logic
+    const realInput = rowNode.querySelector('.real-file-input');
+    const triggerBtn = rowNode.querySelector('.trigger-file-btn');
+    const fileList = rowNode.querySelector('.file-list');
+    
+    if (realInput && triggerBtn && fileList) {
+        let dt = new DataTransfer();
+        
+        triggerBtn.addEventListener('click', () => {
+            realInput.click();
+        });
+        
+        realInput.addEventListener('change', (e) => {
+            for (let file of e.target.files) {
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file "' + file.name + '" melebihi batas 2 MB. Silakan pilih file yang lebih kecil.');
+                    continue;
+                }
+                dt.items.add(file);
+            }
+            realInput.files = dt.files;
+            renderFileList();
+        });
+        
+        function renderFileList() {
+            fileList.innerHTML = '';
+            for (let i = 0; i < dt.files.length; i++) {
+                const file = dt.files[i];
+                const fileItem = document.createElement('div');
+                fileItem.style = 'display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--bg-3);padding:4px 8px;border-radius:6px;font-size:11px;';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.style = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
+                nameSpan.textContent = '📄 ' + file.name;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.style = 'color:var(--danger);background:transparent;border:none;cursor:pointer;font-weight:bold;margin-left:8px;';
+                removeBtn.innerHTML = '✖';
+                removeBtn.onclick = () => {
+                    const newDt = new DataTransfer();
+                    for(let j = 0; j < dt.files.length; j++) {
+                        if (i !== j) newDt.items.add(dt.files[j]);
+                    }
+                    dt = newDt;
+                    realInput.files = dt.files;
+                    renderFileList();
+                };
+                
+                fileItem.appendChild(nameSpan);
+                fileItem.appendChild(removeBtn);
+                fileList.appendChild(fileItem);
+            }
+        }
+    }
+    
+    evidenceCount++;
+}
+
+function addLinkField(btn) {
+    const linkDiv = btn.closest('.evidence-input-link');
+    const list = linkDiv.querySelector('.link-list');
+    const name = list.querySelector('input').name;
+    const div = document.createElement('div');
+    div.style = 'display:flex;gap:8px;';
+    div.innerHTML = `
+        <input type="url" name="${name}" class="m-input" placeholder="https://..." style="font-size:13px;flex:1;" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;font-weight:bold;cursor:pointer;">✖</button>
+    `;
+    list.appendChild(div);
+}
+
+function changeEvidenceType(select) {
+    const row = select.closest('.evidence-row');
+    const type = select.value;
+
+    const linkDiv = row.querySelector('.evidence-input-link');
+    const fileDiv = row.querySelector('.evidence-input-file');
+    const imgDiv = row.querySelector('.evidence-input-image');
+
+    linkDiv.style.display = type === 'link' ? 'block' : 'none';
+    fileDiv.style.display = type === 'file' ? 'block' : 'none';
+    imgDiv.style.display = type === 'image' ? 'block' : 'none';
+
+    // Disable inputs that are not active so they don't get submitted
+    const linkInputs = linkDiv.querySelectorAll('input');
+    const fileInput = fileDiv.querySelector('input');
+    const imgInputs  = imgDiv.querySelectorAll('input');
+
+    linkInputs.forEach(inp => inp.disabled = type !== 'link');
+    if (fileInput) fileInput.disabled = type !== 'file';
+    imgInputs.forEach(inp => inp.disabled = type !== 'image');
+
+    linkInputs.forEach(inp => inp.required = type === 'link');
+    if (fileInput) fileInput.required = type === 'file';
+}
+
+function clearRowImage(btn) {
+    const row = btn.closest('.evidence-row');
+    row.querySelector('.clipboard-img').src = '';
+    row.querySelector('.clipboard-preview').style.display = 'none';
+    row.querySelector('.image-path-input').value = '';
+}
+
+(function () {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    // Global focus for paste zones
+    document.addEventListener('focusin', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--maxy-navy)';
+            e.target.style.background = 'rgba(29,78,216,0.05)';
+        }
+    });
+    document.addEventListener('focusout', function(e) {
+        if (e.target.classList.contains('paste-zone')) {
+            e.target.style.borderColor = 'var(--bg-3)';
+            e.target.style.background = 'var(--bg-2)';
+        }
+    });
+
+    // Global paste listener
+    document.addEventListener('paste', function (e) {
+        const active = document.activeElement;
+        if (!active || !active.classList.contains('paste-zone')) return;
+
+        const row = active.closest('.evidence-row');
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (const item of items) {
+            if (!item.type.startsWith('image/')) continue;
+            const blob = item.getAsFile();
+            if (!blob) continue;
+
+            if (blob.size > 2 * 1024 * 1024) {
+                alert('Ukuran gambar melebihi batas 2 MB. Silakan perkecil resolusi gambar Anda.');
+                continue;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function (ev) {
+                const dataUrl = ev.target.result;
+                const status = row.querySelector('.clipboard-status');
+                const list = row.querySelector('.clipboard-list');
+                const selectElement = row.querySelector('select[name^="evidences"]');
+                const index = selectElement ? selectElement.name.match(/\d+/)[0] : '0';
+                const inputName = `evidences[${index}][path_or_url][]`;
+
+                status.textContent = 'Menyimpan ke server…';
+                status.style.color = 'var(--fg-3)';
+
+                try {
+                    const resp = await fetch('{{ route("daily-tasks.upload-clipboard") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ image: dataUrl }),
+                    });
+
+                    const data = await resp.json();
+                    if (resp.ok && data.path) {
+                        status.textContent = '✅ Gambar berhasil disimpan.';
+                        status.style.color = '#16A571';
+                        
+                        const div = document.createElement('div');
+                        div.style = 'position:relative;border:1px solid var(--bg-3);border-radius:8px;padding:4px;background:var(--bg-1);';
+                        div.innerHTML = `
+                            <input type="hidden" name="${inputName}" value="${data.path}">
+                            <img src="${dataUrl}" style="width:100%;max-height:100px;object-fit:cover;border-radius:4px;">
+                            <button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+                        `;
+                        list.appendChild(div);
+                        
+                        setTimeout(() => status.textContent = '', 3000);
+                    } else {
+                        status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
+                        status.style.color = 'var(--danger)';
+                    }
+                } catch (err) {
+                    status.textContent = '⚠️ Gagal terhubung ke server.';
+                    status.style.color = 'var(--danger)';
+                }
+            };
+            reader.readAsDataURL(blob);
+            break; 
+        }
+    });
+
+    // Otomatis tambahkan 1 baris saat pertama kali load jika sales
+    @if(auth()->user()->department === 'sales')
+        addEvidenceRow();
+    @endif
+})();
+</script>
 </x-app-layout>
+

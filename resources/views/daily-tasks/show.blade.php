@@ -81,8 +81,8 @@
     @endif
 
     {{-- Mulai grid desktop: kolom kiri = info & aksi, kolom kanan = activity log --}}
-    <div class="dt-detail-grid">
-    <div class="dt-detail-left">
+    <div class="dt-detail-grid" style="gap:16px;">
+    <div class="dt-detail-left" style="display:flex;flex-direction:column;gap:16px;">
 
     <!-- Status, Prioritas & Verifikasi -->
     <div class="m-card" style="display:flex;flex-direction:column;gap:10px;">
@@ -342,8 +342,61 @@
             </div>
         @endif
 
+        {{-- ── Timeline Progress Multi-Hari ─────────────────────────────────── --}}
+        @php
+            $progressHistory = $dailyTask->progressHistory();
+        @endphp
+        @if($progressHistory->count() > 1)
+            <div style="height:1px;background:var(--bg-3);"></div>
+            <div>
+                <div class="overline-label" style="margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Riwayat Progress ({{ $progressHistory->count() }} hari)
+                </div>
+                <div style="display:flex;flex-direction:column;gap:0;">
+                    @foreach($progressHistory as $i => $ph)
+                        @php
+                            $isThis   = $ph->id === $dailyTask->id;
+                            $isLast   = $loop->last;
+                            $phStatus = ['belum_mulai'=>'neutral','dalam_proses'=>'warning','terhambat'=>'danger','selesai'=>'success'][$ph->status] ?? 'neutral';
+                            $dotColor = match($ph->status) {
+                                'selesai'      => '#16A571',
+                                'dalam_proses' => '#F59E0B',
+                                'terhambat'    => 'var(--danger)',
+                                default        => 'var(--fg-4)',
+                            };
+                        @endphp
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                            {{-- Timeline dot & line --}}
+                            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;">
+                                <div style="width:10px;height:10px;border-radius:50%;background:{{ $dotColor }};border:2px solid {{ $isThis ? $dotColor : 'var(--bg-3)' }};flex-shrink:0;"></div>
+                                @if(!$isLast)
+                                    <div style="width:2px;flex:1;min-height:24px;background:var(--bg-3);margin:2px 0;"></div>
+                                @endif
+                            </div>
+                            {{-- Content --}}
+                            <div style="flex:1;padding-bottom:{{ $isLast ? '0' : '10px' }};{{ $isThis ? 'background:var(--bg-2);border-radius:8px;padding:8px 10px;border-left:3px solid var(--maxy-navy);' : '' }}">
+                                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                                    <span style="font-size:11px;font-weight:700;color:var(--fg-2);">
+                                        {{ \Carbon\Carbon::parse($ph->task_date)->isoFormat('ddd, D MMM') }}
+                                    </span>
+                                    <span class="chip chip-{{ $phStatus }}" style="font-size:10px;">{{ $ph->status_label }}</span>
+                                    @if($isThis)
+                                        <span style="font-size:10px;color:var(--maxy-navy);font-weight:700;">← Ini</span>
+                                    @endif
+                                </div>
+                                @if($ph->notes)
+                                    <p style="font-size:12px;color:var(--fg-3);margin:0;line-height:1.4;">{{ Str::limit($ph->notes, 80) }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- Bukti Laporan --}}
-        @if($dailyTask->proof_url || $dailyTask->proof_file)
+        @if($dailyTask->evidences->count() > 0 || $dailyTask->proof_url || $dailyTask->proof_file)
             <div style="height:1px;background:var(--bg-3);"></div>
             <div>
                 <div class="overline-label" style="margin-bottom:8px;display:flex;align-items:center;gap:6px;">
@@ -351,56 +404,100 @@
                     Bukti Laporan
                 </div>
 
-                @if($dailyTask->proof_url)
-                    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
-                                border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
-                                margin-bottom:6px;">
-                        <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-size:10px;color:var(--fg-4);margin-bottom:2px;">Link Bukti</div>
-                            <a href="{{ $dailyTask->proof_url }}" target="_blank"
-                               style="font-size:12px;color:var(--maxy-navy);font-weight:600;
-                                      word-break:break-all;text-decoration:none;"
-                               rel="noopener noreferrer">
-                                {{ Str::limit($dailyTask->proof_url, 55) }}
-                                <svg class="lucide" style="width:11px;height:11px;vertical-align:middle;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
-                @if($dailyTask->proof_file)
-                    @php
-                        $ext      = strtolower(pathinfo($dailyTask->proof_file, PATHINFO_EXTENSION));
-                        $isImage  = in_array($ext, ['jpg', 'jpeg', 'png']);
-                        $fileUrl  = Storage::url($dailyTask->proof_file);
-                        $fileName = basename($dailyTask->proof_file);
-                    @endphp
-
-                    @if($isImage)
-                        <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
-                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer">
-                                <img src="{{ $fileUrl }}" alt="Bukti laporan"
-                                     style="width:100%;max-height:220px;object-fit:cover;display:block;">
-                            </a>
-                            <div style="padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);">
-                                📸 {{ $fileName }} · <a href="{{ $fileUrl }}" target="_blank" style="color:var(--maxy-navy);">Buka penuh</a>
-                            </div>
-                        </div>
-                    @else
-                        <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
-                           style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
-                                  border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
-                                  text-decoration:none;color:inherit;">
-                            <svg class="lucide" style="width:20px;height:20px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    {{-- Old Evidence Fallback --}}
+                    @if($dailyTask->proof_url)
+                        <div style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
+                                    border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;">
+                            <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $fileName }}</div>
-                                <div style="font-size:10px;color:var(--fg-4);">PDF · Tap untuk membuka</div>
+                                <div style="font-size:10px;color:var(--fg-4);margin-bottom:2px;">Link Bukti (Legacy)</div>
+                                <a href="{{ $dailyTask->proof_url }}" target="_blank"
+                                   style="font-size:12px;color:var(--maxy-navy);font-weight:600;
+                                          word-break:break-all;text-decoration:none;"
+                                   rel="noopener noreferrer">
+                                    {{ Str::limit($dailyTask->proof_url, 55) }}
+                                </a>
                             </div>
-                            <svg class="lucide" style="width:14px;height:14px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>
+                        </div>
                     @endif
-                @endif
+
+                    @if($dailyTask->proof_file)
+                        @php
+                            $ext      = strtolower(pathinfo($dailyTask->proof_file, PATHINFO_EXTENSION));
+                            $isImage  = in_array($ext, ['jpg', 'jpeg', 'png']);
+                            $fileUrl  = Storage::url($dailyTask->proof_file);
+                            $fileName = basename($dailyTask->proof_file);
+                        @endphp
+
+                        @if($isImage)
+                            <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
+                                <div style="padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);border-bottom:1px solid var(--bg-3);">
+                                    📸 Bukti File (Legacy)
+                                </div>
+                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer">
+                                    <img src="{{ $fileUrl }}" alt="Bukti laporan"
+                                         style="width:100%;max-height:220px;object-fit:cover;display:block;">
+                                </a>
+                            </div>
+                        @else
+                            <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
+                               style="display:flex;align-items:center;gap:8px;background:var(--bg-2);
+                                      border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;
+                                      text-decoration:none;color:inherit;">
+                                <svg class="lucide" style="width:20px;height:20px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $fileName }}</div>
+                                    <div style="font-size:10px;color:var(--fg-4);">PDF (Legacy)</div>
+                                </div>
+                            </a>
+                        @endif
+                    @endif
+
+                    {{-- New Multi Evidence --}}
+                    @if($dailyTask->evidences->count() > 0)
+                        @php
+                            $groupedEvidences = $dailyTask->evidences->groupBy('label');
+                        @endphp
+                        @foreach($groupedEvidences as $label => $evs)
+                            <div style="border:1px solid var(--bg-3); border-radius:10px; overflow:hidden; background:var(--bg-1);">
+                                <div style="padding:10px 12px; font-size:12px; font-weight:700; color:var(--fg-1); background:var(--bg-2); border-bottom:1px solid var(--bg-3); display:flex; align-items:center; gap:8px;">
+                                    <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                    {{ $label }}
+                                    <span style="font-size:10px; color:var(--fg-4); font-weight:500; margin-left:auto;">{{ $evs->count() }} Item</span>
+                                </div>
+                                <div style="padding:12px; display:flex; flex-direction:column; gap:8px;">
+                                    @foreach($evs as $ev)
+                                        @if($ev->type === 'link')
+                                            <a href="{{ $ev->path_or_url }}" target="_blank" rel="noopener noreferrer"
+                                               style="display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--maxy-navy); font-size:12px; padding:8px; background:var(--bg-2); border-radius:6px; border:1px solid var(--bg-3);">
+                                                🔗 <span style="word-break:break-all;">{{ Str::limit($ev->path_or_url, 60) }}</span>
+                                            </a>
+                                        @elseif($ev->type === 'file' || $ev->type === 'image')
+                                            @php
+                                                $ext = strtolower(pathinfo($ev->path_or_url, PATHINFO_EXTENSION));
+                                                $isImage = in_array($ext, ['jpg', 'jpeg', 'png']) || $ev->type === 'image';
+                                                $fileUrl = Storage::url($ev->path_or_url);
+                                                $fileName = basename($ev->path_or_url);
+                                            @endphp
+
+                                            @if($isImage)
+                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer" style="display:block; border-radius:6px; overflow:hidden; border:1px solid var(--bg-3); background:var(--bg-2);">
+                                                    <img src="{{ $fileUrl }}" alt="{{ $ev->label }}" style="width:100%; max-height:200px; object-fit:contain; display:block;">
+                                                </a>
+                                            @else
+                                                <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
+                                                   style="display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--fg-1); font-size:12px; padding:8px; background:var(--bg-2); border-radius:6px; border:1px solid var(--bg-3);">
+                                                    📄 <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $fileName }}</span>
+                                                </a>
+                                            @endif
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
             </div>
         @endif
     </div>
@@ -438,18 +535,7 @@
         @endif
     </div>
 
-    <!-- Quick action: mark as done (jika belum) -->
-    @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
-        <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
-              onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
-            @csrf
-            @method('PATCH')
-            <button type="submit" class="btn btn-primary btn-block">
-                <svg class="lucide sm" viewBox="0 0 24 24" style="margin-right:4px;"><path d="M5 13l4 4L19 7"/></svg>
-                Tandai Selesai
-            </button>
-        </form>
-    @endif
+
     </div>{{-- end dt-detail-left --}}
 
     {{-- Kolom kanan: Activity Log ──────────────────────────── --}}
@@ -518,7 +604,7 @@
         );
     @endphp
 
-    <div class="m-card" style="display:flex;flex-direction:column;gap:0;padding:16px 16px 8px;">
+    <div class="m-card" style="display:flex;flex-direction:column;gap:0;padding:16px 16px 8px;margin-top:16px;">
         {{-- Header --}}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:6px;">
@@ -618,6 +704,21 @@
 
     </div>{{-- end dt-detail-right --}}
     </div>{{-- end dt-detail-grid --}}
+
+    <!-- Quick action: mark as done (jika belum) -->
+    @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
+        <div style="margin-top:20px;">
+            <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
+                  onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;box-shadow:0 4px 12px rgba(245,158,11,0.2);">
+                    <svg class="lucide sm" viewBox="0 0 24 24" style="margin-right:6px;"><path d="M5 13l4 4L19 7"/></svg>
+                    Tandai Selesai
+                </button>
+            </form>
+        </div>
+    @endif
 
 </div>
 </x-app-layout>
