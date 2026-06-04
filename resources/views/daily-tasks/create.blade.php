@@ -502,7 +502,9 @@ function clearRowImage(btn) {
                 const dataUrl = ev.target.result;
                 const status = row.querySelector('.clipboard-status');
                 const list = row.querySelector('.clipboard-list');
-                const inputName = `evidences[${row.querySelector('.evidence-type-select').name.match(/\d+/)[0]}][path_or_url][]`;
+                const selectElement = row.querySelector('select[name^="evidences"]');
+                const index = selectElement ? selectElement.name.match(/\d+/)[0] : '0';
+                const inputName = `evidences[${index}][path_or_url][]`;
 
                 status.textContent = 'Menyimpan ke server…';
                 status.style.color = 'var(--fg-3)';
