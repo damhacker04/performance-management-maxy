@@ -1,13 +1,19 @@
 <x-app-layout>
 
 <div class="page">
+    @php
+        $displayDate = (isset($backdateRequest) && $backdateRequest) 
+            ? \Carbon\Carbon::parse($backdateRequest->requested_date) 
+            : now();
+    @endphp
+
     <div style="display:flex;align-items:center;gap:8px;">
         <a href="{{ route('daily-tasks.index') }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
             <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.2;">Laporan Harian</h1>
-            <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ now()->isoFormat('dddd, D MMMM YYYY') }}</p>
+            <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ $displayDate->isoFormat('dddd, D MMMM YYYY') }}</p>
         </div>
     </div>
 
@@ -178,11 +184,15 @@
                     </span>
                 </div>
 
-                <!-- Tanggal (locked ke hari ini) -->
+                <!-- Tanggal (locked ke hari ini atau backdate) -->
                 <div class="field">
-                    <label>Tanggal Tugas <span style="color:var(--fg-4);font-weight:400;">(otomatis hari ini)</span></label>
+                    <label>Tanggal Tugas 
+                        <span style="color:var(--fg-4);font-weight:400;">
+                            {{ (isset($backdateRequest) && $backdateRequest) ? '(mode backdating)' : '(otomatis hari ini)' }}
+                        </span>
+                    </label>
                     <input type="text"
-                           value="{{ now()->isoFormat('dddd, D MMMM YYYY') }}"
+                           value="{{ $displayDate->isoFormat('dddd, D MMMM YYYY') }}"
                            class="m-input"
                            readonly
                            style="background:var(--bg-2);color:var(--fg-3);cursor:not-allowed;" />
