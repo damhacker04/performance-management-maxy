@@ -56,6 +56,27 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Permintaan backdating yang ditolak (berdasarkan Notifikasi Lonceng)
+            $rejectedBackdateNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_BACKDATE_REVIEWED)
+                ->where('title', 'like', '%Ditolak%')
+                ->whereNull('read_at') // Hanya tampilkan jika belum dibaca dari lonceng
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Permintaan backdating yang masih menunggu (pending)
+            $pendingBackdates = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Token backdating yang sedang aktif (Disetujui dan belum kedaluwarsa)
+            $activeBackdateTokens = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('token_expires_at', '>', now())
+                ->orderByDesc('token_expires_at')
+                ->get();
+
             // Tugas yang belum selesai lebih dari 14 hari
             $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
                 ->where('user_id', $user->id)
@@ -127,6 +148,108 @@
                                 </div>
                                 <svg class="lucide sm" viewBox="0 0 24 24" style="color:#F97316;"><path d="M9 18l6-6-6-6"/></svg>
                             </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner merah: Permintaan Backdating Ditolak --}}
+            @if($rejectedBackdateNotifs->isNotEmpty())
+                <div style="background:#FFF1F2;border:1.5px solid #EF4444;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('rejected-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">❌</span>
+                            <span style="font-size:12px;font-weight:700;color:#B91C1C;">Izin Backdating Ditolak</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EF4444;color:#fff;font-size:10px;border:none;">{{ $rejectedBackdateNotifs->count() }} ditolak</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#B91C1C;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="rejected-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($rejectedBackdateNotifs as $notif)
+                            @php
+                                $metaDate = $notif->meta['requested_date'] ?? null;
+                            @endphp
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FECACA;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#991B1B;margin-bottom:2px;">
+                                        Tanggal {{ $metaDate ? \Carbon\Carbon::parse($metaDate)->isoFormat('D MMM YYYY') : '-' }}
+                                    </div>
+                                    <div style="font-size:11px;color:#B91C1C;">
+                                        {{ Str::limit($notif->body, 100) }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner kuning: Permintaan Backdating Menunggu --}}
+            @if($pendingBackdates->isNotEmpty())
+                <div style="background:#FEFCE8;border:1.5px solid #EAB308;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('pending-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">⏳</span>
+                            <span style="font-size:12px;font-weight:700;color:#A16207;">Izin Backdating Menunggu Review</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EAB308;color:#fff;font-size:10px;border:none;">{{ $pendingBackdates->count() }} menunggu</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#A16207;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="pending-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($pendingBackdates as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FEF08A;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#854D0E;margin-bottom:2px;">
+                                        Tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#A16207;">
+                                        Alasan: {{ Str::limit($req->reason, 100) }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner hijau: Token Backdating Aktif --}}
+            @if($activeBackdateTokens->isNotEmpty())
+                <div style="background:#F0FDF4;border:1.5px solid #22C55E;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">✅</span>
+                            <span style="font-size:12px;font-weight:700;color:#166534;">Izin Backdating Aktif</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#22C55E;color:#fff;font-size:10px;border:none;">{{ $activeBackdateTokens->count() }} disetujui</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#166534;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="approved-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($activeBackdateTokens as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #86EFAC;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#14532D;margin-bottom:2px;">
+                                        Isi laporan tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#166534;">
+                                        Disetujui oleh {{ $req->reviewer?->name ?? 'Leader' }}. Segera isi sebelum {{ \Carbon\Carbon::parse($req->token_expires_at)->isoFormat('HH:mm') }}!
+                                    </div>
+                                </div>
+                                <a href="{{ route('daily-tasks.create', ['backdate_token' => $req->approval_token]) }}" class="btn btn-sm" style="background:#22C55E;color:#fff;text-decoration:none;font-size:11px;padding:4px 12px;white-space:nowrap;">
+                                    Isi Sekarang
+                                </a>
+                            </div>
                         @endforeach
                     </div>
                 </div>
