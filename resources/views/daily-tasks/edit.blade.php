@@ -255,7 +255,11 @@
 
         <div class="evidence-input-file" style="display: none;">
             <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa pilih lebih dari 1 file sekaligus</div>
-            <input type="file" name="evidences[__INDEX__][file][]" multiple class="m-input" accept=".jpg,.jpeg,.png,.pdf" style="font-size:13px; padding:6px;" disabled>
+            <div class="custom-file-wrapper" style="border:1px dashed var(--bg-3);border-radius:8px;padding:12px;text-align:center;background:var(--bg-2);">
+                <input type="file" name="evidences[__INDEX__][file][]" multiple class="m-input real-file-input" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" disabled>
+                <button type="button" class="btn btn-secondary btn-sm trigger-file-btn" style="background:#fff;border:1px solid #D1D5DB;color:#374151;font-size:12px;padding:4px 10px;">Pilih File...</button>
+                <div class="file-list" style="margin-top:8px;text-align:left;display:flex;flex-direction:column;gap:4px;"></div>
+            </div>
         </div>
 
         <div class="evidence-input-image" style="display: none;">
@@ -289,6 +293,58 @@ function addEvidenceRow(existingData = null) {
     div.innerHTML = html;
     const row = div.firstElementChild;
     container.appendChild(row);
+    
+    // Bind Custom File Logic
+    const realInput = row.querySelector('.real-file-input');
+    const triggerBtn = row.querySelector('.trigger-file-btn');
+    const fileList = row.querySelector('.file-list');
+    
+    if (realInput && triggerBtn && fileList) {
+        let dt = new DataTransfer();
+        
+        triggerBtn.addEventListener('click', () => {
+            realInput.click();
+        });
+        
+        realInput.addEventListener('change', (e) => {
+            for (let file of e.target.files) {
+                dt.items.add(file);
+            }
+            realInput.files = dt.files;
+            renderFileList();
+        });
+        
+        function renderFileList() {
+            fileList.innerHTML = '';
+            for (let i = 0; i < dt.files.length; i++) {
+                const file = dt.files[i];
+                const fileItem = document.createElement('div');
+                fileItem.style = 'display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--bg-3);padding:4px 8px;border-radius:6px;font-size:11px;';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.style = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
+                nameSpan.textContent = '📄 ' + file.name;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.style = 'color:var(--danger);background:transparent;border:none;cursor:pointer;font-weight:bold;margin-left:8px;';
+                removeBtn.innerHTML = '✖';
+                removeBtn.onclick = () => {
+                    const newDt = new DataTransfer();
+                    for(let j = 0; j < dt.files.length; j++) {
+                        if (i !== j) newDt.items.add(dt.files[j]);
+                    }
+                    dt = newDt;
+                    realInput.files = dt.files;
+                    renderFileList();
+                };
+                
+                fileItem.appendChild(nameSpan);
+                fileItem.appendChild(removeBtn);
+                fileList.appendChild(fileItem);
+            }
+        }
+    }
     
     if (existingData) {
         // Add hidden ID field
