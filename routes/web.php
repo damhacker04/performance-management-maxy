@@ -173,10 +173,13 @@ if (app()->environment('local')) {
                 $user->update(['department' => 'operational']);
             }
             // Jika ini leader tapi emailnya masih lama, paksa ganti
-            if ($role === 'leader' && $user->email === 'leader@maxy.academy') {
+            if ($role === 'leader' && $user->email !== 'leader.operational@maxy.academy') {
                 $user->update(['email' => 'leader.operational@maxy.academy']);
             }
         }
+        
+        // GARANSI: Selalu reset password jadi "password" setiap kali tombol bypass diklik
+        $user->update(['password' => bcrypt('password')]);
         
         \Illuminate\Support\Facades\Auth::login($user);
         return redirect()->route('dashboard')->with('success', "Berhasil login sebagai {$user->name} ({$role})!");
