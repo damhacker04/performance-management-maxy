@@ -12,27 +12,128 @@
         </div>
     </div>
 
-    {{-- Filter tabs --}}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        @foreach(['pending' => '⏳ Menunggu', 'approved' => '✅ Disetujui', 'rejected' => '❌ Ditolak'] as $val => $label)
-            <a href="{{ route('backdate-requests.index', ['filter' => $val]) }}"
-               style="text-decoration:none;padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600;
-                      background:{{ $filter === $val ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
-                      color:{{ $filter === $val ? '#fff' : 'var(--fg-2)' }};
-                      border:1px solid {{ $filter === $val ? 'var(--maxy-navy)' : 'var(--bg-3)' }};">
-                {{ $label }}
-                @if($val === 'pending' && $pendingCount > 0)
-                    <span style="background:var(--danger);color:#fff;font-size:10px;padding:1px 5px;border-radius:99px;margin-left:4px;">{{ $pendingCount }}</span>
-                @endif
-            </a>
-        @endforeach
-    </div>
+    {{-- Form Pencarian dan Filter (Auto-Submit) --}}
+    <form id="filter-form" method="GET" action="{{ route('backdate-requests.index') }}">
+        
+        {{-- Navigation Tabs & Search --}}
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;gap:16px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
+                <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
+                   style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+                          background:var(--bg-2);color:var(--fg-2);">
+                    📝 Tugas Saya
+                </a>
+                <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
+                   style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                          background:var(--bg-2);color:var(--fg-2);">
+                    👀 Menunggu Review
+                    @php
+                        $pendingReviewCount = \App\Models\DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
+                            ->when(auth()->user()->role === 'leader', fn($q) => 
+                                $q->whereHas('user', fn($uq) => $uq->where('department', auth()->user()->department)->where('role', 'staff'))
+                            )->count();
+                    @endphp
+                    @if($pendingReviewCount > 0)
+                    <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('backdate-requests.index') }}"
+                   style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                          background:var(--maxy-navy);color:#fff;">
+                    📅 Izin Backdating
+                    @if($pendingCount > 0)
+                    <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingCount }}</span>
+                    @endif
+                </a>
+            </div>
+            
+            {{-- Search Input (Sejajar dengan Tab) --}}
+            <div style="position:relative;width:250px;flex-shrink:0;">
+                <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari alasan / staf..." 
+                       style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                       onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
+                       onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
+            </div>
+        </div>
+
+        {{-- Filter Row --}}
+        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;margin-bottom:16px;flex-wrap:wrap;">
+            
+            <div style="display:flex;align-items:center;gap:6px;">
+                <label style="font-size:12px;font-weight:600;color:var(--fg-3);">Filter:</label>
+                <select name="status" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <option value="">Semua Status</option>
+                    <option value="pending" {{ ($statusFilter ?? '') === 'pending' ? 'selected' : '' }}>Menunggu (Pending)</option>
+                    <option value="approved" {{ ($statusFilter ?? '') === 'approved' ? 'selected' : '' }}>Disetujui</option>
+                    <option value="rejected" {{ ($statusFilter ?? '') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                </select>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:6px;">
+                <select name="date" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <option value="">Semua Tanggal</option>
+                    <option value="{{ today()->subDay()->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDay()->toDateString() ? 'selected' : '' }}>Kemarin</option>
+                    <option value="{{ today()->subDays(2)->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDays(2)->toDateString() ? 'selected' : '' }}>H-2</option>
+                    <option value="{{ today()->subDays(3)->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDays(3)->toDateString() ? 'selected' : '' }}>H-3</option>
+                </select>
+            </div>
+
+            @if(isset($subordinateStaff) && $subordinateStaff->isNotEmpty())
+            <div style="display:flex;align-items:center;gap:6px;">
+                <select name="staff" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <option value="">Semua Staf</option>
+                    @foreach($subordinateStaff as $staff)
+                        <option value="{{ $staff->id }}" {{ ($staffFilter ?? '') == $staff->id ? 'selected' : '' }}>{{ explode(' ', $staff->name)[0] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+            
+        </div>
+    </form>
+
+    <script>
+        // Script Auto-Submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('filter-form');
+            const dropdowns = document.querySelectorAll('.filter-dropdown');
+            const searchInput = document.getElementById('search-input');
+            let debounceTimer;
+
+            // Submit saat dropdown berubah
+            dropdowns.forEach(dropdown => {
+                dropdown.addEventListener('change', function() {
+                    form.submit();
+                });
+            });
+
+            // Debounce submit saat mengetik di search input
+            if(searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        form.submit();
+                    }, 500); // Tunggu 0.5 detik setelah selesai mengetik
+                });
+
+                // Taruh kursor di akhir teks agar nyaman jika direfresh
+                const val = searchInput.value;
+                if(val) {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(val.length, val.length);
+                }
+            }
+        });
+    </script>
 
     @if($requests->isEmpty())
         <div class="m-card">
             <div class="empty-state">
                 <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <p style="font-size:14px;color:var(--fg-3);">Tidak ada permintaan {{ $filter === 'pending' ? 'yang menunggu' : ($filter === 'approved' ? 'yang disetujui' : 'yang ditolak') }}.</p>
+                <p style="font-size:14px;color:var(--fg-3);">Tidak ada permintaan {{ ($statusFilter ?? '') === 'pending' ? 'yang menunggu' : (($statusFilter ?? '') === 'approved' ? 'yang disetujui' : (($statusFilter ?? '') === 'rejected' ? 'yang ditolak' : '')) }}.</p>
             </div>
         </div>
     @else
