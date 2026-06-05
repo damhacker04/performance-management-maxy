@@ -95,6 +95,22 @@ class BackdateRequestController extends Controller
     {
         $user = auth()->user();
 
+        $search = $request->query('search');
+        $statusFilter = $request->query('status'); // menggantikan 'filter' yang lama
+        $dateFilter = $request->query('date');
+        $staffFilter = $request->query('staff');
+
+        // Untuk dropdown filter nama staf
+        $subordinateStaff = collect();
+        if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            $subordinateStaff = \App\Models\User::query()
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->where('department', $user->department)->where('role', 'staff')
+                )
+                ->orderBy('name')
+                ->get();
+        }
+
         $query = BackdateRequest::with(['user', 'reviewer'])
             ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'approved' THEN 2 WHEN 'rejected' THEN 3 ELSE 4 END")
             ->orderByDesc('created_at');
@@ -106,9 +122,23 @@ class BackdateRequestController extends Controller
             );
         }
 
-        $filter = $request->query('filter', 'pending');
-        if (in_array($filter, ['pending', 'approved', 'rejected'])) {
-            $query->where('status', $filter);
+        if ($search) {
+            $query->where(function($sq) use ($search) {
+                $sq->where('reason', 'like', "%{$search}%")
+                   ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($statusFilter) {
+            $query->where('status', $statusFilter);
+        }
+
+        if ($dateFilter) {
+            $query->whereDate('requested_date', $dateFilter);
+        }
+
+        if ($staffFilter) {
+            $query->where('user_id', $staffFilter);
         }
 
         $requests       = $query->get();
@@ -116,7 +146,7 @@ class BackdateRequestController extends Controller
             $q->whereHas('user', fn($uq) => $uq->where('department', $user->department))
         )->where('status', 'pending')->count();
 
-        return view('backdate-requests.index', compact('requests', 'filter', 'pendingCount'));
+        return view('backdate-requests.index', compact('requests', 'pendingCount', 'subordinateStaff', 'search', 'statusFilter', 'dateFilter', 'staffFilter'));
     }
 
     /**

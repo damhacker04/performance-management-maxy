@@ -17,6 +17,22 @@ class DailyTaskEntryController extends Controller
         $user = auth()->user();
         $tab  = $request->query('tab', 'mine');
 
+        $search = $request->query('search');
+        $statusFilter = $request->query('status');
+        $dateFilter = $request->query('date');
+        $staffFilter = $request->query('staff');
+
+        // Untuk dropdown filter nama staf
+        $subordinateStaff = collect();
+        if (in_array($user->role, ['leader', 'c_level', 'super_admin']) && $tab === 'review') {
+            $subordinateStaff = \App\Models\User::query()
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->where('department', $user->department)->where('role', 'staff')
+                )
+                ->orderBy('name')
+                ->get();
+        }
+
         if ($tab === 'review' && in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
             // Laporan yang butuh review
             $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget', 'user'])
@@ -24,6 +40,15 @@ class DailyTaskEntryController extends Controller
                     $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
                 )
                 ->whereIn('verification_status', ['pending', 'revision'])
+                ->when($search, function($q) use ($search) {
+                    $q->where(function($sq) use ($search) {
+                        $sq->where('task_description', 'like', "%{$search}%")
+                           ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%"));
+                    });
+                })
+                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+                ->when($dateFilter, fn($q) => $q->whereDate('task_date', $dateFilter))
+                ->when($staffFilter, fn($q) => $q->where('user_id', $staffFilter))
                 ->orderByDesc('task_date')
                 ->orderByDesc('id')
                 ->get();
@@ -31,12 +56,15 @@ class DailyTaskEntryController extends Controller
             // Laporan milik sendiri (default)
             $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
                 ->where('user_id', $user->id)
+                ->when($search, fn($q) => $q->where('task_description', 'like', "%{$search}%"))
+                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+                ->when($dateFilter, fn($q) => $q->whereDate('task_date', $dateFilter))
                 ->orderByDesc('task_date')
                 ->orderByDesc('id')
                 ->get();
         }
 
-        // Hitung jumlah menunggu review untuk badge di UI Tab
+        // Hitung jumlah menunggu review untuk badge di UI Tab (tanpa filter)
         $pendingReviewCount = 0;
         if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
             $pendingReviewCount = DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
@@ -46,7 +74,7 @@ class DailyTaskEntryController extends Controller
                 ->count();
         }
 
-        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount'));
+        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount', 'subordinateStaff', 'search', 'statusFilter', 'dateFilter', 'staffFilter'));
     }
 
     public function show(DailyTaskEntry $dailyTask)
