@@ -128,6 +128,22 @@ class UserSeeder extends Seeder
                 'is_management' => true,
             ],
             [
+                'name'          => 'Staff Testing', 
+                'email'         => 'staff.testing@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Super Admin Dummy', 
+                'email'         => 'superadmin@maxy.academy', 
+                'department'    => null, 
+                'division'      => 'Admin',
+                'role'          => 'super_admin', 
+                'is_management' => true,
+            ],
+            [
                 'name'          => 'Staff Dummy', 
                 'email'         => 'staff@maxy.academy', 
                 'department'    => 'Operational', 
