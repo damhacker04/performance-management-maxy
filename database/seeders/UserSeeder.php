@@ -111,6 +111,30 @@ class UserSeeder extends Seeder
                 'role'          => 'staff', 
                 'is_management' => false,
             ],
+            [
+                'name'          => 'Leader Operational Dummy', 
+                'email'         => 'leader.operational@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'leader', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'C-Level Dummy', 
+                'email'         => 'c_level@maxy.academy', 
+                'department'    => null, 
+                'division'      => 'Management',
+                'role'          => 'c_level', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Staff Dummy', 
+                'email'         => 'staff@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
         ];
 
         foreach ($users as $data) {

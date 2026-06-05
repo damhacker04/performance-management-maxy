@@ -132,7 +132,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
 });
 
 
-// Route rahasia untuk menjalankan migration & seeder dengan aman di production (tanpa menghapus data)
+// Route rahasia untuk menjalankan migration & seeder dengan aman di production
 Route::get('/deploy-update', function() {
     \Illuminate\Support\Facades\Artisan::call('migrate', [
         '--force' => true
@@ -141,39 +141,13 @@ Route::get('/deploy-update', function() {
         '--class' => 'SuperAdminSeeder',
         '--force' => true
     ]);
-    return 'Database berhasil di-migrate dan akun Super Admin berhasil ditambahkan!';
+    \Illuminate\Support\Facades\Artisan::call('db:seed', [
+        '--class' => 'UserSeeder',
+        '--force' => true
+    ]);
+    return 'Berhasil! Database Production (Railway) sudah di-migrate dan seluruh akun (termasuk dummy) sudah di-seed dengan aman.';
 });
 
-// Developer Login Route (Local Only)
-if (app()->environment('local')) {
-    Route::get('/dev/impersonate/{role}', function ($role) {
-        // Cari user dengan role tersebut, utamakan yang di departemen operational
-        $user = \App\Models\User::where('role', $role)->where('department', 'operational')->first();
-        
-        // Jika tidak ketemu di operational, cari bebas
-        if (!$user) {
-            $user = \App\Models\User::where('role', $role)->first();
-        }
 
-        if (!$user) {
-            // Jika user tidak ada sama sekali, coba buatkan dummy
-            $user = \App\Models\User::create([
-                'name' => ucfirst($role) . ' Dummy',
-                'email' => $role . '@maxy.academy',
-                'password' => bcrypt('password'),
-                'role' => $role,
-                'department' => 'operational', // ganti ke operational
-            ]);
-        } else {
-            // Paksa update department ke operational agar testing tidak bocor/berbeda
-            if ($user->department !== 'operational' && str_contains($user->email, 'dummy')) {
-                $user->update(['department' => 'operational']);
-            }
-        }
-        
-        \Illuminate\Support\Facades\Auth::login($user);
-        return redirect()->route('dashboard')->with('success', "Berhasil login sebagai {$user->name} ({$role})!");
-    })->name('dev.impersonate');
-}
 
 require __DIR__ . '/auth.php';
