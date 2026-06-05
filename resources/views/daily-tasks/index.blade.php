@@ -25,8 +25,8 @@
 
             {{-- Navigation Tabs & Search --}}
             @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;">
-                <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;gap:16px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
                     <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
                        style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
                               background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
@@ -58,23 +58,27 @@
                 </div>
                 
                 {{-- Search Input (Sejajar dengan Tab) --}}
-                <div style="position:relative;width:250px;">
+                <div style="position:relative;width:250px;flex-shrink:0;">
                     <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
-                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;">
+                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                           onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
+                           onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
                 </div>
             </div>
             @else
             {{-- Search Input (Jika staf biasa) --}}
             <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-                <div style="position:relative;width:250px;">
+                <div style="position:relative;width:250px;flex-shrink:0;">
                     <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
                     <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
-                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;">
+                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                           onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
+                           onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
                 </div>
             </div>
             @endif
