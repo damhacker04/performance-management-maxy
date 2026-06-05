@@ -144,46 +144,6 @@ Route::get('/deploy-update', function() {
     return 'Database berhasil di-migrate dan akun Super Admin berhasil ditambahkan!';
 });
 
-// Developer Login Route (Local Only)
-if (app()->environment('local')) {
-    Route::get('/dev/impersonate/{role}', function ($role) {
-        // Cari user dengan role tersebut, utamakan yang di departemen operational
-        $user = \App\Models\User::where('role', $role)->where('department', 'operational')->first();
-        
-        // Jika tidak ketemu di operational, cari bebas
-        if (!$user) {
-            $user = \App\Models\User::where('role', $role)->first();
-        }
 
-        if (!$user) {
-            // Tentukan email khusus untuk leader operational
-            $dummyEmail = ($role === 'leader') ? 'leader.operational@maxy.academy' : $role . '@maxy.academy';
-            
-            // Jika user tidak ada sama sekali, coba buatkan dummy
-            $user = \App\Models\User::create([
-                'name' => ucfirst($role) . ' Dummy',
-                'email' => $dummyEmail,
-                'password' => bcrypt('password'),
-                'role' => $role,
-                'department' => 'operational', // ganti ke operational
-            ]);
-        } else {
-            // Paksa update department ke operational agar testing tidak bocor/berbeda
-            if ($user->department !== 'operational' && str_contains($user->email, 'dummy')) {
-                $user->update(['department' => 'operational']);
-            }
-            // Jika ini leader tapi emailnya masih lama, paksa ganti
-            if ($role === 'leader' && $user->email !== 'leader.operational@maxy.academy') {
-                $user->update(['email' => 'leader.operational@maxy.academy']);
-            }
-        }
-        
-        // GARANSI: Selalu reset password jadi "password" setiap kali tombol bypass diklik
-        $user->update(['password' => bcrypt('password')]);
-        
-        \Illuminate\Support\Facades\Auth::login($user);
-        return redirect()->route('dashboard')->with('success', "Berhasil login sebagai {$user->name} ({$role})!");
-    })->name('dev.impersonate');
-}
 
 require __DIR__ . '/auth.php';

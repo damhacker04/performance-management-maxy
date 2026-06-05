@@ -72,16 +72,6 @@
             Masuk dengan Google
         </a>
 
-        @if(app()->environment('local'))
-            <div style="margin-top:24px;padding-top:24px;border-top:1px dashed #e2e8f0;text-align:center;">
-                <p style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Developer Bypass (Local Only)</p>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-                    <a href="{{ route('dev.impersonate', 'staff') }}" style="font-size:12px;padding:6px 12px;background:#f1f5f9;color:#334155;text-decoration:none;border-radius:6px;border:1px solid #cbd5e1;">🧑‍💻 Staff</a>
-                    <a href="{{ route('dev.impersonate', 'leader') }}" style="font-size:12px;padding:6px 12px;background:#f1f5f9;color:#334155;text-decoration:none;border-radius:6px;border:1px solid #cbd5e1;">👔 Leader</a>
-                    <a href="{{ route('dev.impersonate', 'c_level') }}" style="font-size:12px;padding:6px 12px;background:#f1f5f9;color:#334155;text-decoration:none;border-radius:6px;border:1px solid #cbd5e1;">🏢 C-Level</a>
-                </div>
-            </div>
-        @endif
 
         <p style="text-align:center;font-size:12px;color:var(--fg-3);margin-top:24px;">
             Maxy Academy · v1.0
