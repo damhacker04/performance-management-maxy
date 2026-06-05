@@ -88,6 +88,15 @@
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
                                 
+                                {{-- Nama Pengirim (Sender) --}}
+                                <div style="display:flex; align-items:center; gap:6px; padding-bottom:8px; border-bottom:1px dashed #f1f5f9; margin-bottom:4px;">
+                                    <div style="width:20px; height:20px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:11px;">
+                                        👤
+                                    </div>
+                                    <span style="font-size:13px; font-weight:700; color:#0f172a;">{{ $entry->user->name ?? 'Unknown' }}</span>
+                                    <span style="font-size:11px; color:#64748b;">({{ ucfirst($entry->user->role ?? 'Staf') }})</span>
+                                </div>
+
                                 @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
                                     {{-- Target Bulanan --}}
                                     <div>
