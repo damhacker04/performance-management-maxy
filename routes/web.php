@@ -156,10 +156,13 @@ if (app()->environment('local')) {
         }
 
         if (!$user) {
+            // Tentukan email khusus untuk leader operational
+            $dummyEmail = ($role === 'leader') ? 'leader.operational@maxy.academy' : $role . '@maxy.academy';
+            
             // Jika user tidak ada sama sekali, coba buatkan dummy
             $user = \App\Models\User::create([
                 'name' => ucfirst($role) . ' Dummy',
-                'email' => $role . '@maxy.academy',
+                'email' => $dummyEmail,
                 'password' => bcrypt('password'),
                 'role' => $role,
                 'department' => 'operational', // ganti ke operational
@@ -168,6 +171,10 @@ if (app()->environment('local')) {
             // Paksa update department ke operational agar testing tidak bocor/berbeda
             if ($user->department !== 'operational' && str_contains($user->email, 'dummy')) {
                 $user->update(['department' => 'operational']);
+            }
+            // Jika ini leader tapi emailnya masih lama, paksa ganti
+            if ($role === 'leader' && $user->email === 'leader@maxy.academy') {
+                $user->update(['email' => 'leader.operational@maxy.academy']);
             }
         }
         
