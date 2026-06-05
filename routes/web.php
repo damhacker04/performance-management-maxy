@@ -139,10 +139,6 @@ Route::get('/deploy-update', function() {
             '--force' => true
         ]);
         \Illuminate\Support\Facades\Artisan::call('db:seed', [
-            '--class' => 'SuperAdminSeeder',
-            '--force' => true
-        ]);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', [
             '--class' => 'UserSeeder',
             '--force' => true
         ]);
