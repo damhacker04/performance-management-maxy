@@ -132,7 +132,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
 });
 
 
-// Route rahasia untuk menjalankan migration & seeder dengan aman di production (tanpa menghapus data)
+// Route rahasia untuk menjalankan migration & seeder dengan aman di production
 Route::get('/deploy-update', function() {
     \Illuminate\Support\Facades\Artisan::call('migrate', [
         '--force' => true
@@ -141,7 +141,11 @@ Route::get('/deploy-update', function() {
         '--class' => 'SuperAdminSeeder',
         '--force' => true
     ]);
-    return 'Database berhasil di-migrate dan akun Super Admin berhasil ditambahkan!';
+    \Illuminate\Support\Facades\Artisan::call('db:seed', [
+        '--class' => 'UserSeeder',
+        '--force' => true
+    ]);
+    return 'Berhasil! Database Production (Railway) sudah di-migrate dan seluruh akun (termasuk dummy) sudah di-seed dengan aman.';
 });
 
 
