@@ -14,8 +14,6 @@
     @endif
 
     <div style="display:flex;flex-direction:column;gap:16px;">
-        <p style="color:var(--fg-2);font-size:14px;margin-bottom:8px;text-align:center;">Silakan masuk menggunakan email terdaftar.</p>
-
         <!-- Form Login Manual -->
         <form method="POST" action="{{ route('login') }}" style="display:flex;flex-direction:column;gap:16px;">
             @csrf
