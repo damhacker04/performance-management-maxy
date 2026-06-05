@@ -23,69 +23,45 @@
         <form id="filter-form" method="GET" action="{{ route('daily-tasks.index') }}">
             <input type="hidden" name="tab" value="{{ $tab }}">
 
-            {{-- Navigation Tabs & Search --}}
-            @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;gap:16px;flex-wrap:wrap;">
-                <div style="display:flex;align-items:center;gap:8px;overflow-x:auto;">
-                    <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
-                       style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
-                              background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
-                              color:{{ $tab === 'mine' ? '#fff' : 'var(--fg-2)' }};">
-                        📝 Tugas Saya
-                    </a>
-                    <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
-                       style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
-                              background:{{ $tab === 'review' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
-                              color:{{ $tab === 'review' ? '#fff' : 'var(--fg-2)' }};">
-                        👀 Menunggu Review
-                        @if($pendingReviewCount > 0)
-                        <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
-                        @endif
-                    </a>
-                    @php
-                        $backdatePendingCount = \App\Models\BackdateRequest::when(auth()->user()->role === 'leader', fn($q) =>
-                            $q->whereHas('user', fn($uq) => $uq->where('department', auth()->user()->department))
-                        )->where('status', 'pending')->count();
-                    @endphp
-                    <a href="{{ route('backdate-requests.index') }}"
-                       style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
-                              background:var(--bg-2);color:var(--fg-2);">
-                        📅 Izin Backdating
-                        @if($backdatePendingCount > 0)
-                        <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $backdatePendingCount }}</span>
-                        @endif
-                    </a>
-                </div>
-                
-                {{-- Search Input (Sejajar dengan Tab) --}}
-                <div style="position:relative;width:250px;flex-shrink:0;">
-                    <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
-                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
-                           onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
-                           onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
-                </div>
-            </div>
-            @else
-            {{-- Search Input (Jika staf biasa) --}}
-            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-                <div style="position:relative;width:250px;flex-shrink:0;">
-                    <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
-                           style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
-                           onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
-                           onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
-                </div>
-            </div>
-            @endif
+            {{-- Navigation Tabs --}}
+        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        <div style="display:flex;align-items:center;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;gap:8px;">
+            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+                      background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'mine' ? '#fff' : 'var(--fg-2)' }};">
+                📝 Tugas Saya
+            </a>
+            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:{{ $tab === 'review' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'review' ? '#fff' : 'var(--fg-2)' }};">
+                👀 Menunggu Review
+                @if($pendingReviewCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                @endif
+            </a>
+            @php
+                $backdatePendingCount = \App\Models\BackdateRequest::when(auth()->user()->role === 'leader', fn($q) =>
+                    $q->whereHas('user', fn($uq) => $uq->where('department', auth()->user()->department))
+                )->where('status', 'pending')->count();
+            @endphp
+            <a href="{{ route('backdate-requests.index') }}"
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:var(--bg-2);color:var(--fg-2);">
+                📅 Izin Backdating
+                @if($backdatePendingCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $backdatePendingCount }}</span>
+                @endif
+            </a>
+        </div>
+        @endif
 
-            {{-- Filter Row --}}
-            <div style="display:flex;align-items:center;gap:12px;margin-top:12px;margin-bottom:16px;flex-wrap:wrap;">
-                
+        {{-- Filter & Search Row --}}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px;margin-bottom:16px;flex-wrap:wrap;">
+            
+            {{-- Dropdown Filters --}}
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:6px;">
                     <label style="font-size:12px;font-weight:600;color:var(--fg-3);">Filter:</label>
                     <select name="status" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
@@ -101,10 +77,8 @@
                         <option value="">Semua Tanggal</option>
                         <option value="{{ today()->toDateString() }}" {{ ($dateFilter ?? '') === today()->toDateString() ? 'selected' : '' }}>Hari Ini</option>
                         <option value="{{ today()->subDay()->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDay()->toDateString() ? 'selected' : '' }}>Kemarin</option>
+                        <option value="{{ today()->subDays(2)->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDays(2)->toDateString() ? 'selected' : '' }}>H-2</option>
                     </select>
-                    @if($dateFilter && !in_array($dateFilter, [today()->toDateString(), today()->subDay()->toDateString()]))
-                        <span style="font-size:12px;color:var(--maxy-navy);font-weight:600;">Custom: {{ $dateFilter }}</span>
-                    @endif
                 </div>
 
                 @if(isset($subordinateStaff) && $subordinateStaff->isNotEmpty())
@@ -117,8 +91,20 @@
                     </select>
                 </div>
                 @endif
-                
             </div>
+
+            {{-- Search Input --}}
+            <div style="position:relative;width:250px;flex-shrink:0;">
+                <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
+                       style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                       onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
+                       onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
+            </div>
+
+        </div>
         </form>
 
         <script>
