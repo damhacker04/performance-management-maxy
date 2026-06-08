@@ -36,7 +36,11 @@
         <div>
             <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Target</h1>
             <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">
-                {{ ucfirst(str_replace('_',' ', auth()->user()->department ?? 'CEO Office')) }}
+                @if(auth()->user()->department)
+                    {{ ucfirst(str_replace('_',' ', auth()->user()->department)) }}
+                @else
+                    {{ auth()->user()->role === 'super_admin' ? 'Super Admin' : 'Semua Departemen' }}
+                @endif
             </p>
         </div>
         <a href="{{ route('monthly-targets.create') }}" class="btn btn-primary btn-sm">
@@ -176,7 +180,7 @@
                                         </div>
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
                                             @if($weeklyCount > 0)
-                                                <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} minggu</span>
+                                                <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
                                             @else
                                                 <span class="chip chip-neutral" style="font-size:10px;color:var(--fg-4);">Belum ada</span>
                                             @endif
@@ -285,7 +289,7 @@
                                     </div>
                                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
                                         @if($weeklyCount > 0)
-                                            <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} minggu</span>
+                                            <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
                                         @else
                                             <span class="chip chip-neutral" style="font-size:10px;color:var(--fg-4);">Belum ada</span>
                                         @endif
@@ -381,7 +385,7 @@
                                             </div>
                                             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
                                                 @if($weeklyCount > 0)
-                                                    <span class="chip chip-neutral" style="font-size:10px;">{{ $weeklyCount }} minggu</span>
+                                                    <span class="chip chip-neutral" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
                                                 @endif
                                                 <svg class="lucide sm" style="color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                                             </div>

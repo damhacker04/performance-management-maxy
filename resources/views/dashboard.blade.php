@@ -4,6 +4,10 @@
 @endphp
 
 <div class="page">
+    <style>
+        .rotate-180 { transform: rotate(180deg); }
+        .hidden { display: none !important; }
+    </style>
     <!-- Hero greeting -->
     <div class="hero-greeting">
         <img src="{{ asset('images/m-logo.png') }}" class="watermark" alt="" />
@@ -42,6 +46,45 @@
                 ->orderByDesc('updated_at')
                 ->get();
 
+            // Laporan yang baru saja disetujui (berdasarkan Notifikasi Lonceng)
+            $recentApprovedNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', 'report_approved')
+                ->where(function($q) {
+                    $q->whereNull('read_at') // Tampilkan selamanya sampai dibaca
+                      ->orWhere('created_at', '>=', now()->subDays(2)); // Kalau sudah dibaca, tahan selama 2 hari di dashboard
+                })
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Permintaan backdating yang ditolak (berdasarkan Notifikasi Lonceng)
+            $rejectedBackdateNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_BACKDATE_REVIEWED)
+                ->where('title', 'like', '%Ditolak%')
+                ->whereNull('read_at') // Hanya tampilkan jika belum dibaca dari lonceng
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Permintaan backdating yang masih menunggu (pending)
+            $pendingBackdates = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Token backdating yang sedang aktif (Disetujui dan belum kedaluwarsa)
+            $activeBackdateTokens = \App\Models\BackdateRequest::where('user_id', $user->id)
+                ->where('status', 'approved')
+                ->where('token_expires_at', '>', now())
+                ->orderByDesc('token_expires_at')
+                ->get();
+
+            // Tugas yang belum selesai lebih dari 14 hari
+            $overdueUnfinished = \App\Models\DailyTaskEntry::with('weeklyTarget')
+                ->where('user_id', $user->id)
+                ->whereNotIn('status', ['selesai'])
+                ->whereDate('task_date', '<=', today()->subDays(14))
+                ->orderByDesc('task_date')
+                ->get();
+
             // Tentukan minggu aktif berdasarkan tanggal hari ini
             $today = now()->day;
             $currentWeek = match(true) {
@@ -61,14 +104,208 @@
                              ->whereHas('user', fn($uq) => $uq->where('department', $user->department));
                       });
                 })
+                ->where(function ($q) use ($user) {
+                    $q->whereNull('assigned_to')
+                      ->orWhere('assigned_to', $user->id);
+                })
                 ->where('month', now()->month)
                 ->where('year', now()->year)
                 ->where('week_number', $currentWeek)
                 ->get();
         @endphp
 
-        {{-- ===================== NOTIFIKASI REVISI ===================== --}}
-        {{-- Card merah: laporan yang HARUS direvisi --}}
+        {{-- ===================== NOTIFIKASI ===================== --}}
+        
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+            {{-- Banner oranye: Tugas BELUM SELESAI >2 minggu --}}
+            @if($overdueUnfinished->isNotEmpty())
+                <div style="background:#FFF3E8;border:1.5px solid #F97316;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('overdue-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">⏰</span>
+                            <span style="font-size:12px;font-weight:700;color:#C2410C;">Tugas Belum Selesai (&gt;2 Minggu)</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#F97316;color:#fff;font-size:10px;border:none;">{{ $overdueUnfinished->count() }} tugas</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#C2410C;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="overdue-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($overdueUnfinished as $od)
+                            <a href="{{ route('daily-tasks.show', $od->id) }}"
+                               style="display:flex;align-items:center;justify-content:space-between;
+                                      background:#fff;border:1px solid #FED7AA;border-radius:8px;
+                                      padding:8px 10px;text-decoration:none;color:inherit;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:2px;">
+                                        {{ Str::limit($od->task_description, 38) }}
+                                    </div>
+                                    <div style="font-size:11px;color:#C2410C;">
+                                        {{ \Carbon\Carbon::parse($od->task_date)->isoFormat('D MMM') }}
+                                        · {{ $od->status_label }}
+                                        · {{ \Carbon\Carbon::parse($od->task_date)->diffForHumans() }}
+                                    </div>
+                                </div>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:#F97316;"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner merah: Permintaan Backdating Ditolak --}}
+            @if($rejectedBackdateNotifs->isNotEmpty())
+                <div style="background:#FFF1F2;border:1.5px solid #EF4444;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('rejected-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">❌</span>
+                            <span style="font-size:12px;font-weight:700;color:#B91C1C;">Izin Backdating Ditolak</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EF4444;color:#fff;font-size:10px;border:none;">{{ $rejectedBackdateNotifs->count() }} ditolak</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#B91C1C;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="rejected-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($rejectedBackdateNotifs as $notif)
+                            @php
+                                $metaDate = $notif->meta['requested_date'] ?? null;
+                            @endphp
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FECACA;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#991B1B;margin-bottom:2px;">
+                                        Tanggal {{ $metaDate ? \Carbon\Carbon::parse($metaDate)->isoFormat('D MMM YYYY') : '-' }}
+                                    </div>
+                                    <div style="font-size:11px;color:#B91C1C;">
+                                        {{ Str::limit($notif->body, 100) }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner kuning: Permintaan Backdating Menunggu --}}
+            @if($pendingBackdates->isNotEmpty())
+                <div style="background:#FEFCE8;border:1.5px solid #EAB308;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('pending-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">⏳</span>
+                            <span style="font-size:12px;font-weight:700;color:#A16207;">Izin Backdating Menunggu Review</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#EAB308;color:#fff;font-size:10px;border:none;">{{ $pendingBackdates->count() }} menunggu</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#A16207;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="pending-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($pendingBackdates as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #FEF08A;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#854D0E;margin-bottom:2px;">
+                                        Tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#A16207;">
+                                        Alasan: {{ Str::limit($req->reason, 100) }}
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner hijau: Token Backdating Aktif --}}
+            @if($activeBackdateTokens->isNotEmpty())
+                <div style="background:#F0FDF4;border:1.5px solid #22C55E;border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-backdate-accordion-body').classList.toggle('hidden')">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">✅</span>
+                            <span style="font-size:12px;font-weight:700;color:#166534;">Izin Backdating Aktif</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:#22C55E;color:#fff;font-size:10px;border:none;">{{ $activeBackdateTokens->count() }} disetujui</span>
+                            <svg class="lucide sm" viewBox="0 0 24 24" style="color:#166534;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div id="approved-backdate-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($activeBackdateTokens as $req)
+                            <div style="display:flex;align-items:center;justify-content:space-between;
+                                        background:#fff;border:1px solid #86EFAC;border-radius:8px;
+                                        padding:10px 12px;color:inherit;">
+                                <div style="flex:1;">
+                                    <div style="font-size:13px;font-weight:600;color:#14532D;margin-bottom:2px;">
+                                        Isi laporan tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}
+                                    </div>
+                                    <div style="font-size:11px;color:#166534;">
+                                        Disetujui oleh {{ $req->reviewer?->name ?? 'Leader' }}. Segera isi sebelum {{ \Carbon\Carbon::parse($req->token_expires_at)->isoFormat('HH:mm') }}!
+                                    </div>
+                                </div>
+                                <a href="{{ route('daily-tasks.create', ['backdate_token' => $req->approval_token]) }}" class="btn btn-sm" style="background:#22C55E;color:#fff;text-decoration:none;font-size:11px;padding:4px 12px;white-space:nowrap;">
+                                    Isi Sekarang
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Banner hijau: Laporan yang BARU DISETUJUI --}}
+            @if($recentApprovedNotifs->isNotEmpty())
+                @php
+                    $unreadCount = $recentApprovedNotifs->filter(fn($n) => !$n->isRead())->count();
+                    $hasUnread = $unreadCount > 0;
+                    $mainBg = $hasUnread ? '#E8F7F4' : '#F8FAFC';
+                    $mainBorder = $hasUnread ? '#16A571' : '#E2E8F0';
+                    $mainText = $hasUnread ? '#0F7A50' : '#64748B';
+                    $chipBg = $hasUnread ? '#16A571' : '#94A3B8';
+                @endphp
+                <div style="background:{{ $mainBg }};border:1.5px solid {{ $mainBorder }};border-radius:12px;padding:14px 16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="document.getElementById('approved-accordion-body').classList.toggle('hidden'); document.getElementById('approved-chevron').classList.toggle('rotate-180');">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="font-size:15px;">{{ $hasUnread ? '✅' : '✔️' }}</span>
+                            <span style="font-size:12px;font-weight:700;color:{{ $mainText }};">Laporan Baru Disetujui</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="chip" style="background:{{ $chipBg }};color:#fff;font-size:10px;border:none;">{{ $unreadCount > 0 ? $unreadCount.' baru' : $recentApprovedNotifs->count().' laporan' }}</span>
+                            <svg id="approved-chevron" class="lucide sm" viewBox="0 0 24 24" style="color:{{ $mainText }};transition: transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    
+                    <div id="approved-accordion-body" class="hidden" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+                        @foreach($recentApprovedNotifs as $appr)
+                            @php
+                                $isRead = $appr->isRead();
+                                $itemBg = $isRead ? '#F8FAFC' : '#fff';
+                                $itemBorder = $isRead ? '#E2E8F0' : '#D1FAE5';
+                                $itemTitle = $isRead ? '#64748B' : 'var(--fg-1)';
+                                $itemSub = $isRead ? '#94A3B8' : '#0D6A44';
+                            @endphp
+                            <a href="{{ route('notifications.read', $appr->id) }}"
+                               style="display:flex;align-items:center;justify-content:space-between;
+                                      background:{{ $itemBg }};border:1px solid {{ $itemBorder }};border-radius:8px;
+                                      padding:8px 10px;text-decoration:none;color:inherit;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:{{ $isRead ? '500' : '600' }};color:{{ $itemTitle }};margin-bottom:2px;">
+                                        {{ $appr->getMeta('task_desc') }}
+                                    </div>
+                                    <div style="font-size:11px;color:{{ $itemSub }};">
+                                        {{ \Carbon\Carbon::parse($appr->created_at)->isoFormat('D MMM') }} · Disetujui oleh {{ explode(' ', $appr->getMeta('leader_name'))[0] ?? 'Leader' }}
+                                    </div>
+                                </div>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:{{ $itemSub }};"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Card merah: laporan yang HARUS direvisi --}}
         @if($revisionEntries->isNotEmpty())
             <div style="background:#FFF8E8;border:1.5px solid #FBB041;border-radius:12px;padding:14px 16px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -133,6 +370,7 @@
                 </div>
             </div>
         @endif
+        </div>
         {{-- ============================================================ --}}
 
         <!-- KPI grid -->
@@ -237,22 +475,72 @@
                         <a href="{{ route('daily-tasks.show', $entry->id) }}"
                            class="row-body"
                            style="text-decoration:none;color:inherit;cursor:pointer;">
-                            <div class="row-title">
-                                {{ $entry->task_description }}
-                                @if($entry->is_overdue)
-                                    <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                            <div class="row-title" style="display:flex;flex-direction:column;gap:10px;">
+                                {{-- Nama Pengirim (Sender) --}}
+                                <div style="display:flex; align-items:center; gap:6px; padding-bottom:8px; border-bottom:1px dashed #f1f5f9; margin-bottom:4px;">
+                                    <div style="width:20px; height:20px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:11px;">
+                                        👤
+                                    </div>
+                                    <span style="font-size:13px; font-weight:700; color:#0f172a;">{{ $entry->user->name ?? 'Unknown' }}</span>
+                                    <span style="font-size:11px; color:#64748b;">({{ ucfirst($entry->user->role ?? 'Staf') }})</span>
+                                </div>
+
+                                @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                    {{-- Target Mingguan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Mingguan</div>
+                                        <div style="font-size:13px; font-weight:600; color:var(--fg-2); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @elseif($entry->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Tugas Tambahan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Tipe Tugas</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            Tugas Tambahan
+                                        </div>
+                                    </div>
                                 @endif
+                                
+                                {{-- Laporan --}}
+                                <div>
+                                    <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Laporan Dikirim</div>
+                                    <div style="font-size:12px; font-weight:400; color:var(--fg-2); line-height:1.4;">
+                                        {{ $entry->task_description }}
+                                        @if($entry->is_overdue)
+                                            <span class="chip chip-danger" style="margin-left:6px;font-size:10px;">⏰ Terlambat</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                             <div class="row-meta">
                                 <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
                                 @if($entry->priority !== 'medium')
                                     <span class="chip chip-{{ $priorityChip }}">{{ $entry->priority_label }}</span>
                                 @endif
-                                @if($entry->weeklyTarget)
-                                    <span>· {{ Str::limit($entry->weeklyTarget->title, 24) }}</span>
-                                @elseif($entry->monthlyTarget)
-                                    <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
-                                @endif
+                                <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
+                                    @if($entry->verification_status === 'approved') ✅
+                                    @elseif($entry->verification_status === 'revision') ↩
+                                    @elseif($entry->verification_status === 'rejected') ❌
+                                    @else ⏳
+                                    @endif
+                                </span>
                                 <span>· {{ $entry->duration_label }}</span>
                             </div>
                         </a>
@@ -271,12 +559,12 @@
 
         <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-block">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Tambah Laporan Harian (Task)
+            Tambah Task
         </a>
 
     @elseif ($user->role === 'leader')
         @php
-            $targets     = \App\Models\MonthlyTarget::where('user_id', $user->id)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
+            $targets     = \App\Models\MonthlyTarget::where('department', $user->department)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
             $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
             $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
 
@@ -292,6 +580,25 @@
                 ->todayUnread()
                 ->orderByDesc('created_at')
                 ->get();
+
+            $baseQuery = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
+                ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->orderByDesc('task_date')
+                ->orderByDesc('updated_at');
+
+            // Laporan yang terhubung ke target (mingguan atau bulanan)
+            $pendingWithTarget = (clone $baseQuery)
+                ->where(fn($q) => $q->whereNotNull('weekly_target_id')->orWhereNotNull('monthly_target_id'))
+                ->get();
+
+            // Laporan tugas tambahan / mendadak (tidak terhubung target apapun)
+            $pendingAdHoc = (clone $baseQuery)
+                ->whereNull('weekly_target_id')
+                ->whereNull('monthly_target_id')
+                ->get();
+
+            $totalPending = $pendingWithTarget->count() + $pendingAdHoc->count();
         @endphp
 
         {{-- Stat cards: pada desktop jadi 3 kolom (dt-stat-row), mobile tetap 2 kolom (kpi-grid) --}}
@@ -469,37 +776,20 @@
         {{-- ═══════════════════════════════════════════════════════════════ --}}
 
         {{-- Section: Menunggu Review — dibagi 2: dengan target & tugas tambahan --}}
-        @php
-            $baseQuery = \App\Models\DailyTaskEntry::with(['user','weeklyTarget','monthlyTarget'])
-                ->whereHas('user', fn($q) => $q->where('department', $user->department)->where('role', 'staff'))
-                ->whereIn('verification_status', ['pending', 'revision'])
-                ->orderByDesc('task_date')
-                ->orderByDesc('updated_at');
-
-            // Laporan yang terhubung ke target (mingguan atau bulanan)
-            $pendingWithTarget = (clone $baseQuery)
-                ->where(fn($q) => $q->whereNotNull('weekly_target_id')->orWhereNotNull('monthly_target_id'))
-                ->get();
-
-            // Laporan tugas tambahan / mendadak (tidak terhubung target apapun)
-            $pendingAdHoc = (clone $baseQuery)
-                ->whereNull('weekly_target_id')
-                ->whereNull('monthly_target_id')
-                ->get();
-
-            $totalPending = $pendingWithTarget->count() + $pendingAdHoc->count();
-        @endphp
 
         {{-- ── Review Section: 2 kolom berdampingan di desktop ── --}}
         <div class="dt-col2">
 
             {{-- Card 1: Task Target --}}
             <div class="m-card" style="padding:0;">
-                <div class="section-head">
-                    <span class="overline-label">📋 Menunggu Review — Task Target</span>
-                    @if($pendingWithTarget->count() > 0)
-                        <span class="chip chip-warning" style="font-size:11px;">{{ $pendingWithTarget->count() }}</span>
-                    @endif
+                <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="overline-label">📋 Menunggu Review — Task Target</span>
+                        @if($pendingWithTarget->count() > 0)
+                            <span class="chip chip-warning" style="font-size:11px;">{{ $pendingWithTarget->count() }}</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:var(--maxy-navy);text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
                 <div style="padding:0 16px 8px;">
                     @forelse($pendingWithTarget as $entry)
@@ -536,11 +826,14 @@
 
             {{-- Card 2: Task Other --}}
             <div class="m-card" style="padding:0;">
-                <div class="section-head" style="background:linear-gradient(90deg,#FFF7ED 0%,transparent 100%);">
-                    <span class="overline-label" style="color:#B45309;">📌 Menunggu Review — Task Other</span>
-                    @if($pendingAdHoc->count() > 0)
-                        <span class="chip" style="font-size:11px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">{{ $pendingAdHoc->count() }}</span>
-                    @endif
+                <div class="section-head" style="background:linear-gradient(90deg,#FFF7ED 0%,transparent 100%);display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="overline-label" style="color:#B45309;">📌 Menunggu Review — Task Other</span>
+                        @if($pendingAdHoc->count() > 0)
+                            <span class="chip" style="font-size:11px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">{{ $pendingAdHoc->count() }}</span>
+                        @endif
+                    </div>
+                    <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:#B45309;text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
                 <div style="padding:0 16px 8px;">
                     @forelse($pendingAdHoc as $entry)
@@ -653,13 +946,12 @@
     @else
         {{-- C-Level --}}
         @php
-            $depts = [
-                'sales'=>'Sales','marketing'=>'Marketing','product_it'=>'Product & IT',
-                'operational'=>'Operational','ceo_office'=>'CEO Office',
-            ];
+            $depts = \App\Models\User::DEPARTMENTS;
             $deptColors = [
-                'sales'=>'#2F6BD6','marketing'=>'#B43BB7','product_it'=>'#16A571',
-                'operational'=>'#E89B2A','ceo_office'=>'#1D4ED8',
+                'sales' => '#2F6BD6', 'marketing' => '#B43BB7', 'product_it' => '#16A571',
+                'operational' => '#E89B2A', 'hr' => '#DC2626', 'finance' => '#059669',
+                'ga' => '#D97706', 'creative' => '#7C3AED', 'customer_support' => '#2563EB',
+                'ceo_office' => '#1D4ED8' // Fallback
             ];
             $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
             $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
@@ -692,11 +984,12 @@
                         $count      = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $key))->whereDate('task_date', today())->count();
                         $staffCount = \App\Models\User::where('department', $key)->where('role', 'staff')->count();
                         $pct        = $staffCount > 0 ? min(round($count / $staffCount * 100), 100) : 0;
+                        $color      = $deptColors[$key] ?? '#1D4ED8';
                     @endphp
                     <div class="dept-row">
                         <div class="dept-row-header">
                             <div class="dn">
-                                <span class="dept-dot" style="background:{{ $deptColors[$key] }};"></span>
+                                <span class="dept-dot" style="background:{{ $color }};"></span>
                                 {{ $label }}
                             </div>
                             <div class="dd">
@@ -704,7 +997,7 @@
                                 <span style="font-size:13px;font-weight:600;color:var(--fg-2);">{{ $pct }}%</span>
                             </div>
                         </div>
-                        <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $deptColors[$key] }};"></i></div>
+                        <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $color }};"></i></div>
                     </div>
                 @endforeach
             </div>

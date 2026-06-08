@@ -11,24 +11,146 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            // C-Level
+            // Super Admin
             [
-                'name'       => 'Ko Isaac',
-                'email'      => 'isaac.maxy.academy@gmail.com',
-                'role'       => 'c_level',
-                'department' => null,
+                'name'          => 'Admin HR',
+                'email'         => 'adminhr.maxy.academy@gmail.com',
+                'department'    => null,
+                'division'      => 'Human Capital - Admin',
+                'role'          => 'super_admin',
+                'is_management' => true,
             ],
-            // Leaders
-            ['name' => 'Bu Ika',           'email' => 'ika.maxy.academy@gmail.com',          'role' => 'leader', 'department' => 'sales',        'is_management' => true],
-            ['name' => 'Leader Marketing', 'email' => 'marketing.maxy.academy@gmail.com',     'role' => 'leader', 'department' => 'marketing',    'is_management' => false],
-            ['name' => 'Leader Product',   'email' => 'product.maxy.academy@gmail.com',       'role' => 'leader', 'department' => 'product_it',   'is_management' => false],
-            ['name' => 'Leader Ops',       'email' => 'operational.maxy.academy@gmail.com',   'role' => 'leader', 'department' => 'operational',  'is_management' => false],
+            // Management / C-Level
+            [
+                'name'          => 'Ko Isaac',
+                'email'         => 'isaac.maxy.academy@gmail.com',
+                'department'    => null,
+                'division'      => 'CEO',
+                'role'          => 'c_level',
+                'is_management' => true,
+            ],
+            // Leader
+            [
+                'name'          => 'Ika', 
+                'email'         => 'ika.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Head of Operational',
+                'role'          => 'leader',
+                'is_management' => true,
+            ],
             // Staff
-            ['name' => 'Fanny',            'email' => 'fanny.maxy.academy@gmail.com',         'role' => 'staff',  'department' => 'operational',  'is_management' => true],
-            ['name' => 'Staff Sales 1',    'email' => 'sales1.maxy.academy@gmail.com',         'role' => 'staff',  'department' => 'sales',        'is_management' => false],
-            ['name' => 'Staff Sales 2',    'email' => 'sales2.maxy.academy@gmail.com',         'role' => 'staff',  'department' => 'sales',        'is_management' => false],
-            ['name' => 'Staff Marketing',  'email' => 'marketing1.maxy.academy@gmail.com',    'role' => 'staff',  'department' => 'marketing',    'is_management' => false],
-            ['name' => 'Staff Product',    'email' => 'product1.maxy.academy@gmail.com',      'role' => 'staff',  'department' => 'product_it',   'is_management' => false],
+            [
+                'name'          => 'Alifia', 
+                'email'         => 'alifia.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'General Affair',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Brigitha', 
+                'email'         => 'brigithap.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Corporate Legal',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Indah', 
+                'email'         => 'indah.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Finance',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Dwi Isma', 
+                'email'         => 'dwiisma.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'PA of Manager Ops',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Anisa', 
+                'email'         => 'anisasukmawati.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Talent Placement',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Eka', 
+                'email'         => 'eka.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Talent Placement',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Fanny', 
+                'email'         => 'fanny.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Human Capital',
+                'role'          => 'staff', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Kaesar Adam', 
+                'email'         => 'kaesaradam.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational Intern',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Dafy', 
+                'email'         => 'dafy.maxy.academy@gmail.com', 
+                'department'    => 'Operational', 
+                'division'      => 'Office Boy',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Leader Operational Dummy', 
+                'email'         => 'leader.operational@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'leader', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'C-Level Dummy', 
+                'email'         => 'c_level@maxy.academy', 
+                'department'    => null, 
+                'division'      => 'Management',
+                'role'          => 'c_level', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Staff Testing', 
+                'email'         => 'staff.testing@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Super Admin Dummy', 
+                'email'         => 'superadmin@maxy.academy', 
+                'department'    => null, 
+                'division'      => 'Admin',
+                'role'          => 'super_admin', 
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Staff Dummy', 
+                'email'         => 'staff@maxy.academy', 
+                'department'    => 'Operational', 
+                'division'      => 'Operational',
+                'role'          => 'staff', 
+                'is_management' => false,
+            ],
         ];
 
         foreach ($users as $data) {
@@ -38,7 +160,8 @@ class UserSeeder extends Seeder
                     'name'          => $data['name'],
                     'password'      => Hash::make('maxy2026'),
                     'role'          => $data['role'],
-                    'department'    => $data['department'],
+                    'department'    => strtolower($data['department'] ?? ''), // Gunakan format lowercase untuk logic
+                    'division'      => $data['division'],
                     'is_management' => $data['is_management'] ?? false,
                 ]
             );

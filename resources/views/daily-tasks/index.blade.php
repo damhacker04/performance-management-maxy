@@ -1,18 +1,145 @@
 <x-app-layout>
 
     <div class="page">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-                <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Tugas Saya</h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;width:100%;">
+            <div style="min-width:200px;">
+                <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">
+                    {{ $tab === 'review' ? 'Menunggu Review' : 'Tugas Saya' }}
+                </h1>
                 <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">{{ $entries->count() }} laporan tercatat</p>
             </div>
-            <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-sm">
+            @if($tab !== 'review')
+            <a href="{{ route('daily-tasks.create') }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
                 <svg class="lucide sm" viewBox="0 0 24 24">
                     <path d="M12 5v14M5 12h14" />
                 </svg>
-                Tambah Laporan Harian (Task)
+                Tambah Task
+            </a>
+            @endif
+        </div>
+
+        {{-- Navigation Tabs --}}
+        {{-- Form Pencarian dan Filter (Auto-Submit) --}}
+        <form id="filter-form" method="GET" action="{{ route('daily-tasks.index') }}">
+            <input type="hidden" name="tab" value="{{ $tab }}">
+
+            {{-- Navigation Tabs --}}
+        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        <div style="display:flex;align-items:center;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;gap:8px;">
+            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+                      background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'mine' ? '#fff' : 'var(--fg-2)' }};">
+                📝 Tugas Saya
+            </a>
+            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:{{ $tab === 'review' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
+                      color:{{ $tab === 'review' ? '#fff' : 'var(--fg-2)' }};">
+                👀 Menunggu Review
+                @if($pendingReviewCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                @endif
+            </a>
+            @php
+                $backdatePendingCount = \App\Models\BackdateRequest::when(auth()->user()->role === 'leader', fn($q) =>
+                    $q->whereHas('user', fn($uq) => $uq->where('department', auth()->user()->department))
+                )->where('status', 'pending')->count();
+            @endphp
+            <a href="{{ route('backdate-requests.index') }}"
+               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+                      background:var(--bg-2);color:var(--fg-2);">
+                📅 Izin Backdating
+                @if($backdatePendingCount > 0)
+                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $backdatePendingCount }}</span>
+                @endif
             </a>
         </div>
+        @endif
+
+        {{-- Filter & Search Row --}}
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:16px;margin-bottom:16px;flex-wrap:wrap;">
+            
+            {{-- Dropdown Filters --}}
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <label style="font-size:12px;font-weight:600;color:var(--fg-3);">Filter:</label>
+                    <select name="status" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                        <option value="">Semua Status</option>
+                        @foreach(\App\Models\DailyTaskEntry::STATUSES as $key => $label)
+                            <option value="{{ $key }}" {{ ($statusFilter ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <select name="date" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                        <option value="">Semua Tanggal</option>
+                        <option value="{{ today()->toDateString() }}" {{ ($dateFilter ?? '') === today()->toDateString() ? 'selected' : '' }}>Hari Ini</option>
+                        <option value="{{ today()->subDay()->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDay()->toDateString() ? 'selected' : '' }}>Kemarin</option>
+                        <option value="{{ today()->subDays(2)->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDays(2)->toDateString() ? 'selected' : '' }}>H-2</option>
+                    </select>
+                </div>
+
+                @if(isset($subordinateStaff) && $subordinateStaff->isNotEmpty())
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <select name="staff" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                        <option value="">Semua Staf</option>
+                        @foreach($subordinateStaff as $staff)
+                            <option value="{{ $staff->id }}" {{ ($staffFilter ?? '') == $staff->id ? 'selected' : '' }}>{{ explode(' ', $staff->name)[0] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+            </div>
+
+            {{-- Search Input --}}
+            <div style="position:relative;width:250px;flex-shrink:0;">
+                <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
+                       style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                       onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
+                       onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
+            </div>
+
+        </div>
+        </form>
+
+        <script>
+            // Script Auto-Submit
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('filter-form');
+                const dropdowns = document.querySelectorAll('.filter-dropdown');
+                const searchInput = document.getElementById('search-input');
+                let debounceTimer;
+
+                // Submit saat dropdown berubah
+                dropdowns.forEach(dropdown => {
+                    dropdown.addEventListener('change', function() {
+                        form.submit();
+                    });
+                });
+
+                // Debounce submit saat mengetik di search input
+                if(searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => {
+                            form.submit();
+                        }, 500); // Tunggu 0.5 detik setelah selesai mengetik
+                    });
+
+                    // Taruh kursor di akhir teks agar nyaman jika direfresh
+                    const val = searchInput.value;
+                    if(val) {
+                        searchInput.focus();
+                        searchInput.setSelectionRange(val.length, val.length);
+                    }
+                }
+            });
+        </script>
 
         @if($entries->isEmpty())
             <div class="m-card">
@@ -46,12 +173,59 @@
                     <a href="{{ route('daily-tasks.show', $entry->id) }}"
                        class="m-card" style="text-decoration:none;color:inherit;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:10px;">
                         {{-- Header card --}}
-                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-                            <div style="flex:1;min-width:0;">
-                                <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;
-                                            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                                    {{ $entry->task_description }}
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+                                
+                                {{-- Nama Pengirim (Sender) --}}
+                                <div style="display:flex; align-items:center; gap:6px; padding-bottom:8px; border-bottom:1px dashed #f1f5f9; margin-bottom:4px;">
+                                    <div style="width:20px; height:20px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:11px;">
+                                        👤
+                                    </div>
+                                    <span style="font-size:13px; font-weight:700; color:#0f172a;">{{ $entry->user->name ?? 'Unknown' }}</span>
+                                    <span style="font-size:11px; color:#64748b;">({{ ucfirst($entry->user->role ?? 'Staf') }})</span>
                                 </div>
+
+                                @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                    {{-- Target Mingguan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Mingguan</div>
+                                        <div style="font-size:13px; font-weight:600; color:var(--fg-2); line-height:1.3;">
+                                            {{ Str::limit($entry->weeklyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @elseif($entry->monthlyTarget)
+                                    {{-- Target Bulanan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            {{ Str::limit($entry->monthlyTarget->title, 80) }}
+                                        </div>
+                                    </div>
+                                @else
+                                    {{-- Tugas Tambahan --}}
+                                    <div>
+                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Tipe Tugas</div>
+                                        <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
+                                            Tugas Tambahan
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Laporan --}}
+                                <div>
+                                    <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Laporan Dikirim</div>
+                                    <div style="font-size:12px; font-weight:400; color:var(--fg-2); line-height:1.4;">
+                                        {{ $entry->task_description }}
+                                    </div>
+                                </div>
+
                             </div>
                             <span class="m-checkbox {{ $entry->status === 'selesai' ? 'done' : '' }}" style="flex-shrink:0;" aria-hidden="true">
                                 @if($entry->status === 'selesai')
@@ -83,19 +257,6 @@
                             <span>{{ \Carbon\Carbon::parse($entry->task_date)->format('d M Y') }}</span>
                             <span>{{ $entry->duration_label }}</span>
                         </div>
-                        @if($entry->weeklyTarget)
-                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                📋 {{ Str::limit($entry->weeklyTarget->title, 36) }}
-                            </div>
-                        @elseif($entry->monthlyTarget)
-                            <div style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:4px 8px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                📋 {{ Str::limit($entry->monthlyTarget->title, 36) }}
-                            </div>
-                        @else
-                            <div style="font-size:11px;color:#B45309;background:#FEF3C7;padding:4px 8px;border-radius:6px;">
-                                📌 Tugas Tambahan
-                            </div>
-                        @endif
                     </a>
                 @endforeach
             </div>

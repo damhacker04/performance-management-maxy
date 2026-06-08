@@ -46,7 +46,6 @@ class WeeklyTargetController extends Controller
             $cLevelTargetsQuery->where('department', $user->department);
             $teamTargetsQuery
                 ->where('department', $user->department)
-                ->where('user_id', $user->id) // hanya buatan leader ini
                 ->where('month', now()->month)
                 ->where('year',  now()->year);
         } elseif ($user->role === 'c_level') {
@@ -62,8 +61,26 @@ class WeeklyTargetController extends Controller
             ? (int) $request->monthly_target_id
             : null;
 
+        // Tentukan departemen target (berguna untuk super_admin / c_level yang tidak punya departemen tetap)
+        $targetDepartment = $user->department;
+        if ($preSelected) {
+            $monthlyTarget = \App\Models\MonthlyTarget::find($preSelected);
+            if ($monthlyTarget) {
+                $targetDepartment = $monthlyTarget->department;
+            }
+        }
+
+        $staffList = \App\Models\User::when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
+            ->when($user->role === 'leader', function($q) {
+                $q->where('role', 'staff');
+            }, function($q) {
+                $q->whereIn('role', ['staff', 'leader']);
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('weekly-targets.create', compact(
-            'cLevelTargets', 'teamTargets', 'preSelected', 'context'
+            'cLevelTargets', 'teamTargets', 'preSelected', 'context', 'staffList'
         ));
     }
 
@@ -77,10 +94,12 @@ class WeeklyTargetController extends Controller
             'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'assigned_to'       => 'nullable|exists:users,id',
         ], [
             'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
+            'assigned_to.exists'         => 'Staf yang dipilih tidak valid.',
         ]);
 
         // Authorize: leader hanya boleh ke monthly miliknya
@@ -97,6 +116,7 @@ class WeeklyTargetController extends Controller
             'target_value'      => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
             'target_unit'       => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
             'week_number'       => $validated['week_number'],
+            'assigned_to'       => $validated['assigned_to'] ?? null,
             'month'             => $monthlyTarget->month,
             'year'              => $monthlyTarget->year,
         ]);
@@ -171,8 +191,7 @@ class WeeklyTargetController extends Controller
 
             if ($user->role === 'leader') {
                 $teamTargetsQuery
-                    ->where('department', $user->department)
-                    ->where('user_id', $user->id);
+                    ->where('department', $user->department);
             }
 
             $teamTargets   = $teamTargetsQuery->get();
@@ -180,7 +199,18 @@ class WeeklyTargetController extends Controller
             $context       = 'team';
         }
 
-        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context'));
+        $targetDepartment = $currentMonthly ? $currentMonthly->department : $user->department;
+
+        $staffList = \App\Models\User::where('department', $targetDepartment)
+            ->when($user->role === 'leader', function($q) {
+                $q->where('role', 'staff');
+            }, function($q) {
+                $q->whereIn('role', ['staff', 'leader']);
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context', 'staffList'));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)
@@ -195,10 +225,12 @@ class WeeklyTargetController extends Controller
             'target_type'       => ['required', Rule::in(['quantitative', 'qualitative'])],
             'target_value'      => 'nullable|required_if:target_type,quantitative|numeric|min:0',
             'target_unit'       => 'nullable|required_if:target_type,quantitative|string|max:50',
+            'assigned_to'       => 'nullable|exists:users,id',
         ], [
             'monthly_target_id.required' => 'Target bulanan wajib dipilih.',
             'target_value.required_if'   => 'Nilai target wajib diisi untuk tipe kuantitatif.',
             'target_unit.required_if'    => 'Satuan wajib diisi untuk tipe kuantitatif.',
+            'assigned_to.exists'         => 'Staf yang dipilih tidak valid.',
         ]);
 
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
@@ -213,6 +245,7 @@ class WeeklyTargetController extends Controller
             'target_value'      => $validated['target_type'] === 'quantitative' ? $validated['target_value'] : null,
             'target_unit'       => $validated['target_type'] === 'quantitative' ? $validated['target_unit'] : null,
             'week_number'       => $validated['week_number'],
+            'assigned_to'       => $validated['assigned_to'] ?? null,
         ]);
 
         return redirect()->route('monthly-targets.show', $monthlyTarget)
@@ -242,8 +275,8 @@ class WeeklyTargetController extends Controller
     private function authorizeMonthly(MonthlyTarget $monthlyTarget): void
     {
         $user = auth()->user();
-        if ($user->role === 'c_level') return;
-        if ($user->role === 'leader' && $monthlyTarget->user_id === $user->id) return;
+        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->role === 'leader' && $monthlyTarget->department === $user->department) return;
 
         abort(403, 'Anda tidak memiliki akses ke target ini.');
     }
@@ -256,7 +289,7 @@ class WeeklyTargetController extends Controller
     private function authorizeWeekly(WeeklyTarget $weeklyTarget): void
     {
         $user = auth()->user();
-        if ($user->role === 'c_level') return;
+        if (in_array($user->role, ['c_level', 'super_admin'])) return;
 
         if ($weeklyTarget->monthly_target_id) {
             $this->authorizeMonthly($weeklyTarget->monthlyTarget);

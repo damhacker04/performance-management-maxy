@@ -13,6 +13,7 @@ class DailyTaskEntry extends Model
         'user_id',
         'monthly_target_id',
         'weekly_target_id',
+        'parent_entry_id',
         'task_description',
         'priority',
         'duration_minutes',
@@ -88,6 +89,8 @@ class DailyTaskEntry extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+
+
     /**
      * Apakah task terlambat? task_date sudah lewat tapi belum selesai.
      */
@@ -140,6 +143,12 @@ class DailyTaskEntry extends Model
         // Laporan yang sudah approved tidak bisa diedit sama sekali
         if ($this->verification_status === 'approved') return false;
 
+        // Pengecualian khusus: jika diminta revisi oleh leader, staf TETAP BISA mengedit
+        // meskipun statusnya sudah 'selesai' (asalkan masih dalam batas waktu revisi).
+        if ($this->verification_status === 'revision') {
+            return $this->canBeRevised();
+        }
+
         return $this->status !== 'selesai';
     }
 
@@ -173,5 +182,50 @@ class DailyTaskEntry extends Model
             'rejected' => 'danger',
             default    => 'neutral',
         };
+    }
+
+    // ── Relasi progress multi-hari ────────────────────────────────────────────
+
+    /** Entri induk (jika ini adalah lanjutan dari hari sebelumnya) */
+    public function parentEntry()
+    {
+        return $this->belongsTo(DailyTaskEntry::class, 'parent_entry_id');
+    }
+
+    /** Entri-entri lanjutan dari entri ini */
+    public function childEntries()
+    {
+        return $this->hasMany(DailyTaskEntry::class, 'parent_entry_id')->orderBy('task_date');
+    }
+
+    /** Bukti laporan (dinamis) */
+    public function evidences()
+    {
+        return $this->hasMany(DailyTaskEvidence::class, 'daily_task_entry_id');
+    }
+
+    /**
+     * Mengembalikan seluruh rantai progress multi-hari untuk entri ini,
+     * dari entri paling awal (root) hingga entri paling baru,
+     * diurutkan ascending berdasarkan tanggal.
+     */
+    public function progressHistory(): \Illuminate\Support\Collection
+    {
+        // Naik ke root
+        $root = $this;
+        while ($root->parent_entry_id) {
+            $root = $root->parentEntry()->first();
+            if (!$root) break;
+        }
+        if (!$root) return collect([$this]);
+
+        // Kumpulkan semua dalam satu rantai
+        $chain = collect();
+        $current = $root;
+        while ($current) {
+            $chain->push($current);
+            $current = $current->childEntries()->first();
+        }
+        return $chain;
     }
 }

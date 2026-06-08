@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -43,3 +44,6 @@ Artisan::command('db:clean-dummy', function () {
     $this->line('   • monthly_targets    → 0 rows');
     $this->line('   • users              → tetap (tidak diubah)');
 })->purpose('Hapus semua data dummy (target & laporan), users tetap aman');
+
+// Jalankan auto-reject setiap jam
+Schedule::command('tasks:auto-reject-revisions')->hourly();

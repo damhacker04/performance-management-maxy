@@ -18,7 +18,7 @@ class LeaderTargetController extends Controller
         // Hanya tampilkan monthly target yang DIBUAT oleh C-Level untuk dept leader ini
         $targets = MonthlyTarget::with(['weeklyTargets'])
             ->where('department', $user->department)
-            ->whereHas('user', fn($q) => $q->where('role', 'c_level'))
+            ->whereHas('user', fn($q) => $q->whereIn('role', ['c_level', 'super_admin']))
             ->orderByDesc('year')
             ->orderByDesc('month')
             ->get();
@@ -44,11 +44,13 @@ class LeaderTargetController extends Controller
         $user = auth()->user();
 
         // Hanya boleh lihat target dept-nya sendiri yang dibuat C-Level
-        abort_if(
-            $monthlyTarget->department !== $user->department,
-            403,
-            'Anda tidak memiliki akses untuk melihat target ini.'
-        );
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if(
+                $monthlyTarget->department !== $user->department,
+                403,
+                'Anda tidak memiliki akses untuk melihat target ini.'
+            );
+        }
 
         // Pastikan yang buat adalah C-Level
         abort_if(

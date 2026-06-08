@@ -77,7 +77,7 @@
             Target Mingguan
         </span>
         @if($monthlyTarget->weeklyTargets->isNotEmpty())
-            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} minggu</span>
+            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
         @endif
     </div>
 

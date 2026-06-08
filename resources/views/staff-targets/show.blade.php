@@ -77,7 +77,7 @@
             Target Mingguan
         </span>
         @if($monthlyTarget->weeklyTargets->isNotEmpty())
-            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} minggu</span>
+            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
         @endif
     </div>
 
@@ -133,6 +133,17 @@
                                     <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>
                                 @else
                                     <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
+                                @endif
+                                @if($wt->assigned_to)
+                                    <span class="chip chip-warning" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;">
+                                        <svg class="lucide" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                        Tugas Pribadi
+                                    </span>
+                                @else
+                                    <span class="chip chip-neutral" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;">
+                                        <svg class="lucide" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                        Target Umum
+                                    </span>
                                 @endif
                             </div>
                             <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;">

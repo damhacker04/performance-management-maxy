@@ -12,17 +12,69 @@ use Illuminate\Support\Facades\Storage;
 
 class DailyTaskEntryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $tab  = $request->query('tab', 'mine');
 
-        $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
-            ->where('user_id', $user->id)
-            ->orderByDesc('task_date')
-            ->orderByDesc('id')
-            ->get();
+        $search = $request->query('search');
+        $statusFilter = $request->query('status');
+        $dateFilter = $request->query('date');
+        $staffFilter = $request->query('staff');
 
-        return view('daily-tasks.index', compact('entries'));
+        // Untuk dropdown filter nama staf
+        $subordinateStaff = collect();
+        if (in_array($user->role, ['leader', 'c_level', 'super_admin']) && $tab === 'review') {
+            $subordinateStaff = \App\Models\User::query()
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->where('department', $user->department)->where('role', 'staff')
+                )
+                ->orderBy('name')
+                ->get();
+        }
+
+        if ($tab === 'review' && in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            // Laporan yang butuh review
+            $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget', 'user'])
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
+                )
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->when($search, function($q) use ($search) {
+                    $q->where(function($sq) use ($search) {
+                        $sq->where('task_description', 'like', "%{$search}%")
+                           ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$search}%"));
+                    });
+                })
+                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+                ->when($dateFilter, fn($q) => $q->whereDate('task_date', $dateFilter))
+                ->when($staffFilter, fn($q) => $q->where('user_id', $staffFilter))
+                ->orderByDesc('task_date')
+                ->orderByDesc('id')
+                ->get();
+        } else {
+            // Laporan milik sendiri (default)
+            $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
+                ->where('user_id', $user->id)
+                ->when($search, fn($q) => $q->where('task_description', 'like', "%{$search}%"))
+                ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
+                ->when($dateFilter, fn($q) => $q->whereDate('task_date', $dateFilter))
+                ->orderByDesc('task_date')
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        // Hitung jumlah menunggu review untuk badge di UI Tab (tanpa filter)
+        $pendingReviewCount = 0;
+        if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            $pendingReviewCount = DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
+                ->when($user->role === 'leader', fn($q) => 
+                    $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
+                )
+                ->count();
+        }
+
+        return view('daily-tasks.index', compact('entries', 'tab', 'pendingReviewCount', 'subordinateStaff', 'search', 'statusFilter', 'dateFilter', 'staffFilter'));
     }
 
     public function show(DailyTaskEntry $dailyTask)
@@ -31,9 +83,9 @@ class DailyTaskEntryController extends Controller
 
         // Pemilik: boleh lihat laporan sendiri
         // Leader: boleh lihat laporan staff se-departemen
-        // C-Level: boleh lihat semua laporan
+        // C-Level & Super Admin: boleh lihat semua laporan
         $canView = $dailyTask->user_id === $user->id
-            || $user->role === 'c_level'
+            || in_array($user->role, ['c_level', 'super_admin'])
             || ($user->role === 'leader' && $dailyTask->user->department === $user->department);
 
         if (!$canView) {
@@ -69,25 +121,27 @@ class DailyTaskEntryController extends Controller
         // - Leader: HANYA weekly target dari monthly target yang dibuat C-Level untuk dept-nya
         // - C-Level: semua weekly target bulan ini lintas department
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->where(function ($q) use ($user) {
-                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
-                    $mq->where('month', now()->month)
-                       ->where('year', now()->year);
-                    if (!empty($user->department)) {
-                        $mq->where('department', $user->department);
-                    }
-                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
-                    if ($user->role === 'leader') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
-                    }
-                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
-                    if ($user->role === 'staff') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
-                    }
-                });
-            })
             ->where('month', now()->month)
             ->where('year', now()->year)
+            ->where(function ($q) use ($user) {
+                // 1. Yang eksplisit di-assign ke user ini (bisa lintas departemen)
+                $q->where('assigned_to', $user->id)
+                  // 2. ATAU yang assigned_to null TAPI departemennya cocok
+                  ->orWhere(function ($subQ) use ($user) {
+                      $subQ->whereNull('assigned_to');
+                      if (!empty($user->department)) {
+                          $subQ->whereHas('monthlyTarget', function ($mq) use ($user) {
+                              $mq->where('department', $user->department);
+                              if ($user->role === 'leader') {
+                                  $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                              }
+                              if ($user->role === 'staff') {
+                                  $mq->whereHas('user', fn($uq) => $uq->whereIn('role', ['leader', 'super_admin']));
+                              }
+                          });
+                      }
+                  });
+            })
             ->orderBy('week_number')
             ->get();
 
@@ -116,7 +170,17 @@ class DailyTaskEntryController extends Controller
             ? (int) $request->weekly_target_id
             : null;
 
-        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom', 'preSelectedWeeklyId'));
+        // Backdating context: cek apakah ada token valid dari approved backdate request
+        $backdateRequest = null;
+        if ($request->filled('backdate_token')) {
+            $backdateRequest = \App\Models\BackdateRequest::findValidByToken($request->backdate_token);
+            // Token harus milik user yang login
+            if ($backdateRequest && $backdateRequest->user_id !== $user->id) {
+                $backdateRequest = null;
+            }
+        }
+
+        return view('daily-tasks.create', compact('weeklyTargets', 'continuableTasks', 'continueFrom', 'preSelectedWeeklyId', 'backdateRequest'));
     }
 
     /**
@@ -129,25 +193,27 @@ class DailyTaskEntryController extends Controller
         $user = auth()->user();
 
         $weeklyTargets = WeeklyTarget::with('monthlyTarget')
-            ->where(function ($q) use ($user) {
-                $q->whereHas('monthlyTarget', function ($mq) use ($user) {
-                    $mq->where('month', now()->month)
-                       ->where('year', now()->year);
-                    if (!empty($user->department)) {
-                        $mq->where('department', $user->department);
-                    }
-                    // Leader hanya lihat weekly target dari monthly yang dibuat C-Level
-                    if ($user->role === 'leader') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
-                    }
-                    // Staff hanya lihat weekly target dari monthly yang dibuat Leader
-                    if ($user->role === 'staff') {
-                        $mq->whereHas('user', fn($uq) => $uq->where('role', 'leader'));
-                    }
-                });
-            })
             ->where('month', now()->month)
             ->where('year', now()->year)
+            ->where(function ($q) use ($user) {
+                // 1. Yang eksplisit di-assign ke user ini (bisa lintas departemen)
+                $q->where('assigned_to', $user->id)
+                  // 2. ATAU yang assigned_to null TAPI departemennya cocok
+                  ->orWhere(function ($subQ) use ($user) {
+                      $subQ->whereNull('assigned_to');
+                      if (!empty($user->department)) {
+                          $subQ->whereHas('monthlyTarget', function ($mq) use ($user) {
+                              $mq->where('department', $user->department);
+                              if ($user->role === 'leader') {
+                                  $mq->whereHas('user', fn($uq) => $uq->where('role', 'c_level'));
+                              }
+                              if ($user->role === 'staff') {
+                                  $mq->whereHas('user', fn($uq) => $uq->whereIn('role', ['leader', 'super_admin']));
+                              }
+                          });
+                      }
+                  });
+            })
             ->orderBy('week_number')
             ->get();
 
@@ -169,16 +235,22 @@ class DailyTaskEntryController extends Controller
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
             'notes'             => 'required|string|min:5',
-            'proof_url'         => $isSales ? 'required_without:proof_file|nullable|url' : 'nullable|url',
-            'proof_file'        => $isSales ? 'required_without:proof_url|nullable|file|mimes:jpg,jpeg,png,pdf|max:5120' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'revision_response' => 'nullable|string|min:3',
+            // Multi-evidence
+            'evidences'               => 'nullable|array|max:10',
+            'evidences.*.id'          => 'nullable|exists:daily_task_evidences,id',
+            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
+            'evidences.*.label'       => 'required|string|max:100',
+            'evidences.*.path_or_url' => 'nullable|array',
+            'evidences.*.path_or_url.*' => 'nullable|string',
+            'evidences.*.file'        => 'nullable|array|max:10',
+            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
-            'notes.required'              => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'                   => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'proof_url.required_without'  => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_file.required_without' => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_url.url'               => 'Format link tidak valid. Pastikan diawali dengan http:// atau https://',
-            'proof_file.mimes'            => 'File harus berformat JPG, PNG, atau PDF.',
-            'proof_file.max'              => 'Ukuran file maksimal 5MB.',
+            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
+            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
+            'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
+            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
         ]);
 
         $durationMinutes = $validated['duration_unit'] === 'jam'
@@ -194,16 +266,29 @@ class DailyTaskEntryController extends Controller
         $weeklyTarget    = !empty($validated['weekly_target_id'])
             ? WeeklyTarget::find($validated['weekly_target_id'])
             : null;
+
+        if ($weeklyTarget && $weeklyTarget->assigned_to !== null && $weeklyTarget->assigned_to !== $user->id) {
+            return back()->withInput()
+                ->withErrors(['weekly_target_id' => 'Target ini tidak ditugaskan kepada Anda.']);
+        }
+
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
-        // Handle upload file bukti (jika ada file baru, hapus yang lama)
-        $proofFilePath = $dailyTask->proof_file; // pertahankan file lama jika tidak ada upload baru
-        if ($request->hasFile('proof_file')) {
-            // Hapus file lama
-            if ($dailyTask->proof_file) {
-                Storage::disk('public')->delete($dailyTask->proof_file);
+        // Validasi tambahan: Pastikan ada path_or_url atau file yang diisi untuk tipe tertentu pada evidence BARU
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $index => $ev) {
+                if (empty($ev['id'])) {
+                    if ($ev['type'] === 'link' && empty($ev['path_or_url'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'URL wajib diisi untuk tipe Link.']);
+                    }
+                    if ($ev['type'] === 'image' && empty($ev['path_or_url'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'Gambar gagal di-upload.']);
+                    }
+                    if ($ev['type'] === 'file' && empty($ev['file'])) {
+                        return back()->withInput()->withErrors(["evidences.$index.file" => 'File wajib diunggah untuk tipe File.']);
+                    }
+                }
             }
-            $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
         }
 
         $wasRevision = $dailyTask->verification_status === 'revision';
@@ -216,8 +301,6 @@ class DailyTaskEntryController extends Controller
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
-            'proof_url'         => $validated['proof_url'] ?? $dailyTask->proof_url,
-            'proof_file'        => $proofFilePath,
         ];
 
         // Jika laporan sedang revision dan staff menyimpan → kembalikan ke pending
@@ -229,7 +312,7 @@ class DailyTaskEntryController extends Controller
             $history = $dailyTask->revision_history ?? [];
             if (!empty($history)) {
                 $lastIdx = count($history) - 1;
-                $history[$lastIdx]['staff_response']    = $validated['notes'] ?? null;
+                $history[$lastIdx]['staff_response']    = $validated['revision_response'] ?? $validated['notes'] ?? null;
                 $history[$lastIdx]['staff_responded_at'] = now()->toDateTimeString();
                 $history[$lastIdx]['staff_name']        = $user->name;
             }
@@ -237,6 +320,83 @@ class DailyTaskEntryController extends Controller
         }
 
         $dailyTask->update($updateData);
+
+        // ── Sinkronisasi Evidences ────────────────────────────────────────────
+        $submittedIds = [];
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $ev) {
+                if (!empty($ev['id'])) {
+                    // Update existing evidence
+                    $evidence = $dailyTask->evidences()->find($ev['id']);
+                    if ($evidence) {
+                        $upd = [
+                            'label' => $ev['label'],
+                            'type'  => $ev['type'],
+                        ];
+                        
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        $firstUrl = array_shift($urls);
+                        if (in_array($ev['type'], ['link', 'image']) && $firstUrl) {
+                            $upd['path_or_url'] = $firstUrl;
+                        }
+                        
+                        $evidence->update($upd);
+                        $submittedIds[] = $evidence->id;
+                        
+                        // Jika ditambah link/gambar baru pada row yang sudah ada
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $newEv = $dailyTask->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                                $submittedIds[] = $newEv->id;
+                            }
+                        }
+                    }
+                } else {
+                    // Create new evidence
+                    if ($ev['type'] === 'file' && !empty($ev['file']) && is_array($ev['file'])) {
+                        foreach ($ev['file'] as $uploadedFile) {
+                            $path = $uploadedFile->store('proofs', 'public');
+                            $newEv = $dailyTask->evidences()->create([
+                                'type'        => 'file',
+                                'label'       => $ev['label'],
+                                'path_or_url' => $path,
+                            ]);
+                            $submittedIds[] = $newEv->id;
+                        }
+                    } else {
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $newEv = $dailyTask->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                                $submittedIds[] = $newEv->id;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Hapus evidences yang tidak ada di list form (dihapus user)
+        $evidencesToDelete = $dailyTask->evidences()->whereNotIn('id', $submittedIds)->get();
+        foreach ($evidencesToDelete as $delEv) {
+            // Hapus file dari storage jika berupa file/image
+            if (in_array($delEv->type, ['file', 'image']) && str_starts_with($delEv->path_or_url, 'proofs/')) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($delEv->path_or_url);
+            }
+            $delEv->delete();
+        }
 
         // Kirim notifikasi ke leader bahwa revisi sudah dikirim
         if ($wasRevision) {
@@ -299,17 +459,20 @@ class DailyTaskEntryController extends Controller
             'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
             'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
             'notes'             => 'required|string|min:5',
-            // Bukti laporan: wajib untuk sales (salah satu harus diisi), opsional untuk lainnya
-            'proof_url'         => $isSales ? 'required_without:proof_file|nullable|url' : 'nullable|url',
-            'proof_file'        => $isSales ? 'required_without:proof_url|nullable|file|mimes:jpg,jpeg,png,pdf|max:5120' : 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            // Multi-evidence
+            'evidences'               => 'nullable|array|max:10',
+            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
+            'evidences.*.label'       => 'required|string|max:100',
+            'evidences.*.path_or_url' => 'nullable|array',
+            'evidences.*.path_or_url.*' => 'nullable|string',
+            'evidences.*.file'        => 'nullable|array|max:10',
+            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
         ], [
-            'notes.required'         => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'              => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'proof_url.required_without' => 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_file.required_without'=> 'Departemen Sales wajib mengisi link atau upload file bukti.',
-            'proof_url.url'          => 'Format link tidak valid. Pastikan diawali dengan http:// atau https://',
-            'proof_file.mimes'       => 'File harus berformat JPG, PNG, atau PDF.',
-            'proof_file.max'         => 'Ukuran file maksimal 5MB.',
+            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
+            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
+            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
+            'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
+            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
         ]);
 
         // Konversi durasi -> menit
@@ -328,16 +491,61 @@ class DailyTaskEntryController extends Controller
         $weeklyTarget    = !empty($validated['weekly_target_id'])
             ? WeeklyTarget::find($validated['weekly_target_id'])
             : null;
+
+        if ($weeklyTarget && $weeklyTarget->assigned_to !== null && $weeklyTarget->assigned_to !== $user->id) {
+            return back()->withInput()
+                ->withErrors(['weekly_target_id' => 'Target ini tidak ditugaskan kepada Anda.']);
+        }
+
         $monthlyTargetId = $weeklyTarget?->monthly_target_id;
 
-        // Handle upload file bukti
-        $proofFilePath = null;
-        if ($request->hasFile('proof_file')) {
-            $proofFilePath = $request->file('proof_file')->store('proofs', 'public');
+        // Validasi tambahan: Pastikan ada path_or_url atau file yang diisi untuk setiap evidence
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $index => $ev) {
+                if ($ev['type'] === 'link' && empty($ev['path_or_url'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'URL wajib diisi untuk tipe Link.']);
+                }
+                if ($ev['type'] === 'image' && empty($ev['path_or_url'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.path_or_url" => 'Gambar gagal di-upload.']);
+                }
+                if ($ev['type'] === 'file' && empty($ev['file'])) {
+                    return back()->withInput()->withErrors(["evidences.$index.file" => 'File wajib diunggah untuk tipe File.']);
+                }
+            }
+        }
+
+        // ── Grace Period & Backdate Logic ─────────────────────────────────────
+        // Tentukan tanggal laporan:
+        // 1. Jika ada backdate token yang valid → gunakan tanggal yang disetujui.
+        // 2. Jika sebelum jam 03:00 pagi → otomatis izinkan tanggal kemarin (grace period).
+        // 3. Default: hari ini.
+        $taskDate = today()->toDateString();
+
+        if ($request->filled('backdate_token')) {
+            $bdReq = \App\Models\BackdateRequest::findValidByToken($request->backdate_token);
+            if ($bdReq && $bdReq->user_id === $user->id) {
+                $taskDate = $bdReq->requested_date->toDateString();
+                // Invalidate token setelah digunakan (satu kali pakai)
+                $bdReq->update(['token_expires_at' => now()]);
+            }
+        } elseif (now()->hour < 3) {
+            // Grace period: sebelum jam 03:00 pagi → anggap laporan untuk kemarin
+            $taskDate = today()->subDay()->toDateString();
+        }
+
+        // Resolve parent_entry_id jika ini adalah lanjutan dari task sebelumnya
+        $parentEntryId = null;
+        if ($request->filled('continue_from')) {
+            $parentEntry = DailyTaskEntry::where('user_id', $user->id)
+                ->where('id', $request->continue_from)
+                ->whereNotIn('status', ['selesai'])
+                ->first();
+            $parentEntryId = $parentEntry?->id;
         }
 
         $entry = DailyTaskEntry::create([
             'user_id'           => auth()->id(),
+            'parent_entry_id'   => $parentEntryId,
             'monthly_target_id' => $monthlyTargetId,
             'weekly_target_id'  => $weeklyTarget?->id,
             'task_description'  => $validated['task_description'],
@@ -345,10 +553,38 @@ class DailyTaskEntryController extends Controller
             'duration_minutes'  => $durationMinutes,
             'status'            => $validated['status'],
             'notes'             => $validated['notes'],
-            'task_date'         => now()->toDateString(),
-            'proof_url'         => $validated['proof_url'] ?? null,
-            'proof_file'        => $proofFilePath,
+            'task_date'         => $taskDate,
         ]);
+
+        // Simpan Bukti (Multi-Evidence)
+        if (!empty($validated['evidences'])) {
+            foreach ($validated['evidences'] as $ev) {
+                // Jika ini adalah upload file
+                if ($ev['type'] === 'file' && !empty($ev['file']) && is_array($ev['file'])) {
+                    foreach ($ev['file'] as $uploadedFile) {
+                        $path = $uploadedFile->store('proofs', 'public');
+                        $entry->evidences()->create([
+                            'type'        => 'file',
+                            'label'       => $ev['label'],
+                            'path_or_url' => $path,
+                        ]);
+                    }
+                } else {
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (!is_array($urls)) $urls = [$urls];
+                        
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $entry->evidences()->create([
+                                    'type'        => $ev['type'],
+                                    'label'       => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                            }
+                        }
+                }
+            }
+        }
 
         return redirect()->route('daily-tasks.show', $entry)
             ->with('success', '✅ Laporan berhasil dikirim!');
@@ -403,6 +639,8 @@ class DailyTaskEntryController extends Controller
             'verified_at'         => now(),
             'rejection_note'      => null,
         ]);
+
+        \App\Helpers\NotificationHelper::reportApproved($dailyTask, auth()->user());
 
         return redirect()->route('daily-tasks.show', $dailyTask)
             ->with('success', '✅ Laporan berhasil diverifikasi dan disetujui.');
@@ -471,8 +709,67 @@ class DailyTaskEntryController extends Controller
             'reviewed_at'         => now(),
         ]);
 
+        \App\Helpers\NotificationHelper::reportRejected($dailyTask, auth()->user());
+
         return redirect()->route('daily-tasks.show', $dailyTask)
             ->with('error', '❌ Laporan telah ditolak secara permanen.');
+    }
+
+    /**
+     * Terima gambar dari clipboard (base64) → konversi ke JPEG → simpan ke storage.
+     * Digunakan oleh fitur paste screenshot di form bukti laporan.
+     */
+    public function uploadClipboard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|string', // base64 data URL
+        ]);
+
+        try {
+            $dataUrl = $request->input('image');
+
+            // Validasi format: harus data URL gambar
+            if (!preg_match('/^data:image\/(png|jpeg|jpg|gif|webp);base64,/', $dataUrl, $matches)) {
+                return response()->json(['error' => 'Format gambar tidak valid.'], 422);
+            }
+
+            // Decode base64
+            $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $dataUrl);
+            $imageData = base64_decode($base64);
+
+            if (!$imageData) {
+                return response()->json(['error' => 'Gagal decode gambar.'], 422);
+            }
+
+            // Simpan sebagai JPEG dengan nama unik
+            $fileName = 'proofs/clipboard_' . auth()->id() . '_' . now()->format('Ymd_His') . '_' . uniqid() . '.jpg';
+
+            // Konversi ke JPEG menggunakan GD jika tersedia, fallback simpan langsung
+            if (function_exists('imagecreatefromstring')) {
+                $img = imagecreatefromstring($imageData);
+                if ($img) {
+                    ob_start();
+                    imagejpeg($img, null, 85);
+                    $jpegData = ob_get_clean();
+                    imagedestroy($img);
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $jpegData);
+                } else {
+                    \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $imageData);
+                }
+            } else {
+                \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $imageData);
+            }
+
+            $url = \Illuminate\Support\Facades\Storage::disk('public')->url($fileName);
+
+            return response()->json([
+                'path' => $fileName,
+                'url'  => $url,
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Gagal menyimpan gambar: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -485,8 +782,8 @@ class DailyTaskEntryController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['leader', 'c_level'])) {
-            abort(403, 'Hanya Leader atau C-Level yang dapat memverifikasi laporan.');
+        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+            abort(403, 'Hanya Leader, C-Level, atau Super Admin yang dapat memverifikasi laporan.');
         }
 
         // Leader hanya bisa review laporan dari dept-nya sendiri (kecuali C-Level)

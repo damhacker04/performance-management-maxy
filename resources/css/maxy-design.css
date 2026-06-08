@@ -109,6 +109,21 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   position: relative;
 }
 
+/* Mobile & Desktop Wrappers */
+.dt-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+.dt-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+}
+
 /* ===================== App Bar ===================== */
 .appbar {
   position: sticky; top: 0; z-index: 30;
@@ -150,7 +165,8 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
 
 /* ===================== Tab Bar ===================== */
 .tabbar {
-  position: sticky; bottom: 0; z-index: 30;
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 40;
+  width: 100%; max-width: var(--app-max);
   display: flex;
   background: #fff;
   border-top: 1px solid var(--neutral-100);
@@ -183,6 +199,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 /* ===================== Hero Greeting ===================== */

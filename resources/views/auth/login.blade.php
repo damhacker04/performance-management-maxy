@@ -13,8 +13,52 @@
         </div>
     @endif
 
-    <div style="display:flex;flex-direction:column;gap:16px;text-align:center;">
-        <p style="color:var(--fg-2);font-size:14px;margin-bottom:8px;">Silakan masuk menggunakan email terdaftar.</p>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Form Login Manual -->
+        <form method="POST" action="{{ route('login') }}" style="display:flex;flex-direction:column;gap:16px;">
+            @csrf
+
+            <!-- Email Address -->
+            <div>
+                <label for="email" style="display:block;font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
+                       style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;"
+                       placeholder="nama@email.com">
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" style="display:block;font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">Password</label>
+                <input id="password" type="password" name="password" required
+                       style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;"
+                       placeholder="••••••••">
+            </div>
+
+            <!-- Remember Me & Lupa Password -->
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <label for="remember_me" style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input id="remember_me" type="checkbox" name="remember" style="border-radius:4px;border-color:#d1d5db;color:#1D4ED8;">
+                    <span style="margin-left:8px;font-size:13px;color:var(--fg-2);">Ingat saya</span>
+                </label>
+
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" style="font-size:13px;color:#1D4ED8;text-decoration:none;font-weight:500;">
+                        Lupa Password?
+                    </a>
+                @endif
+            </div>
+
+            <button type="submit" class="btn" style="background:#1D4ED8;color:#fff;width:100%;padding:12px;font-size:14px;border-radius:8px;margin-top:8px;">
+                MASUK
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div style="display:flex;align-items:center;gap:12px;margin:8px 0;">
+            <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+            <span style="font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">ATAU</span>
+            <div style="flex:1;height:1px;background:#e2e8f0;"></div>
+        </div>
         
         <a href="{{ route('google.login') }}" style="display:inline-flex;align-items:center;justify-content:center;gap:12px;background-color:#ffffff;color:#374151;border:1px solid #d1d5db;border-radius:8px;padding:12px 16px;font-weight:500;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,0.05);transition:background-color 0.2s;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,6 +69,7 @@
             </svg>
             Masuk dengan Google
         </a>
+
 
         <p style="text-align:center;font-size:12px;color:var(--fg-3);margin-top:24px;">
             Maxy Academy · v1.0
