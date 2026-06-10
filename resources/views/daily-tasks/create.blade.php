@@ -341,14 +341,25 @@
 
         <div class="evidence-input-link">
             <div class="link-list" style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;gap:8px;">
-                    <input type="url" name="evidences[__INDEX__][path_or_url][]" class="m-input" placeholder="https://docs.google.com/..." style="font-size:13px;flex:1;" required>
+                <div class="link-row" style="display:flex;flex-direction:column;gap:4px;">
+                    <div style="display:flex;gap:8px;">
+                        <input type="url"
+                               name="evidences[__INDEX__][path_or_url][]"
+                               class="m-input link-url-input"
+                               placeholder="https://docs.google.com/..."
+                               style="font-size:13px;flex:1;"
+                               required
+                               oninput="debounceValidateLink(this)">
+                    </div>
+                    {{-- Badge status validasi link AI --}}
+                    <div class="link-validation-badge" style="display:none; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px;"></div>
                 </div>
             </div>
             <div style="text-align: center; margin-top: 8px;">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="addLinkField(this)" style="font-size:11px; padding:6px 12px; background:transparent; border:1px dashed var(--maxy-navy); color:var(--maxy-navy); border-radius:6px; cursor:pointer; font-weight:600;">+ Tambahkan Link</button>
             </div>
         </div>
+
 
         <div class="evidence-input-file" style="display: none;">
             <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa pilih lebih dari 1 file sekaligus</div>
@@ -455,14 +466,19 @@ function addLinkField(btn) {
     const linkDiv = btn.closest('.evidence-input-link');
     const list = linkDiv.querySelector('.link-list');
     const name = list.querySelector('input').name;
-    const div = document.createElement('div');
-    div.style = 'display:flex;gap:8px;';
-    div.innerHTML = `
-        <input type="url" name="${name}" class="m-input" placeholder="https://..." style="font-size:13px;flex:1;" required>
-        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;font-weight:bold;cursor:pointer;">✖</button>
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    row.style = 'display:flex;flex-direction:column;gap:4px;';
+    row.innerHTML = `
+        <div style="display:flex;gap:8px;">
+            <input type="url" name="${name}" class="m-input link-url-input" placeholder="https://..." style="font-size:13px;flex:1;" required oninput="debounceValidateLink(this)">
+            <button type="button" onclick="this.closest('.link-row').remove(); updateSubmitButton();" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:0 12px;border-radius:6px;font-weight:bold;cursor:pointer;">✖</button>
+        </div>
+        <div class="link-validation-badge" style="display:none; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px;"></div>
     `;
-    list.appendChild(div);
+    list.appendChild(row);
 }
+
 
 function changeEvidenceType(select) {
     const row = select.closest('.evidence-row');
@@ -589,6 +605,90 @@ function clearRowImage(btn) {
         addEvidenceRow();
     @endif
 })();
+
+// ── Fase 2: Real-time Link Validation (AI) ────────────────────────────────
+const VALIDATE_URL = '{{ route('ai.validate-link') }}';
+const CSRF_META    = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+let   linkTimers   = new WeakMap();
+
+function debounceValidateLink(input) {
+    const badge = input.closest('.link-row')?.querySelector('.link-validation-badge');
+    if (!badge) return;
+
+    // Reset badge
+    badge.style.display = 'none';
+    badge.dataset.status = '';
+    updateSubmitButton();
+
+    const url = input.value.trim();
+    if (!url || !url.startsWith('http')) return;
+
+    // Hanya validasi link Google Workspace / Notion
+    const needsCheck = url.includes('docs.google.com') || url.includes('drive.google.com')
+        || url.includes('sheets.google.com') || url.includes('notion.so') || url.includes('notion.site');
+    if (!needsCheck) return;
+
+    // Debounce 800ms
+    if (linkTimers.has(input)) clearTimeout(linkTimers.get(input));
+    linkTimers.set(input, setTimeout(() => doValidateLink(input, url, badge), 800));
+}
+
+async function doValidateLink(input, url, badge) {
+    // Tampilkan status loading
+    badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px; background:#F3F4F6; color:#6B7280; border:1px solid #E5E7EB;';
+    badge.innerHTML = `<svg style="width:12px;height:12px;flex-shrink:0;animation:ai-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Memeriksa akses link ke AI…`;
+
+    try {
+        const res = await fetch(VALIDATE_URL, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_META, 'Accept': 'application/json' },
+            body   : JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        badge.dataset.status = data.status;
+
+        if (data.status === 'public') {
+            badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px; background:#ECFDF5; color:#065F46; border:1px solid #6EE7B7;';
+            badge.innerHTML = `✅ Link dapat diakses publik — AI akan membaca isinya secara otomatis.`;
+        } else if (data.status === 'restricted') {
+            badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:flex-start; gap:6px; background:#FEF2F2; color:#991B1B; border:1px solid #FCA5A5;';
+            badge.innerHTML = `🚫 <span><strong>Link Terkunci!</strong> AI tidak bisa memproses penilaian. Ubah akses file Google menjadi <strong>"Anyone with the link"</strong> terlebih dahulu.</span>`;
+        } else {
+            badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px; background:#FFFBEB; color:#92400E; border:1px solid #FCD34D;';
+            badge.innerHTML = `⚠️ ${data.message}`;
+        }
+    } catch (e) {
+        badge.style.display = 'none';
+    }
+
+    updateSubmitButton();
+}
+
+function updateSubmitButton() {
+    const hasRestricted = [...document.querySelectorAll('.link-validation-badge')]
+        .some(b => b.dataset.status === 'restricted');
+
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (!submitBtn) return;
+
+    if (hasRestricted) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.45';
+        submitBtn.style.cursor = 'not-allowed';
+        submitBtn.title = 'Ada link yang masih terkunci. Perbaiki terlebih dahulu agar AI bisa menilai laporan Anda.';
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.title = '';
+    }
+}
+
+// CSS untuk spinner animasi
+const aiStyle = document.createElement('style');
+aiStyle.textContent = `@keyframes ai-spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }`;
+document.head.appendChild(aiStyle);
 </script>
+
 </x-app-layout>
 

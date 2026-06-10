@@ -9,7 +9,9 @@ use App\Http\Controllers\LeaderTargetController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BackdateRequestController;
+use App\Http\Controllers\AiEvaluationController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -98,7 +100,21 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/backdate-requests/{backdateRequest}/reject', [BackdateRequestController::class, 'reject'])
             ->name('backdate-requests.reject');
     });
+
+    // ── Fase 2: AI Evaluation ─────────────────────────────────────────────────
+    // [AJAX] Validasi link publik/restricted secara real-time (dipanggil frontend)
+    Route::post('/ai/validate-link', [AiEvaluationController::class, 'validateLink'])
+        ->name('ai.validate-link');
+
+    // Override nilai AI oleh Leader (Modal)
+    Route::middleware('role:leader,c_level,super_admin')->group(function () {
+        Route::get('/ai/evaluations/{evaluation}/override',  [AiEvaluationController::class, 'showOverrideForm'])
+            ->name('ai.evaluations.override.form');
+        Route::post('/ai/evaluations/{evaluation}/override', [AiEvaluationController::class, 'storeOverride'])
+            ->name('ai.evaluations.override.store');
+    });
 });
+
 
 // ============================================================
 // Panel Admin — hanya bisa diakses oleh Super Admin (HR)
@@ -129,6 +145,16 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         ->name('weekly-targets.destroy');
     Route::delete('daily-tasks/{dailyTask}', [TargetAssignmentController::class, 'destroyDailyTask'])
         ->name('daily-tasks.destroy');
+
+    // ── Fase 2: Panel KPI Settings & Override Log ─────────────────────────────
+    Route::get('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'index'])
+        ->name('kpi-settings.index');
+    Route::post('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'store'])
+        ->name('kpi-settings.store');
+
+    // Log histori Override oleh Leader (untuk monitoring manajemen)
+    Route::get('ai/override-logs', [AiEvaluationController::class, 'overrideLogs'])
+        ->name('ai.override-logs');
 });
 
 

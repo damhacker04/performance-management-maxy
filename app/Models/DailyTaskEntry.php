@@ -205,6 +205,15 @@ class DailyTaskEntry extends Model
     }
 
     /**
+     * Penilaian AI untuk task ini (Fase 2).
+     * Satu task hanya punya satu evaluasi AI.
+     */
+    public function aiEvaluation()
+    {
+        return $this->hasOne(AiEvaluation::class);
+    }
+
+    /**
      * Mengembalikan seluruh rantai progress multi-hari untuk entri ini,
      * dari entri paling awal (root) hingga entri paling baru,
      * diurutkan ascending berdasarkan tanggal.

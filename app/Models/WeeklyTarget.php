@@ -12,6 +12,7 @@ class WeeklyTarget extends Model
     protected $fillable = [
         'monthly_target_id',
         'category',          // 'planned' | 'other' — sesuai notul rapat 12 Mei 2026
+        'impact_level',      // 'high' | 'medium' | 'low' — Fase 2: ditentukan Leader
         'user_id',
         'assigned_to',
         'title',
@@ -22,6 +23,12 @@ class WeeklyTarget extends Model
         'week_number',
         'month',
         'year',
+    ];
+
+    public const IMPACT_LEVELS = [
+        'high'   => 'Dampak Tinggi',
+        'medium' => 'Dampak Sedang',
+        'low'    => 'Dampak Rendah',
     ];
 
     protected $casts = [
@@ -72,6 +79,35 @@ class WeeklyTarget extends Model
     public function dailyTaskEntries()
     {
         return $this->hasMany(DailyTaskEntry::class);
+    }
+
+    /**
+     * Gap Analysis Report (Fase 2) — hanya muncul jika target ini gagal.
+     */
+    public function gapAnalysisReport()
+    {
+        return $this->morphOne(GapAnalysisReport::class, 'reportable');
+    }
+
+    /**
+     * Label dampak bisnis dalam Bahasa Indonesia.
+     */
+    public function getImpactLabelAttribute(): string
+    {
+        return self::IMPACT_LEVELS[$this->impact_level ?? 'medium'] ?? 'Dampak Sedang';
+    }
+
+    /**
+     * Chip warna untuk badge impact level di UI.
+     */
+    public function getImpactChipAttribute(): string
+    {
+        return match($this->impact_level ?? 'medium') {
+            'high'   => 'danger',
+            'medium' => 'warning',
+            'low'    => 'neutral',
+            default  => 'warning',
+        };
     }
 
     /**

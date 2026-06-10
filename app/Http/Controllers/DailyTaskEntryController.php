@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\EvaluateDailyTaskJob;
 use App\Models\DailyTaskEntry;
 use App\Models\MonthlyTarget;
 use App\Models\WeeklyTarget;
@@ -107,9 +108,18 @@ class DailyTaskEntryController extends Controller
         }
         // ─────────────────────────────────────────────────────────────────────
 
-        $dailyTask->load(['weeklyTarget.monthlyTarget', 'monthlyTarget', 'user', 'verifiedBy']);
+        $dailyTask->load([
+            'weeklyTarget.monthlyTarget',
+            'monthlyTarget',
+            'user',
+            'verifiedBy',
+            'aiEvaluation.latestOverride.leader', // Fase 2: load evaluasi AI
+        ]);
 
-        return view('daily-tasks.show', compact('dailyTask'));
+        // Fase 2: cek apakah AI masih memproses (job sudah dispatch tapi belum selesai)
+        $evalPending = !$dailyTask->aiEvaluation && $dailyTask->created_at->diffInMinutes(now()) < 10;
+
+        return view('daily-tasks.show', compact('dailyTask', 'evalPending'));
     }
 
     public function create(Request $request)
@@ -586,8 +596,12 @@ class DailyTaskEntryController extends Controller
             }
         }
 
+        // ── Fase 2: Dispatch AI Evaluation Job (background) ──────────────────
+        // Job berjalan di queue, tidak memblokir response ke staf.
+        EvaluateDailyTaskJob::dispatch($entry->id)->onQueue('default');
+
         return redirect()->route('daily-tasks.show', $entry)
-            ->with('success', '✅ Laporan berhasil dikirim!');
+            ->with('success', '✅ Laporan berhasil dikirim! AI sedang memproses penilaian…');
     }
 
     /**

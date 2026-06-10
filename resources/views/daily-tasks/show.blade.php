@@ -538,7 +538,12 @@
 
     </div>{{-- end dt-detail-left --}}
 
+    {{-- ── Fase 2: AI Score Card ────────────────────────────────────────────── --}}
+    @php $entry = $dailyTask; @endphp
+    @include('daily-tasks.partials.ai-score-card')
+
     {{-- Kolom kanan: Activity Log ──────────────────────────── --}}
+
     <div class="dt-detail-right">
 
     {{-- ── ACTIVITY LOG TIMELINE ────────────────────────────────────────────── --}}
