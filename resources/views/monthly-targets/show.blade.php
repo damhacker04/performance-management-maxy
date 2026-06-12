@@ -240,31 +240,6 @@
                     @endif
                 </div>
 
-                        {{-- Tombol aksi --}}
-                        <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;padding-top:2px;">
-                            <a href="{{ route('weekly-targets.edit', $wt) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
-                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            </a>
-                            <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
-                                  onsubmit="return confirm('Hapus target mingguan ini?\n\nPerhatian: {{ $wtTotal }} laporan terkait akan tetap tersimpan.');"
-                                  style="margin:0;">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="icon-btn" title="Hapus"
-                                        style="color:var(--danger);width:32px;height:32px;">
-                                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                @endforeach
-
-                @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-                <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
-                   class="btn btn-outline btn-sm" style="margin-top:4px;border-style:dashed;color:var(--maxy-navy);border-color:var(--maxy-navy);">
-                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                    Tambah Target untuk {{ explode(' ', $pName)[0] }}
-                </a>
-                @endif
             </div>
         </a>
     @endforeach
