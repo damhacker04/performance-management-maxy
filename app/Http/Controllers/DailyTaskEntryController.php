@@ -643,7 +643,7 @@ class DailyTaskEntryController extends Controller
     /**
      * Leader menyetujui laporan → approved (terkunci permanen).
      */
-    public function approve(DailyTaskEntry $dailyTask)
+    public function approve(DailyTaskEntry $dailyTask, Request $request)
     {
         $this->authorizeReview($dailyTask);
 
@@ -656,8 +656,10 @@ class DailyTaskEntryController extends Controller
 
         \App\Helpers\NotificationHelper::reportApproved($dailyTask, auth()->user());
 
-        return redirect()->route('daily-tasks.show', $dailyTask)
-            ->with('success', '✅ Laporan berhasil diverifikasi dan disetujui.');
+        return redirect()->route('daily-tasks.show', [
+            'daily_task' => $dailyTask->id,
+            'from'       => $request->query('from')
+        ])->with('success', '✅ Laporan berhasil diverifikasi dan disetujui.');
     }
 
     /**
@@ -696,8 +698,10 @@ class DailyTaskEntryController extends Controller
         // Kirim notifikasi ke staff bahwa laporan perlu direvisi
         NotificationHelper::revisionRequested($dailyTask, auth()->user());
 
-        return redirect()->route('daily-tasks.show', $dailyTask)
-            ->with('info', '↩ Laporan dikembalikan ke staff untuk direvisi.');
+        return redirect()->route('daily-tasks.show', [
+            'daily_task' => $dailyTask->id,
+            'from'       => $request->query('from')
+        ])->with('info', '↩ Laporan dikembalikan ke staff untuk direvisi.');
     }
 
     /**
@@ -725,8 +729,10 @@ class DailyTaskEntryController extends Controller
 
         \App\Helpers\NotificationHelper::reportRejected($dailyTask, auth()->user());
 
-        return redirect()->route('daily-tasks.show', $dailyTask)
-            ->with('error', '❌ Laporan telah ditolak secara permanen.');
+        return redirect()->route('daily-tasks.show', [
+            'daily_task' => $dailyTask->id,
+            'from'       => $request->query('from')
+        ])->with('error', '❌ Laporan telah ditolak secara permanen.');
     }
 
     /**
