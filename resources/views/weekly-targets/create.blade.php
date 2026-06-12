@@ -118,7 +118,7 @@
                             class="m-select {{ $errors->has('assigned_to') ? 'err' : '' }}">
                         <option value="">-- Umum (Semua staf di departemen dapat mengambil target ini) --</option>
                         @foreach($staffList as $staff)
-                            <option value="{{ $staff->id }}" {{ old('assigned_to') == $staff->id ? 'selected' : '' }}>
+                            <option value="{{ $staff->id }}" {{ old('assigned_to', $preSelectedUser ?? null) == $staff->id ? 'selected' : '' }}>
                                 {{ $staff->name }} ({{ $staff->role == 'leader' ? 'Leader' : 'Staff' }})
                             </option>
                         @endforeach

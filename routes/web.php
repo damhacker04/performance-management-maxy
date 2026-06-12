@@ -33,6 +33,8 @@ Route::middleware(['auth'])->group(function () {
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
+        Route::get('monthly-targets/{monthlyTarget}/staff/{assignee}', [MonthlyTargetController::class, 'showStaff'])
+            ->name('monthly-targets.staff');
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.

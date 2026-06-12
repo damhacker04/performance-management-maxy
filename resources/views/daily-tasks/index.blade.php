@@ -170,7 +170,7 @@
                             'low'      => 'neutral',
                         ][$entry->priority] ?? 'neutral';
                     @endphp
-                    <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                    <a href="{{ route('daily-tasks.show', $entry->id) }}{{ $tab === 'review' ? '?from=review' : '' }}"
                        class="m-card" style="text-decoration:none;color:inherit;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:10px;">
                         {{-- Header card --}}
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
