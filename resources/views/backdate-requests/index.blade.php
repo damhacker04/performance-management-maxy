@@ -162,7 +162,7 @@
                         <th>Waktu Pengajuan</th>
                         <th>Alasan</th>
                         <th>Status</th>
-                        @if($filter === 'pending')
+                        @if($statusFilter === 'pending')
                             <th style="text-align:right;">Aksi</th>
                         @endif
                     </tr>
@@ -212,7 +212,7 @@
                                 <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">Kedaluwarsa</div>
                             @endif
                         </td>
-                        @if($filter === 'pending')
+                        @if($statusFilter === 'pending')
                         <td style="text-align:right;">
                             @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
                                 <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
