@@ -38,14 +38,14 @@
     transition:background .15s;
 }
 .person-header:hover { background:var(--bg-2); }
-.person-body { overflow:hidden; transition:max-height .3s ease; }
-.person-body.collapsed { max-height:0 !important; }
+.person-body { overflow:hidden; transition:max-height .3s ease; padding:0 12px 12px; display:flex; flex-direction:column; gap:8px; }
+.person-body.collapsed { max-height:0 !important; padding-top:0; padding-bottom:0; }
 .wt-row {
     display:flex; align-items:flex-start; gap:10px;
-    padding:10px 16px; border-top:1px solid var(--bg-2);
-    transition:background .15s;
+    padding:12px 14px; border:1.5px solid var(--bd-1); border-radius:10px; background:#fff;
+    transition:all .15s;
 }
-.wt-row:hover { background:var(--bg-2); }
+.wt-row:hover { border-color:var(--maxy-navy); }
 .wt-row.week-hidden { display:none; }
 .person-accordion.all-weeks-hidden { display:none; }
 
@@ -329,6 +329,14 @@
                         </div>
                     </div>
                 @endforeach
+
+                @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
+                   class="btn btn-outline btn-sm" style="margin-top:4px;border-style:dashed;color:var(--maxy-navy);border-color:var(--maxy-navy);">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                    Tambah Target untuk {{ explode(' ', $pName)[0] }}
+                </a>
+                @endif
             </div>
         </div>
     @endforeach

@@ -17,9 +17,12 @@
 
     // Smart back: kembali ke halaman sebelumnya (referrer)
     $prev = url()->previous();
-    $backUrl = ($prev !== url()->current() && !str_contains($prev, '/edit'))
-        ? $prev 
-        : route('daily-tasks.index');
+    $fromReview = request()->query('from') === 'review';
+    $backUrl = $fromReview
+        ? route('daily-tasks.index', ['tab' => 'review'])
+        : (($prev !== url()->current() && !str_contains($prev, '/edit'))
+            ? $prev 
+            : route('daily-tasks.index'));
 @endphp
 
 <div class="page">
