@@ -234,8 +234,15 @@
             <div class="m-card" style="display:flex;flex-direction:column;gap:12px;">
                 <div class="overline-label">Aksi Verifikasi</div>
 
+                @php
+                    $actionParams = ['dailyTask' => $dailyTask->id];
+                    if (request()->has('from')) {
+                        $actionParams['from'] = request()->query('from');
+                    }
+                @endphp
+
                 {{-- Tombol Setujui --}}
-                <form method="POST" action="{{ route('daily-tasks.approve', $dailyTask) }}"
+                <form method="POST" action="{{ route('daily-tasks.approve', $actionParams) }}"
                       onsubmit="return confirm('Setujui laporan ini? Laporan akan terkunci setelah disetujui.');">
                     @csrf @method('PATCH')
                     <button type="submit" class="btn btn-primary btn-block" style="background:#16A571;">
@@ -246,7 +253,7 @@
                 {{-- Form Kembalikan untuk Revisi --}}
                 <details style="border:1px solid #FBB041;border-radius:8px;padding:12px;">
                     <summary style="font-size:13px;font-weight:600;color:#B45309;cursor:pointer;">↩ Kembalikan untuk Direvisi</summary>
-                    <form method="POST" action="{{ route('daily-tasks.revision', $dailyTask) }}" style="margin-top:10px;">
+                    <form method="POST" action="{{ route('daily-tasks.revision', $actionParams) }}" style="margin-top:10px;">
                         @csrf @method('PATCH')
                         <textarea name="rejection_note" rows="3" required minlength="10"
                             placeholder="Tuliskan apa yang perlu diperbaiki staff..."
@@ -259,7 +266,7 @@
                 <details style="border:1px solid #F87171;border-radius:8px;padding:12px;">
                     <summary style="font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">❌ Tolak Permanen</summary>
                     <p style="font-size:11px;color:#9CA3AF;margin:6px 0;">Staff tidak akan bisa merevisi laporan ini setelah ditolak.</p>
-                    <form method="POST" action="{{ route('daily-tasks.reject', $dailyTask) }}" style="margin-top:6px;"
+                    <form method="POST" action="{{ route('daily-tasks.reject', $actionParams) }}" style="margin-top:6px;"
                           onsubmit="return confirm('Tolak permanen laporan ini? Tindakan ini tidak bisa dibatalkan.');">
                         @csrf @method('PATCH')
                         <textarea name="rejection_note" rows="3" required minlength="10"
