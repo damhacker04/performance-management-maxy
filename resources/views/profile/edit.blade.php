@@ -29,10 +29,5 @@
         @include('profile.partials.update-password-form')
     </div>
 
-    <!-- Delete account -->
-    <div class="m-card">
-        <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg-3);margin-bottom:14px;">Zona Berbahaya</div>
-        @include('profile.partials.delete-user-form')
-    </div>
 </div>
 </x-app-layout>

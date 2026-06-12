@@ -165,6 +165,60 @@ class MonthlyTargetController extends Controller
         ));
     }
 
+    public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
+        }
+
+        $monthlyTarget->load([
+            'user',
+            'weeklyTargets' => fn($q) => $q->where('assigned_to', $assignee === 'umum' ? null : $assignee)->orderBy('week_number')->orderBy('id'),
+            'weeklyTargets.assignee',
+            'weeklyTargets.dailyTaskEntries.user',
+        ]);
+
+        $entriesByWeek = $monthlyTarget->weeklyTargets
+            ->mapWithKeys(fn($wt) => [
+                $wt->id => [
+                    'total'          => $wt->dailyTaskEntries->count(),
+                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
+                    'pending_review' => $wt->dailyTaskEntries
+                                          ->where('status', 'selesai')
+                                          ->where('verification_status', 'pending')
+                                          ->count(),
+                ],
+            ]);
+
+        $personTargets = $monthlyTarget->weeklyTargets;
+
+        if ($assignee !== 'umum') {
+            $person = \App\Models\User::findOrFail($assignee);
+            $pName = $person->name;
+            $pDiv = $person->division ?? $person->department;
+            $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
+        } else {
+            $person = null;
+            $pName = 'Target Umum (Seluruh Tim)';
+            $pDiv = '';
+            $initials = '🏢';
+        }
+        $personKey = $assignee;
+
+        // Hitung persentase progress untuk banner atas
+        $pTotalEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
+        $pDoneEntry   = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
+        $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
+        
+        $weekRanges = []; // Biar ga undefined di view if needed
+
+        return view('monthly-targets.show-staff', compact(
+            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey', 'initials',
+            'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges'
+        ));
+    }
+
 
     public function edit(MonthlyTarget $monthlyTarget)
     {

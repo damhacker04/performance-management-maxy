@@ -61,6 +61,10 @@ class WeeklyTargetController extends Controller
             ? (int) $request->monthly_target_id
             : null;
 
+        $preSelectedUser = $request->filled('assigned_to')
+            ? (int) $request->assigned_to
+            : null;
+
         // Tentukan departemen target (berguna untuk super_admin / c_level yang tidak punya departemen tetap)
         $targetDepartment = $user->department;
         if ($preSelected) {
@@ -80,7 +84,7 @@ class WeeklyTargetController extends Controller
             ->get();
 
         return view('weekly-targets.create', compact(
-            'cLevelTargets', 'teamTargets', 'preSelected', 'context', 'staffList'
+            'cLevelTargets', 'teamTargets', 'preSelected', 'preSelectedUser', 'context', 'staffList'
         ));
     }
 
