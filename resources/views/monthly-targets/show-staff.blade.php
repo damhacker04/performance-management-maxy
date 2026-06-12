@@ -12,14 +12,24 @@
 @endphp
 
 <div class="page">
-    <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.show', $monthlyTarget->id) }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
-        <div style="flex:1;min-width:0;">
-            <h1 style="font-size:17px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.3;">Target: {{ $pName }}</h1>
-            <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ $monthlyTarget->title }} ({{ $monthName }} {{ $monthlyTarget->year }})</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+            <a href="{{ route('monthly-targets.show', $monthlyTarget->id) }}" class="icon-btn" style="margin-left:-8px;">
+                <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </a>
+            <div style="flex:1;min-width:0;">
+                <h1 style="font-size:17px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.3;">Target: {{ $pName }}</h1>
+                <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ $monthlyTarget->title }} ({{ $monthName }} {{ $monthlyTarget->year }})</p>
+            </div>
         </div>
+
+        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
+           class="btn btn-sm" style="background:#FBBF24;color:#1E3A8A;border:none;font-weight:700;padding:8px 16px;display:flex;align-items:center;gap:6px;border-radius:8px;text-decoration:none;">
+            <svg class="lucide sm" style="width:16px;height:16px;stroke-width:3px;" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah
+        </a>
+        @endif
     </div>
 
     {{-- Banner Progress --}}
@@ -126,13 +136,6 @@
             </div>
         @endforelse
 
-        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
-           class="m-card" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:1.5px dashed var(--maxy-navy);color:var(--maxy-navy);text-decoration:none;font-weight:600;font-size:14px;background:rgba(30,58,138,0.02);transition:background .15s;">
-            <svg class="lucide" style="width:18px;height:18px;" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Tambah Target untuk {{ explode(' ', $pName)[0] }}
-        </a>
-        @endif
     </div>
 </div>
 </x-app-layout>
