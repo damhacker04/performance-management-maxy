@@ -32,7 +32,7 @@ class EvaluateDailyTaskJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;           // Coba ulang 3x jika gagal
-    public int $backoff = 30;        // Tunggu 30 detik sebelum retry
+    public array $backoff = [10, 30]; // Tunggu 10s lalu 30s sebelum retry
 
     public function __construct(
         public readonly int $dailyTaskEntryId
@@ -97,8 +97,8 @@ class EvaluateDailyTaskJob implements ShouldQueue
         $result = $gemini->evaluateDailyTask($taskData, $department, $impactLevel, $weights, $linkContent);
 
         if (!$result) {
-            Log::error("EvaluateDailyTaskJob: Gemini gagal evaluasi task ID {$this->dailyTaskEntryId}");
-            return;
+            Log::error("EvaluateDailyTaskJob: Groq gagal evaluasi task ID {$this->dailyTaskEntryId}");
+            throw new \Exception("Groq gagal evaluasi task ID {$this->dailyTaskEntryId}");
         }
 
         // Hitung skor akhir berbobot
