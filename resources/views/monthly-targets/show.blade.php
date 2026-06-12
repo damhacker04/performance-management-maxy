@@ -33,9 +33,8 @@
 .person-accordion { border:1.5px solid var(--bg-3); border-radius:14px; overflow:hidden; background:#fff; }
 .person-accordion + .person-accordion { margin-top:10px; }
 .person-header {
-    display:flex; align-items:center; gap:12px; padding:14px 16px;
-    cursor:pointer; background:var(--bg-1); user-select:none;
-    transition:background .15s;
+    cursor:pointer; user-select:none;
+    transition:all .15s;
 }
 .person-header:hover { background:var(--bg-2); }
 .person-body { overflow:hidden; transition:max-height .3s ease; padding:0 12px 12px; display:flex; flex-direction:column; gap:8px; }
@@ -202,115 +201,44 @@
             $pDoneEntry   = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
             $pPendingRev  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['pending_review'] ?? 0));
             $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
-
-            $accordionId = 'acc-' . ($isUmum ? 'umum' : $personKey);
         @endphp
 
-        <div class="person-accordion" data-accordion="{{ $accordionId }}">
-            {{-- Header accordion --}}
-            <div class="person-header" onclick="toggleAccordion('{{ $accordionId }}')">
-                {{-- Avatar --}}
-                <div style="width:36px;height:36px;border-radius:10px;background:{{ $bgColor }};
-                            color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
-                            font-size:{{ $isUmum ? '18px' : '13px' }};font-weight:700;
-                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    {{ $initials }}
-                </div>
-
-                {{-- Info --}}
+        <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => $personKey]) }}" class="person-accordion m-card" style="margin-bottom:12px; border:1.5px solid var(--bd-1); display:block; text-decoration:none; color:inherit; padding:14px 16px; transition:border-color .15s;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
                 <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <span style="font-size:14px;font-weight:700;color:var(--fg-1);">{{ $pName }}</span>
-                        @if($pPendingRev > 0)
-                            <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700;">
-                                {{ $pPendingRev }} pending review
-                            </span>
-                        @endif
-                    </div>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap;">
+                    {{-- Chips --}}
+                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+                        <span class="chip chip-success" style="font-size:10px;">Aktif</span>
                         @if($pDiv)
-                            <span style="font-size:11px;color:var(--fg-4);">{{ $pDiv }}</span>
-                        @endif
-                        <span style="font-size:11px;color:var(--fg-3);">{{ $pTotalWt }} target</span>
-                        <span style="font-size:11px;color:var(--fg-3);">{{ $pDoneEntry }}/{{ $pTotalEntry }} laporan selesai</span>
-                        @if($pTotalEntry > 0)
-                            <div style="display:flex;align-items:center;gap:5px;">
-                                <div style="width:60px;height:4px;background:var(--bg-3);border-radius:99px;overflow:hidden;">
-                                    <div style="height:100%;width:{{ $pProgress }}%;background:{{ $pProgress >= 80 ? '#16A571' : ($pProgress >= 40 ? '#F59E0B' : 'var(--maxy-navy)') }};border-radius:99px;"></div>
-                                </div>
-                                <span style="font-size:10px;color:var(--fg-4);font-weight:600;">{{ $pProgress }}%</span>
-                            </div>
+                            <span class="chip chip-dept-{{ str_replace('_','-', strtolower($pDiv)) }}" style="font-size:10px;">{{ $pDiv }}</span>
                         @endif
                     </div>
-                </div>
-
-                {{-- Chevron --}}
-                <svg class="lucide chevron-icon" style="width:16px;height:16px;flex-shrink:0;color:var(--fg-4);transition:transform .3s;" viewBox="0 0 24 24">
-                    <path d="M6 9l6 6 6-6"/>
-                </svg>
-            </div>
-
-            {{-- Body accordion (default: terbuka) --}}
-            <div class="person-body" id="{{ $accordionId }}" style="max-height:9999px;">
-                @foreach($personTargets as $wt)
-                    @php
-                        [$rStart, $rEnd] = $weekRanges[$wt->week_number] ?? [1, 7];
-                        $stats        = $entriesByWeek[$wt->id] ?? ['total' => 0, 'done' => 0, 'pending_review' => 0];
-                        $wtTotal      = $stats['total'];
-                        $wtDone       = $stats['done'];
-                        $wtPending    = $stats['pending_review'];
-                        $isActiveWeek   = $isCurrentMonth && $wt->week_number == $currentWeek;
-                        // Cek apakah ada laporan overdue >2 minggu di target ini
-                        $hasOverdue2w   = $wt->dailyTaskEntries()
-                            ->whereNotIn('status', ['selesai'])
-                            ->whereDate('task_date', '<=', today()->subDays(14))
-                            ->exists();
-                    @endphp
-                    <div class="wt-row" data-week="{{ $wt->week_number }}"
-                         data-search-text="{{ strtolower($wt->title . ' ' . $wt->description . ' ' . ($person?->name ?? '')) }}">
-                        {{-- Garis minggu aktif --}}
-                        <div style="width:3px;border-radius:99px;flex-shrink:0;margin-top:2px;align-self:stretch;
-                                    background:{{ $isActiveWeek ? 'var(--maxy-navy)' : 'var(--bg-3)' }};min-height:20px;"></div>
-
-                        {{-- Konten target --}}
-                        <div style="flex:1;min-width:0;">
-                            {{-- Badges --}}
-                            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
-                                <span class="chip chip-neutral" style="font-size:10px;font-weight:700;">Minggu {{ $wt->week_number }}</span>
-                                <span style="font-size:10px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }}</span>
-                                @if($isActiveWeek)
-                                    <span class="chip chip-success" style="font-size:10px;">Minggu ini</span>
-                                @endif
-                                @if($hasOverdue2w)
-                                    <span class="chip" style="font-size:10px;background:#F97316;color:#fff;border:none;">⏰ &gt;2 minggu</span>
-                                @endif
-                                @if($wt->target_type === 'quantitative')
-                                    <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>
-                                @else
-                                    <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
-                                @endif
-                            </div>
-
-                            {{-- Judul --}}
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);line-height:1.4;margin-bottom:4px;">
-                                {{ $wt->title }}
-                            </div>
-                            @if($wt->description)
-                                <p style="font-size:11px;color:var(--fg-3);margin:0 0 5px;line-height:1.4;">
-                                    {{ Str::limit($wt->description, 90) }}
-                                </p>
-                            @endif
-
-                            {{-- Link laporan --}}
-                            <a href="{{ route('weekly-targets.show', $wt) }}"
-                               style="font-size:11px;color:var(--maxy-navy);font-weight:600;display:inline-flex;align-items:center;gap:4px;text-decoration:none;">
-                                <svg class="lucide" style="width:11px;height:11px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                Lihat {{ $wtTotal }} laporan
-                                @if($wtPending > 0)
-                                    <span style="background:var(--danger);color:#fff;font-size:10px;padding:1px 6px;border-radius:99px;">{{ $wtPending }} pending</span>
-                                @endif
-                            </a>
+                    
+                    {{-- Nama dan Avatar --}}
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:24px;height:24px;border-radius:6px;background:{{ $bgColor }};
+                                    color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
+                                    font-size:10px;font-weight:700;
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            {{ $initials }}
                         </div>
+                        <div style="font-size:15px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ $pName }}
+                        </div>
+                    </div>
+
+                    {{-- Progress --}}
+                    @if($pTotalEntry > 0)
+                        <div style="margin-top:10px;">
+                            <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:{{ $pProgress }}%;background:{{ $pProgress >= 80 ? '#16A571' : ($pProgress >= 40 ? '#F59E0B' : 'var(--maxy-navy)') }};border-radius:4px;"></div>
+                            </div>
+                            <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">
+                                {{ $pDoneEntry }}/{{ $pTotalEntry }} laporan selesai
+                            </div>
+                        </div>
+                    @endif
+                </div>
 
                         {{-- Tombol aksi --}}
                         <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;padding-top:2px;">
@@ -338,7 +266,7 @@
                 </a>
                 @endif
             </div>
-        </div>
+        </a>
     @endforeach
 @endif
 
