@@ -17,7 +17,7 @@
             <svg style="width:16px;height:16px;color:#fff;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/>
             </svg>
-            <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;">PENILAIAN AI (Gemini)</span>
+            <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;">PENILAIAN AI (Groq)</span>
             @if($eval->is_overridden)
                 <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">✏️ Dikoreksi Leader</span>
             @endif
@@ -167,13 +167,37 @@
 @endif
 
 @elseif(isset($evalPending) && $evalPending)
-{{-- AI sedang memproses --}}
-<div style="margin-top:16px;border:1px solid #E0E7FF;border-radius:12px;padding:14px 16px;background:#F8FAFF;display:flex;gap:10px;align-items:center;">
+{{-- AI sedang memproses - dengan auto-refresh otomatis --}}
+<div id="ai-pending-card" style="margin-top:16px;border:1px solid #E0E7FF;border-radius:12px;padding:14px 16px;background:#F8FAFF;display:flex;gap:10px;align-items:center;">
     <svg style="width:16px;height:16px;flex-shrink:0;color:#3B82F6;animation:ai-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
     <div>
         <div style="font-size:12px;font-weight:700;color:#1E3A8A;">🤖 AI sedang memproses penilaian…</div>
-        <div style="font-size:11px;color:#3B82F6;margin-top:2px;">Hasil penilaian akan muncul dalam beberapa detik. Refresh halaman untuk melihat hasilnya.</div>
+        <div style="font-size:11px;color:#3B82F6;margin-top:2px;">Hasil akan muncul otomatis dalam beberapa detik. Tidak perlu refresh manual.</div>
     </div>
 </div>
 <style>@keyframes ai-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }</style>
+<script>
+(function() {
+    // Auto-refresh setiap 4 detik selama AI masih memproses
+    var interval = setInterval(function() {
+        fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(res) { return res.text(); })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc    = parser.parseFromString(html, 'text/html');
+                // Cek apakah di halaman baru sudah TIDAK ada spinner lagi
+                var stillPending = doc.getElementById('ai-pending-card');
+                if (!stillPending) {
+                    // Skor sudah ada → reload halaman untuk tampilkan kartu skor
+                    clearInterval(interval);
+                    window.location.reload();
+                }
+            })
+            .catch(function() { /* abaikan error jaringan sementara */ });
+    }, 4000); // Cek setiap 4 detik
+
+    // Hentikan polling setelah 5 menit (agar tidak loop selamanya)
+    setTimeout(function() { clearInterval(interval); }, 300000);
+})();
+</script>
 @endif

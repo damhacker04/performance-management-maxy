@@ -6,35 +6,29 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * GeminiService — Service utama untuk komunikasi dengan Google Gemini 1.5 Flash API.
+ * GeminiService — Service utama untuk komunikasi dengan Groq API.
+ * (Nama kelas dipertahankan untuk kompatibilitas dengan kode lain)
  *
+ * Model: llama-3.3-70b-versatile via Groq Cloud
  * Cara kerja:
  * 1. Menerima konteks departemen + data laporan staf
  * 2. Merakit prompt yang tepat (Dynamic Prompting)
- * 3. Mengirim ke Gemini API
+ * 3. Mengirim ke Groq API (format OpenAI-compatible)
  * 4. Mengembalikan respons JSON terstruktur
  */
 class GeminiService
 {
     private string $apiKey;
-    private string $apiUrl;
-    private string $model = 'gemini-1.5-flash';
+    private string $apiUrl  = 'https://api.groq.com/openai/v1/chat/completions';
+    private string $model   = 'llama-3.3-70b-versatile';
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.api_key');
-        $this->apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
+        $this->apiKey = config('services.groq.api_key');
     }
 
     /**
      * Evaluasi satu Daily Task Entry dan kembalikan skor KPI.
-     *
-     * @param  array  $taskData    Data task dari Daily Task Entry
-     * @param  string $department  Nama departemen staf
-     * @param  string $impactLevel Dampak target mingguan (high/medium/low)
-     * @param  array  $weights     Bobot 4 dimensi KPI dari KpiWeightSetting
-     * @param  string|null $linkContent Isi teks dari link publik (jika ada)
-     * @return array|null
      */
     public function evaluateDailyTask(
         array $taskData,
@@ -45,7 +39,7 @@ class GeminiService
     ): ?array {
         $prompt = $this->buildEvaluationPrompt($taskData, $department, $impactLevel, $weights, $linkContent);
 
-        $response = $this->callGemini($prompt);
+        $response = $this->callGroq($prompt);
 
         if (!$response) return null;
 
@@ -54,11 +48,6 @@ class GeminiService
 
     /**
      * Generate Gap Analysis untuk Weekly Target yang gagal.
-     *
-     * @param  array  $targetData  Data Weekly Target
-     * @param  array  $taskSummaries Ringkasan Daily Tasks dalam minggu itu
-     * @param  string $department  Nama departemen
-     * @return array|null
      */
     public function generateWeeklyGapAnalysis(
         array $targetData,
@@ -66,18 +55,13 @@ class GeminiService
         string $department
     ): ?array {
         $prompt = $this->buildWeeklyGapPrompt($targetData, $taskSummaries, $department);
-        $response = $this->callGemini($prompt);
+        $response = $this->callGroq($prompt);
         if (!$response) return null;
         return $this->parseGapAnalysisResponse($response);
     }
 
     /**
      * Generate Gap Analysis Bulanan (Strategis) untuk Monthly Target yang gagal.
-     *
-     * @param  array  $monthlyTargetData   Data Monthly Target
-     * @param  array  $weeklyGapSummaries  Ringkasan Gap Analysis mingguan di bulan itu
-     * @param  string $department          Nama departemen
-     * @return array|null
      */
     public function generateMonthlyGapAnalysis(
         array $monthlyTargetData,
@@ -85,7 +69,7 @@ class GeminiService
         string $department
     ): ?array {
         $prompt = $this->buildMonthlyGapPrompt($monthlyTargetData, $weeklyGapSummaries, $department);
-        $response = $this->callGemini($prompt);
+        $response = $this->callGroq($prompt);
         if (!$response) return null;
         return $this->parseGapAnalysisResponse($response);
     }
@@ -112,17 +96,23 @@ class GeminiService
 
         $weightInfo = "Bobot Penilaian: Pencapaian={$weights['achievement']}%, Efisiensi={$weights['efficiency']}%, Kontribusi={$weights['contribution']}%, ProblemSolving={$weights['problem_solving']}%";
 
+        $weeklyTargetTitle  = $taskData['weekly_target_title'] ?? 'Tidak ada target';
+        $taskDescription    = $taskData['task_description']    ?? '-';
+        $durationMinutes    = $taskData['duration_minutes']    ?? 0;
+        $taskStatus         = $taskData['status']              ?? '-';
+        $taskNotes          = $taskData['notes']               ?? 'Tidak ada';
+
         return <<<PROMPT
 Kamu adalah sistem evaluasi kinerja AI untuk perusahaan di Indonesia bernama Maxy Academy.
 Kamu sedang menilai laporan harian karyawan dari Departemen: {$department}.
 
 KONTEKS PEKERJAAN:
-- Target Mingguan: {$taskData['weekly_target_title']}
+- Target Mingguan: {$weeklyTargetTitle}
 - Tingkat Dampak Target: {$impactLabel}
-- Deskripsi Tugas yang Dilaporkan: {$taskData['task_description']}
-- Durasi Kerja: {$taskData['duration_minutes']} menit
-- Status: {$taskData['status']}
-- Catatan Tambahan: {$taskData['notes'] ?? 'Tidak ada'}
+- Deskripsi Tugas yang Dilaporkan: {$taskDescription}
+- Durasi Kerja: {$durationMinutes} menit
+- Status: {$taskStatus}
+- Catatan Tambahan: {$taskNotes}
 
 {$linkSection}
 
@@ -141,14 +131,8 @@ ATURAN KETAT:
 - Jangan pernah memberi skor sempurna (10.0) kecuali ada bukti yang sangat kuat.
 - ai_feedback harus dalam Bahasa Indonesia, maksimal 2 kalimat, spesifik dan konstruktif.
 
-Kembalikan HANYA JSON berikut tanpa teks lain:
-{
-  "score_achievement": 0.00,
-  "score_efficiency": 0.00,
-  "score_contribution": 0.00,
-  "score_problem_solving": 0.00,
-  "ai_feedback": "..."
-}
+Kembalikan HANYA JSON berikut tanpa teks, penjelasan, atau markdown lain:
+{"score_achievement": 0.00, "score_efficiency": 0.00, "score_contribution": 0.00, "score_problem_solving": 0.00, "ai_feedback": "..."}
 PROMPT;
     }
 
@@ -158,8 +142,15 @@ PROMPT;
         string $department
     ): string {
         $tasksText = collect($taskSummaries)->map(function($t, $i) {
-            return ($i+1) . ". [{$t['date']}] {$t['description']} ({$t['duration']} menit, Status: {$t['status']}) - Catatan: {$t['notes'] ?? '-'}";
+            $notes = $t['notes'] ?? '-';
+            return ($i+1) . ". [{$t['date']}] {$t['description']} ({$t['duration']} menit, Status: {$t['status']}) - Catatan: {$notes}";
         })->implode("\n");
+
+        $targetValue = $targetData['target_value'] ?? '-';
+        $targetUnit  = $targetData['target_unit']  ?? '';
+        $weekNumber  = $targetData['week_number']  ?? '-';
+        $monthYear   = $targetData['month_year']   ?? '-';
+        $title       = $targetData['title']        ?? '-';
 
         return <<<PROMPT
 Kamu adalah analis kinerja AI untuk Maxy Academy, sebuah perusahaan di Indonesia.
@@ -167,26 +158,22 @@ Kamu adalah analis kinerja AI untuk Maxy Academy, sebuah perusahaan di Indonesia
 TUGAS: Lakukan analisis mendalam mengapa Target Mingguan berikut GAGAL dicapai.
 
 TARGET MINGGUAN YANG GAGAL:
-- Judul: {$targetData['title']}
+- Judul: {$title}
 - Departemen: {$department}
-- Target: {$targetData['target_value']} {$targetData['target_unit']}
-- Periode: Minggu {$targetData['week_number']}, {$targetData['month_year']}
+- Target: {$targetValue} {$targetUnit}
+- Periode: Minggu {$weekNumber}, {$monthYear}
 
 LAPORAN HARIAN STAF SELAMA SEMINGGU:
 {$tasksText}
 
 INSTRUKSI ANALISIS:
-1. Identifikasi pola masalah dari laporan harian (misalnya: alokasi waktu salah, kendala berulang, fokus tidak pada target).
+1. Identifikasi pola masalah dari laporan harian.
 2. Tentukan apakah kegagalan ini disebabkan faktor INTERNAL (kinerja staf), EXTERNAL (sistem/birokrasi/klien), atau MIXED.
 3. Tulis narrative investigasi dalam Bahasa Indonesia, maksimal 3 kalimat, spesifik dan berbasis data dari laporan.
 4. Tulis recommendation untuk Leader, maksimal 2 kalimat, actionable.
 
-Kembalikan HANYA JSON berikut:
-{
-  "root_cause_type": "internal|external|mixed",
-  "narrative": "...",
-  "recommendation": "..."
-}
+Kembalikan HANYA JSON berikut tanpa teks atau markdown lain:
+{"root_cause_type": "internal|external|mixed", "narrative": "...", "recommendation": "..."}
 PROMPT;
     }
 
@@ -203,7 +190,6 @@ PROMPT;
 Kamu adalah konsultan manajemen AI senior untuk Maxy Academy, perusahaan di Indonesia.
 
 TUGAS: Buat laporan Gap Analysis STRATEGIS level C-Level/Eksekutif mengapa Target Bulanan gagal.
-Fokus pada masalah STRUKTURAL, bukan detail operasional harian yang remeh.
 
 TARGET BULANAN YANG GAGAL:
 - Judul: {$monthlyTargetData['title']}
@@ -214,55 +200,62 @@ RINGKASAN GAP ANALYSIS MINGGUAN (4 minggu):
 {$weeksText}
 
 INSTRUKSI:
-1. Identifikasi BENANG MERAH (pola yang berulang di lebih dari 1 minggu) dari 4 gap analysis mingguan.
+1. Identifikasi BENANG MERAH (pola yang berulang di lebih dari 1 minggu).
 2. Tentukan root_cause_type keseluruhan: internal/external/mixed.
-3. Tulis narrative untuk C-Level: masalah struktural apa yang menghambat target bulan ini? Maksimal 4 kalimat.
-4. Tulis recommendation strategis untuk manajemen puncak. Maksimal 2 kalimat, bersifat sistemik.
+3. Tulis narrative untuk C-Level, maksimal 4 kalimat.
+4. Tulis recommendation strategis untuk manajemen puncak, maksimal 2 kalimat, bersifat sistemik.
 
-Kembalikan HANYA JSON berikut:
-{
-  "root_cause_type": "internal|external|mixed",
-  "narrative": "...",
-  "recommendation": "..."
-}
+Kembalikan HANYA JSON berikut tanpa teks atau markdown lain:
+{"root_cause_type": "internal|external|mixed", "narrative": "...", "recommendation": "..."}
 PROMPT;
     }
 
     // ── Private: API Call & Response Parsers ────────────────────────────────
 
-    private function callGemini(string $prompt): ?array
+    private function callGroq(string $prompt): ?array
     {
         try {
             $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post("{$this->apiUrl}?key={$this->apiKey}", [
-                'contents' => [
-                    ['parts' => [['text' => $prompt]]]
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+            ])->timeout(30)->post($this->apiUrl, [
+                'model'    => $this->model,
+                'messages' => [
+                    [
+                        'role'    => 'system',
+                        'content' => 'Kamu adalah AI evaluator kinerja karyawan. Selalu kembalikan HANYA JSON murni tanpa markdown, kode block, atau teks penjelasan apapun.',
+                    ],
+                    [
+                        'role'    => 'user',
+                        'content' => $prompt,
+                    ],
                 ],
-                'generationConfig' => [
-                    'responseMimeType' => 'application/json',
-                    'temperature'      => 0.2,  // Rendah = lebih konsisten & tidak kreatif berlebihan
-                    'maxOutputTokens'  => 512,
-                ],
+                'temperature'     => 0.2,
+                'max_tokens'      => 512,
+                'response_format' => ['type' => 'json_object'], // Groq mendukung JSON mode!
             ]);
 
             if (!$response->successful()) {
-                Log::error('Gemini API error', [
+                Log::error('Groq API error', [
                     'status' => $response->status(),
                     'body'   => $response->body(),
                 ]);
                 return null;
             }
 
-            $data = $response->json();
-            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            $data    = $response->json();
+            $content = $data['choices'][0]['message']['content'] ?? null;
 
-            if (!$text) return null;
+            if (!$content) return null;
 
-            return json_decode($text, true);
+            // Bersihkan jika masih ada markdown (fallback)
+            $content = preg_replace('/```(?:json)?\n?(.*?)\n?```/s', '$1', $content);
+            $content = trim($content);
+
+            return json_decode($content, true);
 
         } catch (\Exception $e) {
-            Log::error('GeminiService exception', ['message' => $e->getMessage()]);
+            Log::error('GroqService exception', ['message' => $e->getMessage()]);
             return null;
         }
     }
@@ -271,7 +264,6 @@ PROMPT;
     {
         if (!$data) return null;
 
-        // Validasi semua field ada
         $required = ['score_achievement', 'score_efficiency', 'score_contribution', 'score_problem_solving', 'ai_feedback'];
         foreach ($required as $field) {
             if (!array_key_exists($field, $data)) return null;
@@ -294,7 +286,6 @@ PROMPT;
             if (!array_key_exists($field, $data)) return null;
         }
 
-        // Pastikan root_cause_type valid
         if (!in_array($data['root_cause_type'], ['internal', 'external', 'mixed'])) {
             $data['root_cause_type'] = 'mixed';
         }
