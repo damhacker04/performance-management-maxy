@@ -548,9 +548,11 @@
 
     </div>{{-- end dt-detail-left --}}
 
-    {{-- ── Fase 2: AI Score Card ────────────────────────────────────────────── --}}
-    @php $entry = $dailyTask; @endphp
-    @include('daily-tasks.partials.ai-score-card')
+    {{-- ── Fase 2: AI Score Card (hanya tampil jika GROQ_API_KEY aktif) ────── --}}
+    @if(ai_enabled())
+        @php $entry = $dailyTask; @endphp
+        @include('daily-tasks.partials.ai-score-card')
+    @endif
 
     {{-- Kolom kanan: Activity Log ──────────────────────────── --}}
 

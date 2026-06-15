@@ -606,6 +606,7 @@ function clearRowImage(btn) {
     @endif
 })();
 
+@if(ai_enabled())
 // ── Fase 2: Real-time Link Validation (AI) ────────────────────────────────
 const VALIDATE_URL = '{{ route('ai.validate-link') }}';
 const CSRF_META    = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -688,6 +689,7 @@ function updateSubmitButton() {
 const aiStyle = document.createElement('style');
 aiStyle.textContent = `@keyframes ai-spin { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }`;
 document.head.appendChild(aiStyle);
+@endif
 </script>
 
 </x-app-layout>

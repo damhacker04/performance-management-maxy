@@ -117,7 +117,7 @@ class DailyTaskEntryController extends Controller
         ]);
 
         // Fase 2: cek apakah AI masih memproses (job sudah dispatch tapi belum selesai)
-        $evalPending = !$dailyTask->aiEvaluation && $dailyTask->created_at->diffInMinutes(now()) < 10;
+        $evalPending = ai_enabled() && !$dailyTask->aiEvaluation && $dailyTask->created_at->diffInMinutes(now()) < 10;
 
         return view('daily-tasks.show', compact('dailyTask', 'evalPending'));
     }
@@ -597,11 +597,17 @@ class DailyTaskEntryController extends Controller
         }
 
         // ── Fase 2: Dispatch AI Evaluation Job (background) ──────────────────
-        // Job berjalan di queue, tidak memblokir response ke staf.
-        EvaluateDailyTaskJob::dispatch($entry->id)->onQueue('default');
+        // Hanya dijalankan jika AI diaktifkan (GROQ_API_KEY tersedia di .env).
+        if (ai_enabled()) {
+            EvaluateDailyTaskJob::dispatch($entry->id)->onQueue('default');
+        }
+
+        $successMsg = ai_enabled()
+            ? '✅ Laporan berhasil dikirim! AI sedang memproses penilaian…'
+            : '✅ Laporan berhasil dikirim!';
 
         return redirect()->route('daily-tasks.show', $entry)
-            ->with('success', '✅ Laporan berhasil dikirim! AI sedang memproses penilaian…');
+            ->with('success', $successMsg);
     }
 
     /**
