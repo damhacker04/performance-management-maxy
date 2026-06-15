@@ -103,7 +103,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Fase 2: AI Evaluation (hanya aktif jika GROQ_API_KEY di-set di .env) ────────
-    if (ai_enabled()) {
+    if (!empty(config('services.groq.api_key'))) {
         // [AJAX] Validasi link publik/restricted secara real-time (dipanggil frontend)
         Route::post('/ai/validate-link', [AiEvaluationController::class, 'validateLink'])
             ->name('ai.validate-link');
@@ -150,7 +150,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         ->name('daily-tasks.destroy');
 
     // ── Fase 2: Panel KPI Settings & Override Log (hanya jika AI aktif) ──────────
-    if (ai_enabled()) {
+    if (!empty(config('services.groq.api_key'))) {
         Route::get('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'index'])
             ->name('kpi-settings.index');
         Route::post('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'store'])
