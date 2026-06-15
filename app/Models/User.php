@@ -81,4 +81,9 @@ class User extends Authenticatable
         if (!$this->department) return null;
         return self::DEPARTMENTS[$this->department] ?? ucfirst(str_replace('_', ' ', $this->department));
     }
+
+    public function kpiTargets()
+    {
+        return $this->hasMany(KpiTarget::class);
+    }
 }

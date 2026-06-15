@@ -1,162 +1,86 @@
 <x-app-layout>
-@php
-    $user      = auth()->user();
-    $isCLevel  = $user->role === 'c_level';
-
-    $depts = [
-        'sales'             => ['label' => 'Sales',            'color' => '#2F6BD6'],
-        'marketing'         => ['label' => 'Marketing',        'color' => '#B43BB7'],
-        'product_it'        => ['label' => 'Product & IT',     'color' => '#16A571'],
-        'operational'       => ['label' => 'Operational',      'color' => '#E89B2A'],
-        'ceo_office'        => ['label' => 'CEO Office',       'color' => '#1D4ED8'],
-    ];
-
-    $now = now();
-
-    // Hitung per departemen
-    $deptData = [];
-    foreach ($depts as $key => $info) {
-        $staffCount    = \App\Models\User::where('department', $key)->where('role', 'staff')->count();
-        $reportedToday = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $key))
-                            ->whereDate('task_date', today())->distinct('user_id')->count('user_id');
-        $monthEntries  = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $key))
-                            ->whereMonth('task_date', $now->month)->whereYear('task_date', $now->year)->count();
-        $monthTargets  = \App\Models\MonthlyTarget::where('department', $key)
-                            ->where('month', $now->month)->where('year', $now->year)->count();
-        $pct = $staffCount > 0 ? min(round($reportedToday / $staffCount * 100), 100) : 0;
-
-        // Jika leader, hanya tampilkan dept sendiri
-        if (!$isCLevel && $key !== $user->department) continue;
-
-        $deptData[$key] = array_merge($info, [
-            'staff'         => $staffCount,
-            'reportedToday' => $reportedToday,
-            'monthEntries'  => $monthEntries,
-            'monthTargets'  => $monthTargets,
-            'pct'           => $pct,
-        ]);
-    }
-
-    $totalStaff    = array_sum(array_column($deptData, 'staff'));
-    $totalReported = array_sum(array_column($deptData, 'reportedToday'));
-    $avgPct        = count($deptData) > 0 ? round(array_sum(array_column($deptData, 'pct')) / count($deptData)) : 0;
-@endphp
-
 <div class="page">
-
-    <!-- Header -->
-    <div>
-        <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">KPI Organisasi</h1>
-        <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">
-            Minggu ke-{{ $now->weekOfYear }} · {{ $now->format('M Y') }}
-        </p>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div>
+            <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">KPI Organisasi</h1>
+            <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">
+                Target KPI individual
+            </p>
+        </div>
+        @if(auth()->user()->role === 'c_level')
+            {{-- Placeholder untuk tombol tambah KPI bagi C-Level nanti --}}
+            <!-- <button class="btn btn-primary">Tambah KPI</button> -->
+        @endif
     </div>
 
-    <!-- Summary cards -->
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kc-header">
-                <span class="kc-title">Rata-rata KPI</span>
-                <span class="chip chip-{{ $avgPct >= 80 ? 'success' : ($avgPct >= 50 ? 'warning' : 'danger') }}">
-                    {{ $avgPct >= 80 ? 'Baik' : ($avgPct >= 50 ? 'Cukup' : 'Perlu perhatian') }}
-                </span>
-            </div>
-            <div class="kc-value">{{ $avgPct }}<span class="kc-sub">%</span></div>
-            <div class="progress-bar"><i class="navy" style="width:{{ $avgPct }}%"></i></div>
+    @forelse ($groupedStaffs as $deptKey => $staffs)
+        <div class="overline-label" style="margin:20px 0 10px;">
+            {{ \App\Models\User::DEPARTMENTS[$deptKey] ?? ucfirst(str_replace('_', ' ', $deptKey)) }}
         </div>
-        <div class="kpi-card">
-            <div class="kc-header">
-                <span class="kc-title">Laporan hari ini</span>
-                <span class="chip chip-{{ $totalReported >= $totalStaff ? 'success' : 'warning' }}">
-                    {{ $totalReported }}/{{ $totalStaff }}
-                </span>
-            </div>
-            <div class="kc-value">{{ $totalStaff > 0 ? round($totalReported/$totalStaff*100) : 0 }}<span class="kc-sub">%</span></div>
-            <div class="progress-bar"><i class="success" style="width:{{ $totalStaff > 0 ? round($totalReported/$totalStaff*100) : 0 }}%"></i></div>
-        </div>
-    </div>
+        
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            @foreach ($staffs as $staff)
+                @php
+                    $targetCount = $staff->kpiTargets->count();
+                @endphp
+                
+                {{-- Card per staff --}}
+                <div class="m-card" style="padding:0; overflow:hidden;" x-data="{ expanded: false }">
+                    {{-- Header Card --}}
+                    <div @click="expanded = !expanded" style="padding:16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; background:var(--bg-card); transition:background 0.2s;" :style="expanded ? 'background:var(--bg-body)' : ''">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="{{ $staff->avatar ? asset('storage/'.$staff->avatar) : 'https://ui-avatars.com/api/?name='.urlencode($staff->name).'&background=E5EEFF&color=1D4ED8' }}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                            <div>
+                                <div style="font-size:15px; font-weight:600; color:var(--fg-1);">{{ $staff->name }}</div>
+                                <div style="font-size:12px; color:var(--fg-3);">
+                                    {{ $targetCount }} KPI aktif
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            @if($targetCount == 0)
+                                <span class="chip chip-neutral" style="font-size:10px;">Belum diset</span>
+                            @endif
+                            <svg class="lucide chevron-icon" :style="expanded ? 'transform:rotate(180deg);' : ''" style="transition:transform 0.2s;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                        </div>
+                    </div>
 
-    <!-- Per departemen -->
-    <div class="m-card">
-        <div class="overline-label" style="margin-bottom:16px;">Per departemen</div>
-        <div style="display:flex;flex-direction:column;gap:18px;">
-            @foreach ($deptData as $key => $dept)
-                <div class="dept-row">
-                    <div class="dept-row-header">
-                        <div class="dn">
-                            <span class="dept-dot" style="background:{{ $dept['color'] }};"></span>
-                            {{ $dept['label'] }}
+                    {{-- Expanded Content --}}
+                    <div x-show="expanded" x-collapse style="display:none; border-top:1px solid var(--border-color);">
+                        <div style="padding:16px;">
+                            @if($targetCount > 0)
+                                <div style="display:grid; grid-template-columns:1fr; gap:12px;">
+                                    @foreach($staff->kpiTargets as $kpi)
+                                        <div style="padding:12px; border:1px solid var(--border-color); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                            <div>
+                                                <div style="font-size:14px; font-weight:600; color:var(--fg-1);">{{ $kpi->kpi_name }}</div>
+                                                <div style="font-size:12px; color:var(--fg-3);">
+                                                    Target: {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}
+                                                </div>
+                                            </div>
+                                            {{-- Nanti tombol Edit/Delete untuk C-Level --}}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div style="text-align:center; padding:20px; color:var(--fg-4); font-size:13px;">
+                                    Belum ada KPI yang di-assign untuk staff ini.
+                                </div>
+                            @endif
                         </div>
-                        <div class="dd">
-                            <span style="font-size:12px;color:var(--fg-3);">
-                                {{ $dept['reportedToday'] }}/{{ $dept['staff'] }} staff
-                            </span>
-                            <span style="font-size:14px;font-weight:700;color:{{ $dept['pct'] >= 80 ? 'var(--success)' : ($dept['pct'] >= 50 ? 'var(--warning)' : 'var(--danger)') }};">
-                                {{ $dept['pct'] }}%
-                            </span>
-                        </div>
-                    </div>
-                    <div class="progress-bar">
-                        <i style="width:{{ $dept['pct'] }}%;background:{{ $dept['color'] }};"></i>
-                    </div>
-                    <div style="display:flex;gap:12px;margin-top:4px;">
-                        <span style="font-size:11px;color:var(--fg-3);">
-                            {{ $dept['monthTargets'] }} target aktif
-                        </span>
-                        <span style="font-size:11px;color:var(--fg-3);">
-                            · {{ $dept['monthEntries'] }} laporan bulan ini
-                        </span>
                     </div>
                 </div>
             @endforeach
         </div>
-    </div>
-
-    <!-- Laporan terbaru per dept -->
-    @foreach ($deptData as $key => $dept)
-        @php
-            $recentEntries = \App\Models\DailyTaskEntry::with(['user','monthlyTarget','weeklyTarget'])
-                ->whereHas('user', fn($q) => $q->where('department', $key))
-                ->orderByDesc('task_date')->orderByDesc('created_at')
-                ->take(3)->get();
-            $monthShort = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-        @endphp
-        @if ($recentEntries->isNotEmpty())
-            <div class="m-card" style="padding:0;">
-                <div class="section-head">
-                    <span class="overline-label">
-                        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ $dept['color'] }};margin-right:6px;vertical-align:middle;"></span>
-                        {{ $dept['label'] }}
-                    </span>
-                    <span style="font-size:12px;color:var(--fg-3);">3 terbaru</span>
-                </div>
-                <div style="padding:0 16px 8px;">
-                    @foreach ($recentEntries as $entry)
-                        @php
-                            $statusMap  = ['selesai'=>'success','dalam_proses'=>'warning','terhambat'=>'danger'];
-                            $sChip      = $statusMap[$entry->status] ?? 'neutral';
-                            $sLabel     = ['selesai'=>'Selesai','dalam_proses'=>'Dalam Proses','terhambat'=>'Terhambat'][$entry->status] ?? $entry->status;
-                        @endphp
-                        <div class="m-row">
-                            <div class="row-body">
-                                <div class="row-title">{{ Str::limit($entry->task_description, 44) }}</div>
-                                <div class="row-meta">
-                                    <span class="chip chip-{{ $sChip }}">{{ $sLabel }}</span>
-                                    @if($entry->weeklyTarget)
-                                        <span>· <span style="color:var(--maxy-navy);font-weight:600;">M{{ $entry->weeklyTarget->week_number }}</span> {{ Str::limit($entry->weeklyTarget->title, 22) }}</span>
-                                    @elseif($entry->monthlyTarget)
-                                        <span>· {{ Str::limit($entry->monthlyTarget->title, 24) }}</span>
-                                    @endif
-                                    <span>· {{ $entry->user->name }}</span>
-                                    <span>· {{ \Carbon\Carbon::parse($entry->task_date)->format('d M') }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
-    @endforeach
-
+    @empty
+        <div class="m-card" style="text-align:center; padding:40px 20px;">
+            <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div style="font-size:15px;font-weight:600;color:var(--fg-1);">Tidak Ada Staf</div>
+            <p style="font-size:13px;color:var(--fg-3);margin:4px 0 0;">Belum ada staf yang terdaftar.</p>
+        </div>
+    @endforelse
 </div>
 </x-app-layout>

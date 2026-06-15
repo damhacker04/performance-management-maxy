@@ -10,6 +10,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BackdateRequestController;
 use App\Http\Controllers\AiEvaluationController;
+use App\Http\Controllers\KpiController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -45,9 +46,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leader-targets', [LeaderTargetController::class, 'index'])->name('leader-targets.index');
         Route::get('/leader-targets/{monthlyTarget}', [LeaderTargetController::class, 'show'])->name('leader-targets.show');
 
-        Route::get('/kpi', function () {
-            return view('kpi');
-        })->name('kpi');
+        Route::get('/kpi', [KpiController::class, 'index'])->name('kpi');
     });
 
     // Daily Task — Staff, Leader, dan C-Level semua bisa input laporan harian
