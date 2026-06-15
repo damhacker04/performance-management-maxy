@@ -193,21 +193,16 @@ class MonthlyTargetController extends Controller
 
         $personTargets = $monthlyTarget->weeklyTargets;
 
-        $avatarColors = ['#1B4FD8','#6D28D9','#0E7490','#065F46','#9A3412','#1D4ED8','#7C3AED','#047857'];
-
         if ($assignee !== 'umum') {
             $person = \App\Models\User::findOrFail($assignee);
             $pName = $person->name;
             $pDiv = $person->division ?? $person->department;
             $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-            $colorIdx = abs(crc32($pName) % count($avatarColors));
-            $bgColor  = $avatarColors[$colorIdx];
         } else {
-            $person   = null;
-            $pName    = 'Target Umum (Seluruh Tim)';
-            $pDiv     = '';
+            $person = null;
+            $pName = 'Target Umum (Seluruh Tim)';
+            $pDiv = '';
             $initials = '🏢';
-            $bgColor  = 'var(--neutral-300)';
         }
         $personKey = $assignee;
 
@@ -215,12 +210,12 @@ class MonthlyTargetController extends Controller
         $pTotalEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
         $pDoneEntry   = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
         $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
-
-        $weekRanges = \App\Models\WeeklyTarget::WEEK_RANGES;
+        
+        $weekRanges = []; // Biar ga undefined di view if needed
 
         return view('monthly-targets.show-staff', compact(
-            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey',
-            'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges'
+            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey', 'initials',
+            'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges'
         ));
     }
 
