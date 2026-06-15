@@ -203,43 +203,54 @@
             $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
         @endphp
 
-        <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => $personKey]) }}" class="person-accordion m-card" style="margin-bottom:12px; border:1.5px solid var(--bd-1); display:block; text-decoration:none; color:inherit; padding:14px 16px; transition:border-color .15s;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+        <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => $personKey]) }}"
+           class="person-accordion"
+           style="margin-bottom:10px; display:block; text-decoration:none; color:inherit; transition:all .15s;"
+           onmouseenter="this.style.borderColor='var(--maxy-navy)'"
+           onmouseleave="this.style.borderColor='var(--neutral-200)'">
+
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 16px;">
+                {{-- Avatar --}}
+                <div style="width:40px;height:40px;border-radius:10px;background:{{ $bgColor }};
+                            color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
+                            font-size:14px;font-weight:700;letter-spacing:0.01em;
+                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    {{ $initials }}
+                </div>
+
+                {{-- Info --}}
                 <div style="flex:1;min-width:0;">
-                    {{-- Chips --}}
-                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
-                        <span class="chip chip-success" style="font-size:10px;">Aktif</span>
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
+                        <span style="font-size:15px;font-weight:700;color:var(--fg-1);">{{ $pName }}</span>
                         @if($pDiv)
                             <span class="chip chip-dept-{{ str_replace('_','-', strtolower($pDiv)) }}" style="font-size:10px;">{{ $pDiv }}</span>
                         @endif
                     </div>
-                    
-                    {{-- Nama dan Avatar --}}
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div style="width:24px;height:24px;border-radius:6px;background:{{ $bgColor }};
-                                    color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
-                                    font-size:10px;font-weight:700;
-                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            {{ $initials }}
-                        </div>
-                        <div style="font-size:15px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            {{ $pName }}
-                        </div>
-                    </div>
-
-                    {{-- Progress --}}
                     @if($pTotalEntry > 0)
-                        <div style="margin-top:10px;">
-                            <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
-                                <div style="height:100%;width:{{ $pProgress }}%;background:{{ $pProgress >= 80 ? '#16A571' : ($pProgress >= 40 ? '#F59E0B' : 'var(--maxy-navy)') }};border-radius:4px;"></div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                            <div style="flex:1;height:4px;background:var(--neutral-100);border-radius:99px;overflow:hidden;">
+                                <div style="height:100%;width:{{ $pProgress }}%;border-radius:99px;
+                                            background:{{ $pProgress >= 80 ? 'var(--success)' : ($pProgress >= 40 ? 'var(--warning)' : 'var(--maxy-navy)') }};
+                                            transition:width .4s ease;">
+                                </div>
                             </div>
-                            <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">
-                                {{ $pDoneEntry }}/{{ $pTotalEntry }} laporan selesai
-                            </div>
+                            <span style="font-size:11px;font-weight:600;color:var(--fg-3);white-space:nowrap;min-width:28px;text-align:right;">{{ $pProgress }}%</span>
                         </div>
+                        <div style="font-size:11px;color:var(--fg-4);margin-top:2px;">
+                            {{ $pDoneEntry }} dari {{ $pTotalEntry }} laporan selesai
+                            @if($pPendingRev > 0)
+                                · <span style="color:var(--danger);font-weight:600;">{{ $pPendingRev }} pending review</span>
+                            @endif
+                        </div>
+                    @else
+                        <div style="font-size:12px;color:var(--fg-4);margin-top:2px;">{{ $pTotalWt }} target mingguan · Belum ada laporan</div>
                     @endif
                 </div>
 
+                {{-- Chevron --}}
+                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
             </div>
         </a>
     @endforeach
