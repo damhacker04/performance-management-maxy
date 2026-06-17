@@ -19,7 +19,20 @@ class MonthlyTargetController extends Controller
             ->orderByDesc('month')
             ->get();
 
-        return view('monthly-targets.index', compact('targets'));
+        // ── Leader: group Departemen → Bulan (terbaru di atas) ──────────────
+        // Struktur: dept → ['YYYY-MM' => Collection<MonthlyTarget>]
+        $leaderGrouped = null;
+        if ($user->role === 'leader') {
+            $leaderGrouped = $targets
+                ->groupBy('department')
+                ->map(fn($deptTargets) =>
+                    $deptTargets
+                        ->groupBy(fn($t) => $t->year . '-' . str_pad($t->month, 2, '0', STR_PAD_LEFT))
+                        ->sortKeysDesc() // Bulan terbaru di atas
+                );
+        }
+
+        return view('monthly-targets.index', compact('targets', 'leaderGrouped'));
     }
 
     public function create()

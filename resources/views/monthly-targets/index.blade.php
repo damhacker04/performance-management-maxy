@@ -202,207 +202,176 @@
 
     @else
 
-        {{-- ════════════════════════════════════════
-             LEADER VIEW: Accordion Aktif | Arsip
-             ════════════════════════════════════════ --}}
-        @php
-            $aktifTargets = $targets->filter(fn($t) => $t->month == now()->month && $t->year == now()->year);
-            $arsipTargets = $targets->reject(fn($t)  => $t->month == now()->month && $t->year == now()->year);
+        {{-- ════════════════════════════════════════════════════════════════
+             LEADER VIEW: Accordion Departemen → Bulan → (show.blade.php)
+             ════════════════════════════════════════════════════════════════ --}}
+        <div style="display:flex;flex-direction:column;gap:10px;">
 
-            // Group arsip by "Mmm YYYY" label
-            $arsipGroups  = $arsipTargets->groupBy(fn($t) => $t->year . '-' . str_pad($t->month, 2, '0', STR_PAD_LEFT));
-        @endphp
+        @foreach($leaderGrouped as $dept => $monthGroups)
+            @php
+                $color      = $deptColors[$dept]  ?? '#232E66';
+                $label      = $deptLabels[$dept]  ?? ucfirst(str_replace('_',' ', $dept));
+                $deptId     = 'dept-' . str_replace('_','-',$dept);
+                $totalTargets = $monthGroups->flatten()->count();
+            @endphp
 
-        <div style="display:flex;flex-direction:column;gap:8px;">
-
-            {{-- ── AKTIF (bulan ini) — selalu terbuka ── --}}
-            <details id="group-aktif" open
+            {{-- ── Level 1: Card Departemen (auto-open karena leader biasanya 1 dept) ── --}}
+            <details id="{{ $deptId }}" open
                      style="background:var(--bg-1);border-radius:14px;overflow:hidden;
-                            border:1.5px solid var(--maxy-navy);
-                            box-shadow:0 1px 4px rgba(0,0,0,.06);">
+                            border:1.5px solid {{ $color }};
+                            box-shadow:0 2px 8px rgba(0,0,0,.07);">
 
-                <summary style="list-style:none;cursor:pointer;padding:13px 16px;
+                <summary style="list-style:none;cursor:pointer;padding:14px 16px;
                                 display:flex;align-items:center;gap:10px;
                                 -webkit-tap-highlight-color:transparent;user-select:none;">
-                    {{-- Dot hijau --}}
-                    <div style="width:10px;height:10px;border-radius:50%;background:var(--success);flex-shrink:0;"></div>
+
+                    {{-- Colour dot --}}
+                    <div style="width:12px;height:12px;border-radius:50%;
+                                background:{{ $color }};flex-shrink:0;
+                                box-shadow:0 0 0 3px {{ $color }}22;"></div>
+
+                    {{-- Dept name --}}
                     <div style="flex:1;min-width:0;">
-                        <span style="font-size:14px;font-weight:700;color:var(--fg-1);">Bulan Ini</span>
-                        <span style="font-size:12px;color:var(--fg-4);margin-left:6px;">
-                            {{ $months[now()->month] }} {{ now()->year }}
+                        <span style="font-size:15px;font-weight:700;color:var(--fg-1);">
+                            {{ $label }}
                         </span>
                     </div>
-                    <span style="background:#16A57118;color:#16A571;font-size:11px;font-weight:700;
-                                 padding:2px 8px;border-radius:20px;flex-shrink:0;">
-                        {{ $aktifTargets->count() }} target
+
+                    {{-- Badge jumlah target --}}
+                    <span style="background:{{ $color }}18;color:{{ $color }};
+                                 font-size:11px;font-weight:700;
+                                 padding:3px 10px;border-radius:20px;flex-shrink:0;">
+                        {{ $totalTargets }} target
                     </span>
-                    <svg class="aktif-chevron" viewBox="0 0 24 24"
-                         style="width:16px;height:16px;stroke:var(--fg-3);fill:none;stroke-width:2;
-                                flex-shrink:0;transition:transform .2s;">
+
+                    {{-- Chevron --}}
+                    <svg class="dept-ldr-chevron-{{ $deptId }}" viewBox="0 0 24 24"
+                         style="width:16px;height:16px;stroke:var(--fg-3);fill:none;
+                                stroke-width:2;flex-shrink:0;transition:transform .2s;">
                         <path d="M6 9l6 6 6-6"/>
                     </svg>
                 </summary>
 
-                <div style="padding:0 12px 12px;">
-                    <div style="height:1px;background:var(--bd-1);margin-bottom:12px;"></div>
+                {{-- ── Level 2: Daftar Bulan (terbaru di atas) ── --}}
+                <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;">
 
-                    <div class="dt-card-grid" style="gap:12px;">
-                    @forelse($aktifTargets as $target)
+                    <div style="height:1px;background:var(--bd-1);margin-bottom:4px;"></div>
+
+                    @foreach($monthGroups as $yearMonth => $monthTargets)
                         @php
-                            $weeklyCount  = $target->weeklyTargets->count();
-                            $color        = $deptColors[$target->department] ?? '#232E66';
-                            $totalEntries = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
-                            $doneEntries  = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
-                            $pct          = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
+                            [$yr, $mo]   = explode('-', $yearMonth);
+                            $monthLabel  = $months[(int)$mo] . ' ' . $yr;
+                            $isActive    = (int)$mo == now()->month && (int)$yr == now()->year;
+
+                            // Ambil target pertama untuk link (biasanya 1 target per dept per bulan)
+                            $firstTarget  = $monthTargets->first();
+
+                            // Hitung progress agregat bulan ini
+                            $totalEntries = $monthTargets->sum(
+                                fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count())
+                            );
+                            $doneEntries  = $monthTargets->sum(
+                                fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count())
+                            );
+                            $pct = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
+
+                            $weeklyCount  = $monthTargets->sum(fn($t) => $t->weeklyTargets->count());
+                            $staffCount   = $monthTargets->pluck('user_id')->unique()->count();
                         @endphp
-                        <a href="{{ route('monthly-targets.show', $target) }}"
+
+                        {{-- Card Bulan — klik langsung masuk show.blade.php --}}
+                        <a href="{{ route('monthly-targets.show', $firstTarget) }}"
                            style="display:block;text-decoration:none;color:inherit;">
-                            <div class="m-card" style="padding:12px 14px;border:1.5px solid var(--maxy-navy);">
-                                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                            <div class="m-card" style="padding:13px 15px;
+                                        {{ $isActive ? 'border:1.5px solid '.$color.';' : 'opacity:.88;' }}
+                                        transition:transform .15s,box-shadow .15s;">
+
+                                <div style="display:flex;align-items:flex-start;
+                                            justify-content:space-between;gap:10px;">
+
+                                    {{-- Info kiri --}}
                                     <div style="flex:1;min-width:0;">
-                                        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
-                                            <span class="chip chip-success" style="font-size:10px;">Aktif</span>
-                                            <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}" style="font-size:10px;">
-                                                {{ ucfirst(str_replace('_',' ',$target->department)) }}
+
+                                        {{-- Badge bulan + status --}}
+                                        <div style="display:flex;align-items:center;
+                                                    gap:5px;flex-wrap:wrap;margin-bottom:6px;">
+                                            @if($isActive)
+                                                <span class="chip chip-success" style="font-size:10px;">Aktif</span>
+                                            @else
+                                                <span class="chip chip-neutral" style="font-size:10px;color:var(--fg-4);">Arsip</span>
+                                            @endif
+                                            <span style="font-size:13px;font-weight:700;color:var(--fg-1);">
+                                                {{ $monthLabel }}
                                             </span>
                                         </div>
-                                        <div style="font-size:14px;font-weight:600;color:var(--fg-1);
-                                                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                            {{ $target->title }}
+
+                                        {{-- Judul target --}}
+                                        <div style="font-size:13px;color:var(--fg-2);
+                                                    white-space:nowrap;overflow:hidden;
+                                                    text-overflow:ellipsis;margin-bottom:4px;">
+                                            {{ $firstTarget->title }}
                                         </div>
-                                        @if($target->description)
-                                            <p style="font-size:12px;color:var(--fg-3);margin:3px 0 0;
-                                                      display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">
-                                                {{ $target->description }}
-                                            </p>
-                                        @endif
+
+                                        {{-- Meta info --}}
+                                        <div style="font-size:11px;color:var(--fg-4);
+                                                    display:flex;gap:10px;flex-wrap:wrap;">
+                                            @if($weeklyCount > 0)
+                                                <span>📋 {{ $weeklyCount }} target mingguan</span>
+                                            @endif
+                                            @if($staffCount > 0)
+                                                <span>👤 {{ $staffCount }} staf</span>
+                                            @endif
+                                        </div>
+
+                                        {{-- Progress bar --}}
                                         @if($totalEntries > 0)
-                                            <div style="margin-top:8px;">
-                                                <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
-                                                    <div style="height:100%;width:{{ $pct }}%;background:{{ $color }};border-radius:4px;"></div>
+                                            <div style="margin-top:9px;">
+                                                <div style="display:flex;justify-content:space-between;
+                                                            font-size:10px;color:var(--fg-4);margin-bottom:3px;">
+                                                    <span>{{ $doneEntries }}/{{ $totalEntries }} laporan selesai</span>
+                                                    <span style="font-weight:700;color:{{ $pct >= 80 ? '#16A571' : ($pct >= 50 ? $color : 'var(--fg-3)') }};">
+                                                        {{ $pct }}%
+                                                    </span>
                                                 </div>
-                                                <div style="font-size:10px;color:var(--fg-4);margin-top:3px;">
-                                                {{ $totalEntries }} laporan masuk
+                                                <div style="height:5px;background:var(--bg-3);
+                                                            border-radius:5px;overflow:hidden;">
+                                                    <div style="height:100%;width:{{ $pct }}%;
+                                                                background:{{ $pct >= 80 ? '#16A571' : $color }};
+                                                                border-radius:5px;transition:width .4s;">
+                                                    </div>
                                                 </div>
+                                            </div>
+                                        @else
+                                            <div style="margin-top:6px;font-size:11px;color:var(--fg-4);">
+                                                Belum ada laporan masuk
                                             </div>
                                         @endif
                                     </div>
-                                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
-                                        @if($weeklyCount > 0)
-                                            <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
-                                        @else
-                                            <span class="chip chip-neutral" style="font-size:10px;color:var(--fg-4);">Belum ada</span>
-                                        @endif
-                                        <svg class="lucide sm" style="color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+
+                                    {{-- Chevron kanan --}}
+                                    <div style="display:flex;align-items:center;
+                                                align-self:center;flex-shrink:0;">
+                                        <svg class="lucide sm" style="color:var(--fg-3);"
+                                             viewBox="0 0 24 24">
+                                            <path d="M9 6l6 6-6 6"/>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </a>
-                    @empty
-                        <div style="text-align:center;padding:16px 0;font-size:13px;color:var(--fg-4);grid-column:1/-1;">
-                            Belum ada target untuk bulan ini.
-                            <a href="{{ route('monthly-targets.create') }}" style="color:var(--maxy-navy);font-weight:600;">Buat sekarang →</a>
-                        </div>
-                    @endforelse
-                    </div>{{-- end dt-card-grid --}}
+                    @endforeach
+
                 </div>
             </details>
 
-            {{-- ── ARSIP (bulan sebelumnya) — collapsed by default ── --}}
-            @if($arsipTargets->isNotEmpty())
-                <details id="group-arsip"
-                         style="background:var(--bg-1);border-radius:14px;overflow:hidden;
-                                border:1.5px solid var(--bd-1);
-                                box-shadow:0 1px 4px rgba(0,0,0,.04);">
-
-                    <summary style="list-style:none;cursor:pointer;padding:13px 16px;
-                                    display:flex;align-items:center;gap:10px;
-                                    -webkit-tap-highlight-color:transparent;user-select:none;">
-                        <div style="width:10px;height:10px;border-radius:50%;background:var(--fg-4);flex-shrink:0;"></div>
-                        <div style="flex:1;min-width:0;">
-                            <span style="font-size:14px;font-weight:700;color:var(--fg-2);">Arsip</span>
-                            <span style="font-size:12px;color:var(--fg-4);margin-left:6px;">Bulan sebelumnya</span>
-                        </div>
-                        <span style="background:var(--bg-3);color:var(--fg-3);font-size:11px;font-weight:700;
-                                     padding:2px 8px;border-radius:20px;flex-shrink:0;">
-                            {{ $arsipTargets->count() }} target
-                        </span>
-                        <svg class="arsip-chevron" viewBox="0 0 24 24"
-                             style="width:16px;height:16px;stroke:var(--fg-3);fill:none;stroke-width:2;
-                                    flex-shrink:0;transition:transform .2s;">
-                            <path d="M6 9l6 6 6-6"/>
-                        </svg>
-                    </summary>
-
-                    <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;">
-                        <div style="height:1px;background:var(--bd-1);margin-bottom:4px;"></div>
-
-                        @foreach($arsipGroups->sortKeysDesc() as $yearMonth => $groupTargets)
-                            @php
-                                [$yr, $mo] = explode('-', $yearMonth);
-                                $groupLabel = $months[(int)$mo] . ' ' . $yr;
-                            @endphp
-
-                            {{-- Sub-label bulan --}}
-                            <div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
-                                        color:var(--fg-4);padding:6px 4px 2px;">
-                                {{ $groupLabel }}
-                            </div>
-
-                            @foreach($groupTargets as $target)
-                                @php
-                                    $weeklyCount  = $target->weeklyTargets->count();
-                                    $color        = $deptColors[$target->department] ?? '#232E66';
-                                    $totalEntries = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
-                                    $doneEntries  = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
-                                    $pct          = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
-                                @endphp
-                                <a href="{{ route('monthly-targets.show', $target) }}"
-                                   style="display:block;text-decoration:none;color:inherit;">
-                                    <div class="m-card" style="padding:12px 14px;opacity:.85;">
-                                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-                                            <div style="flex:1;min-width:0;">
-                                                <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px;">
-                                                    <span class="chip chip-neutral" style="font-size:10px;">{{ $groupLabel }}</span>
-                                                    <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}" style="font-size:10px;">
-                                                        {{ ucfirst(str_replace('_',' ',$target->department)) }}
-                                                    </span>
-                                                </div>
-                                                <div style="font-size:13px;font-weight:600;color:var(--fg-2);
-                                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                                    {{ $target->title }}
-                                                </div>
-                                                @if($totalEntries > 0)
-                                                    <div style="margin-top:6px;">
-                                                        <div style="height:3px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
-                                                            <div style="height:100%;width:{{ $pct }}%;background:{{ $pct == 100 ? '#16A571' : $color }};border-radius:4px;"></div>
-                                                        </div>
-                                                        <div style="font-size:10px;color:var(--fg-4);margin-top:2px;">
-                                                        {{ $totalEntries }} laporan masuk
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
-                                                @if($weeklyCount > 0)
-                                                    <span class="chip chip-neutral" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
-                                                @endif
-                                                <svg class="lucide sm" style="color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            @endforeach
-                        @endforeach
-                    </div>
-                </details>
-            @endif
+        @endforeach
 
         </div>
 
         <style>
-            details[open] .aktif-chevron { transform: rotate(180deg); }
-            details[open] .arsip-chevron { transform: rotate(180deg); }
+            details[open] .dept-ldr-chevron-{{ $deptId ?? '' }} { transform: rotate(180deg); }
+            details summary::-webkit-details-marker { display: none; }
+            .m-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.10); }
         </style>
 
     @endif
