@@ -17,7 +17,12 @@
 
     {{-- ── HEADER ──────────────────────────────────────────────────────────────── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.show', $monthlyTarget->id) }}" class="icon-btn" style="margin-left:-8px;">
+        {{-- Back: ke daftar monthly target staf (Gambar 3) jika staf spesifik,
+             atau ke show monthly target (Gambar 2) jika target umum --}}
+        <a href="{{ $person
+                ? route('staff.monthly-targets', ['staff' => $person->id])
+                : route('monthly-targets.show', $monthlyTarget->id) }}"
+           class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
