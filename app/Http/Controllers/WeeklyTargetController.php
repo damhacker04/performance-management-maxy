@@ -125,7 +125,11 @@ class WeeklyTargetController extends Controller
             'year'              => $monthlyTarget->year,
         ]);
 
-        return redirect()->route('monthly-targets.show', $monthlyTarget)
+        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
+        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
+        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+
+        return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil disimpan.');
     }
 
@@ -294,7 +298,11 @@ class WeeklyTargetController extends Controller
             'assigned_to'       => $validated['assigned_to'] ?? null,
         ]);
 
-        return redirect()->route('monthly-targets.show', $monthlyTarget)
+        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
+        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
+        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+
+        return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil diperbarui.');
     }
 
