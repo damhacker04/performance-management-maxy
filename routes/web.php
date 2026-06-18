@@ -39,6 +39,9 @@ Route::middleware(['auth'])->group(function () {
         // Gambar 3 baru: daftar monthly target milik staf tertentu
         Route::get('staff/{staff}/monthly-targets', [MonthlyTargetController::class, 'staffMonthlyTargets'])
             ->name('staff.monthly-targets');
+        // Halaman perantara: daftar staf per bulan (klik dari index)
+        Route::get('monthly-targets/period/{year}/{month}/staff', [MonthlyTargetController::class, 'staffListForMonth'])
+            ->name('monthly-targets.month-staff');
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.

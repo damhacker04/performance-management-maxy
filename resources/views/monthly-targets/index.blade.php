@@ -203,230 +203,82 @@
     @else
 
         {{-- ════════════════════════════════════════════════════════════════
-             LEADER VIEW: Accordion Bulan → Dropdown Dept → Target Cards
+             LEADER VIEW: Daftar Bulan — klik langsung ke halaman staf
              ════════════════════════════════════════════════════════════════ --}}
-        <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
 
-        @foreach($leaderGrouped as $yearMonth => $deptGroups)
+        @foreach($leaderGrouped as $yearMonth => $monthTargets)
             @php
-                [$yr, $mo]   = explode('-', $yearMonth);
-                $monthLabel  = ['','Januari','Februari','Maret','April','Mei','Juni',
-                                'Juli','Agustus','September','Oktober','November','Desember'][(int)$mo]
-                               . ' ' . $yr;
-                $isActive    = (int)$mo == now()->month && (int)$yr == now()->year;
-                $totalTargets= $deptGroups->flatten()->count();
+                [$yr, $mo] = explode('-', $yearMonth);
+                $monthLabel = ['','Januari','Februari','Maret','April','Mei','Juni',
+                               'Juli','Agustus','September','Oktober','November','Desember'][(int)$mo]
+                              . ' ' . $yr;
+                $isActive = (int)$mo == now()->month && (int)$yr == now()->year;
 
-                // Total laporan bulan ini
-                $totalEntries = $deptGroups->flatten()->sum(
-                    fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count())
-                );
-                $doneEntries  = $deptGroups->flatten()->sum(
-                    fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count())
-                );
-                $pct = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
-                $monthId = 'month-' . $yearMonth;
+                $totalEntries = $monthTargets->sum(fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count()));
+                $doneEntries  = $monthTargets->sum(fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count()));
+                $pct          = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
+                $staffCount   = $monthTargets->pluck('assigned_to')->filter()->unique()->count();
             @endphp
 
-            {{-- ── Level 1: Accordion per Bulan ── --}}
-            <details id="{{ $monthId }}" {{ $isActive ? 'open' : '' }}
-                     style="background:var(--bg-1);border-radius:14px;overflow:hidden;
-                            border:1.5px solid {{ $isActive ? 'var(--warning)' : 'var(--bd-1)' }};
-                            box-shadow:0 2px 8px rgba(0,0,0,.07);">
+            <a href="{{ route('monthly-targets.month-staff', ['year' => $yr, 'month' => $mo]) }}"
+               style="display:flex;align-items:center;gap:12px;
+                      padding:14px 16px;border-radius:14px;
+                      background:var(--bg-1);text-decoration:none;color:inherit;
+                      border:1.5px solid {{ $isActive ? 'var(--warning)' : 'var(--bd-1)' }};
+                      box-shadow:0 2px 8px rgba(0,0,0,.06);
+                      transition:border-color .15s,box-shadow .15s;"
+               onmouseenter="this.style.borderColor='var(--maxy-navy)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.10)'"
+               onmouseleave="this.style.borderColor='{{ $isActive ? 'var(--warning)' : 'var(--bd-1)' }}';this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)'">
 
-                <summary style="list-style:none;cursor:pointer;padding:14px 16px;
-                                display:flex;align-items:center;gap:10px;
-                                -webkit-tap-highlight-color:transparent;user-select:none;">
+                {{-- Status dot --}}
+                <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;
+                            background:{{ $isActive ? 'var(--warning)' : 'var(--neutral-300)' }};
+                            {{ $isActive ? 'box-shadow:0 0 0 3px #FEF3C7;' : '' }}">
+                </div>
 
-                    {{-- Status dot --}}
-                    <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;
-                                background:{{ $isActive ? 'var(--warning)' : 'var(--neutral-300)' }};
-                                {{ $isActive ? 'box-shadow:0 0 0 3px #FEF3C7;' : '' }}">
-                    </div>
-
-                    {{-- Bulan label --}}
-                    <div style="flex:1;min-width:0;">
+                {{-- Info --}}
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
                         <span style="font-size:15px;font-weight:700;color:var(--fg-1);">
                             {{ $monthLabel }}
                         </span>
                         @if($isActive)
-                            <span class="chip chip-success" style="font-size:10px;margin-left:6px;">Bulan ini</span>
+                            <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
                         @endif
                     </div>
-
-                    {{-- Badge jumlah target --}}
-                    <span style="background:{{ $isActive ? '#FEF3C7' : 'var(--neutral-100)' }};
-                                 color:{{ $isActive ? '#92400E' : 'var(--fg-3)' }};
-                                 font-size:11px;font-weight:700;
-                                 padding:3px 10px;border-radius:20px;flex-shrink:0;">
-                        {{ $totalTargets }} target
-                    </span>
-
-                    {{-- Chevron --}}
-                    <svg class="month-chevron-{{ $monthId }}" viewBox="0 0 24 24"
-                         style="width:16px;height:16px;stroke:var(--fg-3);fill:none;
-                                stroke-width:2;flex-shrink:0;transition:transform .2s;">
-                        <path d="M6 9l6 6 6-6"/>
-                    </svg>
-                </summary>
-
-                {{-- ── Body: Progress bar + Dept Dropdown rows ── --}}
-                <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;">
-
-                    {{-- Divider --}}
-                    <div style="height:1px;background:var(--bd-1);margin-bottom:2px;"></div>
-
-                    {{-- Progress bar bulan (jika ada laporan) --}}
+                    <div style="font-size:11px;color:var(--fg-4);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:{{ $totalEntries > 0 ? '6px' : '0' }};">
+                        <span>👤 {{ $staffCount }} staf</span>
+                        <span>📋 {{ $monthTargets->count() }} target</span>
+                        @if($totalEntries > 0)
+                            <span>{{ $doneEntries }}/{{ $totalEntries }} laporan selesai</span>
+                        @else
+                            <span>Belum ada laporan</span>
+                        @endif
+                    </div>
+                    {{-- Progress bar --}}
                     @if($totalEntries > 0)
-                        <div style="padding:6px 4px 2px;">
-                            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--fg-4);margin-bottom:4px;">
-                                <span>{{ $doneEntries }}/{{ $totalEntries }} laporan selesai</span>
-                                <span style="font-weight:700;color:{{ $pct >= 80 ? '#16A571' : ($pct >= 50 ? 'var(--warning)' : 'var(--fg-3)') }};">
-                                    {{ $pct }}%
-                                </span>
-                            </div>
-                            <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
-                                <div style="height:100%;width:{{ $pct }}%;border-radius:4px;transition:width .4s;
-                                            background:{{ $pct >= 80 ? '#16A571' : 'var(--warning)' }};"></div>
-                            </div>
+                        <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
+                            <div style="height:100%;width:{{ $pct }}%;border-radius:4px;transition:width .4s;
+                                        background:{{ $pct >= 80 ? '#16A571' : 'var(--warning)' }};"></div>
+                        </div>
+                        <div style="font-size:10px;color:{{ $pct >= 80 ? '#16A571' : 'var(--fg-3)' }};margin-top:3px;font-weight:600;">
+                            {{ $pct }}% selesai
                         </div>
                     @endif
-
-                    {{-- ── Level 2: Dropdown Dept ── --}}
-                    @foreach($deptGroups as $dept => $deptTargets)
-                        @php
-                            $color      = $deptColors[$dept] ?? '#232E66';
-                            $label      = $deptLabels[$dept] ?? ucfirst(str_replace('_',' ', $dept));
-                            $deptCount  = $deptTargets->count();
-                            $firstTarget = $deptTargets->first();
-                            $deptTotalE = $deptTargets->sum(fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count()));
-                            $deptDoneE  = $deptTargets->sum(fn($t) => $t->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count()));
-                            $deptPct    = $deptTotalE > 0 ? round($deptDoneE / $deptTotalE * 100) : 0;
-                            $weeklyCount = $deptTargets->sum(fn($t) => $t->weeklyTargets->count());
-                            $staffCount  = $deptTargets->pluck('assigned_to')->merge($deptTargets->pluck('user_id'))->filter()->unique()->count();
-                            $deptTargetId = 'dept-' . $yearMonth . '-' . str_replace('_','-',$dept);
-                        @endphp
-
-                        {{-- Jika hanya 1 target → langsung link ke show --}}
-                        @if($deptCount === 1)
-                            <a href="{{ route('monthly-targets.show', $firstTarget) }}"
-                               style="display:flex;align-items:center;gap:10px;
-                                      padding:11px 14px;border-radius:10px;
-                                      border:1.5px solid var(--bd-1);background:#fff;
-                                      text-decoration:none;color:inherit;
-                                      transition:border-color .15s,box-shadow .15s;"
-                               onmouseenter="this.style.borderColor='{{ $color }}';this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'"
-                               onmouseleave="this.style.borderColor='var(--bd-1)';this.style.boxShadow='none'">
-
-                                {{-- Colour dot dept --}}
-                                <div style="width:8px;height:8px;border-radius:50%;background:{{ $color }};flex-shrink:0;"></div>
-
-                                {{-- Info --}}
-                                <div style="flex:1;min-width:0;">
-                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                                        <span style="font-size:13px;font-weight:700;color:{{ $color }};">{{ $label }}</span>
-                                        <span style="font-size:12px;color:var(--fg-3);">·</span>
-                                        <span style="font-size:12px;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">
-                                            {{ $firstTarget->title }}
-                                        </span>
-                                    </div>
-                                    <div style="font-size:11px;color:var(--fg-4);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
-                                        @if($weeklyCount > 0)
-                                            <span>📋 {{ $weeklyCount }} target mingguan</span>
-                                        @endif
-                                        @if($staffCount > 0)
-                                            <span>👤 {{ $staffCount }} staf</span>
-                                        @endif
-                                    </div>
-                                    {{-- Mini progress --}}
-                                    @if($deptTotalE > 0)
-                                        <div style="height:3px;background:var(--bg-3);border-radius:3px;overflow:hidden;margin-top:6px;">
-                                            <div style="height:100%;width:{{ $deptPct }}%;background:{{ $color }};border-radius:3px;"></div>
-                                        </div>
-                                        <div style="font-size:10px;color:var(--fg-4);margin-top:2px;">{{ $deptPct }}% selesai</div>
-                                    @endif
-                                </div>
-
-                                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
-                                    <path d="M9 6l6 6-6 6"/>
-                                </svg>
-                            </a>
-
-                        @else
-                            {{-- Multiple target → accordion dept dalam bulan --}}
-                            <details id="{{ $deptTargetId }}"
-                                     style="background:#fff;border-radius:10px;overflow:hidden;
-                                            border:1.5px solid var(--bd-1);">
-                                <summary style="list-style:none;cursor:pointer;padding:11px 14px;
-                                                display:flex;align-items:center;gap:10px;
-                                                -webkit-tap-highlight-color:transparent;user-select:none;">
-                                    <div style="width:8px;height:8px;border-radius:50%;background:{{ $color }};flex-shrink:0;"></div>
-                                    <div style="flex:1;min-width:0;">
-                                        <span style="font-size:13px;font-weight:700;color:{{ $color }};">{{ $label }}</span>
-                                        <span style="font-size:12px;color:var(--fg-4);margin-left:6px;">{{ $deptCount }} target</span>
-                                    </div>
-                                    @if($deptTotalE > 0)
-                                        <span style="font-size:11px;font-weight:700;
-                                                     color:{{ $deptPct >= 80 ? '#16A571' : 'var(--fg-3)' }};">
-                                            {{ $deptPct }}%
-                                        </span>
-                                    @endif
-                                    <svg class="dept2-chevron-{{ $deptTargetId }}" viewBox="0 0 24 24"
-                                         style="width:14px;height:14px;stroke:var(--fg-4);fill:none;stroke-width:2;flex-shrink:0;transition:transform .2s;">
-                                        <path d="M6 9l6 6 6-6"/>
-                                    </svg>
-                                </summary>
-                                <div style="padding:4px 12px 10px;display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--bd-1);">
-                                    @foreach($deptTargets as $target)
-                                        @php
-                                            $tTotal = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
-                                            $tDone  = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
-                                            $tPct   = $tTotal > 0 ? round($tDone / $tTotal * 100) : 0;
-                                        @endphp
-                                        <a href="{{ route('monthly-targets.show', $target) }}"
-                                           style="display:flex;align-items:center;gap:10px;
-                                                  padding:10px 12px;border-radius:8px;
-                                                  background:var(--bg-1);text-decoration:none;color:inherit;
-                                                  transition:background .15s;"
-                                           onmouseenter="this.style.background='var(--bg-2)'"
-                                           onmouseleave="this.style.background='var(--bg-1)'">
-                                            <div style="flex:1;min-width:0;">
-                                                <div style="font-size:13px;font-weight:600;color:var(--fg-1);
-                                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                                    {{ $target->title }}
-                                                </div>
-                                                @if($tTotal > 0)
-                                                    <div style="height:3px;background:var(--bg-3);border-radius:3px;margin-top:5px;overflow:hidden;">
-                                                        <div style="height:100%;width:{{ $tPct }}%;background:{{ $color }};border-radius:3px;"></div>
-                                                    </div>
-                                                    <div style="font-size:10px;color:var(--fg-4);margin-top:2px;">{{ $tPct }}% selesai</div>
-                                                @endif
-                                            </div>
-                                            <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
-                                                <path d="M9 6l6 6-6 6"/>
-                                            </svg>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </details>
-                        @endif
-
-                    @endforeach
-
                 </div>
-            </details>
+
+                {{-- Chevron --}}
+                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                    <path d="M9 6l6 6-6 6"/>
+                </svg>
+            </a>
 
         @endforeach
 
         </div>
 
-        <style>
-            details[open] .month-chevron-{{ $monthId ?? '' }} { transform: rotate(180deg); }
-            details[open] [class^="dept2-chevron-"] { transform: rotate(180deg); }
-            details summary::-webkit-details-marker { display: none; }
-        </style>
-
     @endif
-
 
 </div>
 </x-app-layout>

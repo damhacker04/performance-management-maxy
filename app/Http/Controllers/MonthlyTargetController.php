@@ -19,17 +19,61 @@ class MonthlyTargetController extends Controller
             ->orderByDesc('month')
             ->get();
 
-        // ── Leader: group Bulan (terbaru di atas) → Departemen ──────────────
-        // Struktur baru: ['YYYY-MM' => [dept => Collection<MonthlyTarget>]]
+        // ── Leader: group Bulan (terbaru di atas) — hanya untuk index display ──
         $leaderGrouped = null;
         if ($user->role === 'leader') {
             $leaderGrouped = $targets
                 ->groupBy(fn($t) => $t->year . '-' . str_pad($t->month, 2, '0', STR_PAD_LEFT))
-                ->sortKeysDesc()
-                ->map(fn($monthTargets) => $monthTargets->groupBy('department'));
+                ->sortKeysDesc();
         }
 
         return view('monthly-targets.index', compact('targets', 'leaderGrouped'));
+    }
+
+    /**
+     * Halaman perantara: daftar staf yang punya target di bulan tertentu.
+     * Dipanggil dari index ketika leader klik sebuah bulan.
+     */
+    public function staffListForMonth(int $year, int $month)
+    {
+        $user = auth()->user();
+
+        // Ambil semua monthly target di bulan ini, untuk dept leader
+        $monthlyTargets = MonthlyTarget::with([
+            'assignedStaff',
+            'weeklyTargets.dailyTaskEntries',
+        ])
+        ->where('month', $month)
+        ->where('year', $year)
+        ->when(!in_array($user->role, ['c_level', 'super_admin']),
+            fn($q) => $q->where('department', $user->department)
+        )
+        ->whereNotNull('assigned_to')
+        ->get();
+
+        // Group by assigned staff
+        $byStaff = $monthlyTargets->groupBy('assigned_to')->map(function ($staffTargets) {
+            $staff       = $staffTargets->first()->assignedStaff;
+            $totalEntries = $staffTargets->sum(fn($mt) => $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count()));
+            $doneEntries  = $staffTargets->sum(fn($mt) => $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count()));
+            return [
+                'staff'        => $staff,
+                'targets'      => $staffTargets,
+                'targetCount'  => $staffTargets->count(),
+                'totalEntries' => $totalEntries,
+                'doneEntries'  => $doneEntries,
+                'progress'     => $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0,
+            ];
+        })->sortBy(fn($s) => $s['staff']?->name ?? '');
+
+        $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+        $monthLabel = $monthNames[$month] . ' ' . $year;
+        $isCurrentMonth = $month == now()->month && $year == now()->year;
+
+        return view('monthly-targets.month-staff-list', compact(
+            'byStaff', 'monthLabel', 'month', 'year', 'isCurrentMonth', 'user'
+        ));
     }
 
     public function create()
