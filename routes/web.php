@@ -36,6 +36,9 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
         Route::get('monthly-targets/{monthlyTarget}/staff/{assignee}', [MonthlyTargetController::class, 'showStaff'])
             ->name('monthly-targets.staff');
+        // Gambar 3 baru: daftar monthly target milik staf tertentu
+        Route::get('staff/{staff}/monthly-targets', [MonthlyTargetController::class, 'staffMonthlyTargets'])
+            ->name('staff.monthly-targets');
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.

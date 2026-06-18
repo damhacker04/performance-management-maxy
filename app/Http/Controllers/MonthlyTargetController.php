@@ -192,6 +192,48 @@ class MonthlyTargetController extends Controller
         ));
     }
 
+    /**
+     * Gambar 3 (baru): Tampilkan semua monthly target yang di-assign ke staf tertentu.
+     * Dipanggil saat leader klik nama staf di show.blade.php.
+     */
+    public function staffMonthlyTargets(\App\Models\User $staff)
+    {
+        $user = auth()->user();
+
+        // Guard: leader hanya bisa lihat staf di dept-nya sendiri
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if($staff->department !== $user->department, 403, 'Akses ditolak.');
+        }
+
+        // Semua monthly target yang di-assign ke staf ini
+        $monthlyTargets = MonthlyTarget::with([
+            'weeklyTargets',
+            'weeklyTargets.dailyTaskEntries',
+            'kpiTarget',
+        ])
+        ->where('assigned_to', $staff->id)
+        ->orderByDesc('year')
+        ->orderByDesc('month')
+        ->get();
+
+        // Hitung stats per monthly target
+        $monthlyTargets->each(function ($mt) {
+            $mt->total_entries = $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
+            $mt->done_entries  = $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status', 'selesai')->count());
+            $mt->progress_pct  = $mt->total_entries > 0
+                ? round($mt->done_entries / $mt->total_entries * 100)
+                : 0;
+            $mt->weekly_count  = $mt->weeklyTargets->count();
+        });
+
+        $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+
+        return view('monthly-targets.staff-monthly-targets', compact(
+            'staff', 'monthlyTargets', 'monthNames', 'user'
+        ));
+    }
+
     public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
     {
         $user = auth()->user();
