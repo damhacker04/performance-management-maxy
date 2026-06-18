@@ -34,14 +34,27 @@ Route::middleware(['auth'])->group(function () {
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
+
+        // ── PERIOD HIERARCHY (URL bersih & konsisten) ────────────────────────────
+        // Level 2: /monthly-targets/period/{year}/{month}/staff
+        // Level 3: /monthly-targets/period/{year}/{month}/staff/{staff}
+        // Level 4: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}
+        Route::prefix('monthly-targets/period/{year}/{month}')->group(function () {
+            Route::get('staff', [MonthlyTargetController::class, 'staffListForMonth'])
+                ->name('period.staff-list');
+            Route::get('staff/{staff}', [MonthlyTargetController::class, 'staffTargetsForPeriod'])
+                ->name('period.staff-targets');
+            Route::get('staff/{staff}/{monthlyTarget}', [MonthlyTargetController::class, 'showStaffInPeriod'])
+                ->name('period.staff-weekly');
+        });
+
+        // ── LEGACY ROUTES (deprecated \u2014 redirect ke period hierarchy) ────────────
         Route::get('monthly-targets/{monthlyTarget}/staff/{assignee}', [MonthlyTargetController::class, 'showStaff'])
-            ->name('monthly-targets.staff');
-        // Gambar 3 baru: daftar monthly target milik staf tertentu
+            ->name('monthly-targets.staff'); // lama, masih dipakai show.blade.php
         Route::get('staff/{staff}/monthly-targets', [MonthlyTargetController::class, 'staffMonthlyTargets'])
-            ->name('staff.monthly-targets');
-        // Halaman perantara: daftar staf per bulan (klik dari index)
-        Route::get('monthly-targets/period/{year}/{month}/staff', [MonthlyTargetController::class, 'staffListForMonth'])
-            ->name('monthly-targets.month-staff');
+            ->name('staff.monthly-targets'); // deprecated \u2014 redirect ke period.staff-targets
+        // (period.staff-list sudah mencakup ini, lihat prefix group di atas)
+
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.

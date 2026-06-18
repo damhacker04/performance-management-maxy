@@ -17,15 +17,12 @@
 
     {{-- ── HEADER ──────────────────────────────────────────────────────────────── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back: ke daftar monthly target staf jika assignee ada,
-             ke show monthly target hanya jika target umum/tim --}}
-        @php
-            $isUmumTarget = ($personKey === 'umum' || $personKey === null);
-            $backUrl = $isUmumTarget
+        {{-- Back URL di-set oleh controller (period.staff-targets untuk flow baru,
+             monthly-targets.show untuk target umum via legacy showStaff) --}}
+        <a href="{{ $backUrl ?? ($personKey === 'umum' || !$personKey
                 ? route('monthly-targets.show', $monthlyTarget->id)
-                : route('staff.monthly-targets', ['staff' => $personKey]);
-        @endphp
-        <a href="{{ $backUrl }}" class="icon-btn" style="margin-left:-8px;">
+                : route('period.staff-targets', ['year' => now()->year, 'month' => now()->month, 'staff' => $personKey])) }}"
+           class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">

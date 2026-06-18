@@ -221,7 +221,7 @@
                 $staffCount   = $monthTargets->pluck('assigned_to')->filter()->unique()->count();
             @endphp
 
-            <a href="{{ route('monthly-targets.month-staff', ['year' => $yr, 'month' => $mo]) }}"
+            <a href="{{ route('period.staff-list', ['year' => $yr, 'month' => $mo]) }}"
                style="display:flex;align-items:center;gap:12px;
                       padding:14px 16px;border-radius:14px;
                       background:var(--bg-1);text-decoration:none;color:inherit;

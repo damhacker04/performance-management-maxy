@@ -43,12 +43,10 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back ke daftar staf per bulan. Gunakan bulan dari target pertama sebagai konteks,
-             fallback ke index jika tidak ada target --}}
+        {{-- Back ke daftar staf untuk bulan ini (period.staff-list) --}}
         @php
-            $firstMt   = $monthlyTargets->sortByDesc('year')->sortByDesc('month')->first();
-            $backRoute = $firstMt
-                ? route('monthly-targets.month-staff', ['year' => $firstMt->year, 'month' => $firstMt->month])
+            $backRoute = isset($year, $month)
+                ? route('period.staff-list', ['year' => $year, 'month' => $month])
                 : route('monthly-targets.index');
         @endphp
         <a href="{{ $backRoute }}" class="icon-btn" style="margin-left:-8px;">
@@ -68,7 +66,11 @@
                 </span>
             </div>
             <div style="font-size:12px;color:var(--fg-4);margin-left:36px;">
-                Target bulanan yang ditugaskan
+                @if(isset($monthLabel))
+                    Target {{ $monthLabel }}
+                @else
+                    Target bulanan yang ditugaskan
+                @endif
             </div>
         </div>
     </div>
@@ -144,8 +146,11 @@
                         $isActive  = $isCurrentMonth;
                     @endphp
 
-                    {{-- Link ke showStaff (Gambar 4 = weekly targets) --}}
-                    <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $mt->id, 'assignee' => $staff->id]) }}"
+                    {{-- Link ke showStaffInPeriod (period.staff-weekly) jika ada context year/month,
+                         fallback ke legacy monthly-targets.staff --}}
+                    <a href="{{ isset($year, $month)
+                        ? route('period.staff-weekly', ['year' => $year, 'month' => $month, 'staff' => $staff->id, 'monthlyTarget' => $mt->id])
+                        : route('monthly-targets.staff', ['monthlyTarget' => $mt->id, 'assignee' => $staff->id]) }}"
                        class="mt-card" style="border-color: {{ $isActive ? 'var(--warning)' : 'var(--neutral-200)' }};">
 
                         {{-- Icon --}}

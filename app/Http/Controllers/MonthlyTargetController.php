@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MonthlyTarget;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class MonthlyTargetController extends Controller
@@ -234,44 +235,118 @@ class MonthlyTargetController extends Controller
     }
 
     /**
-     * Gambar 3 (baru): Tampilkan semua monthly target yang di-assign ke staf tertentu.
-     * Dipanggil saat leader klik nama staf di show.blade.php.
+     * [DEPRECATED — redirects ke period.staff-targets]
+     * Kept untuk backward compat agar link lama tidak 404.
      */
-    public function staffMonthlyTargets(\App\Models\User $staff)
+    public function staffMonthlyTargets(User $staff)
+    {
+        // Redirect ke bulan sekarang sebagai konteks default
+        return redirect()->route('period.staff-targets', [
+            'year'  => now()->year,
+            'month' => now()->month,
+            'staff' => $staff->id,
+        ]);
+    }
+
+    /**
+     * [BARU — Level 3] Daftar monthly target staf untuk bulan tertentu.
+     * URL: /monthly-targets/period/{year}/{month}/staff/{staff}
+     */
+    public function staffTargetsForPeriod(int $year, int $month, User $staff)
     {
         $user = auth()->user();
 
-        // Guard: leader hanya bisa lihat staf di dept-nya sendiri
         if (!in_array($user->role, ['c_level', 'super_admin'])) {
             abort_if($staff->department !== $user->department, 403, 'Akses ditolak.');
         }
 
-        // Semua monthly target yang di-assign ke staf ini
         $monthlyTargets = MonthlyTarget::with([
             'weeklyTargets',
             'weeklyTargets.dailyTaskEntries',
             'kpiTarget',
         ])
         ->where('assigned_to', $staff->id)
+        ->where('year',  $year)
+        ->where('month', $month)
         ->orderByDesc('year')
         ->orderByDesc('month')
         ->get();
 
-        // Hitung stats per monthly target
         $monthlyTargets->each(function ($mt) {
             $mt->total_entries = $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
-            $mt->done_entries  = $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status', 'selesai')->count());
+            $mt->done_entries  = $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
             $mt->progress_pct  = $mt->total_entries > 0
-                ? round($mt->done_entries / $mt->total_entries * 100)
-                : 0;
+                ? round($mt->done_entries / $mt->total_entries * 100) : 0;
             $mt->weekly_count  = $mt->weeklyTargets->count();
         });
 
         $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni',
                        'Juli','Agustus','September','Oktober','November','Desember'];
+        $monthLabel    = $monthNames[$month] . ' ' . $year;
+        $isCurrentMonth = $month == now()->month && $year == now()->year;
 
         return view('monthly-targets.staff-monthly-targets', compact(
-            'staff', 'monthlyTargets', 'monthNames', 'user'
+            'staff', 'monthlyTargets', 'monthNames', 'user',
+            'year', 'month', 'monthLabel', 'isCurrentMonth'
+        ));
+    }
+
+    /**
+     * [BARU — Level 4] Weekly targets staf untuk monthly target + period context.
+     * URL: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}
+     */
+    public function showStaffInPeriod(int $year, int $month, User $staff, MonthlyTarget $monthlyTarget)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            abort_if($monthlyTarget->department !== $user->department, 403);
+        }
+
+        // Delegasi ke logika showStaff, tambah period context
+        $assignee = (string) $staff->id;
+
+        $monthlyTarget->load([
+            'user',
+            'weeklyTargets' => fn($q) => $q->where('assigned_to', $staff->id)->orderBy('week_number')->orderBy('id'),
+            'weeklyTargets.assignee',
+            'weeklyTargets.dailyTaskEntries.user',
+        ]);
+
+        $entriesByWeek = $monthlyTarget->weeklyTargets
+            ->mapWithKeys(fn($wt) => [
+                $wt->id => [
+                    'total'          => $wt->dailyTaskEntries->count(),
+                    'done'           => $wt->dailyTaskEntries->where('status','selesai')->count(),
+                    'pending_review' => $wt->dailyTaskEntries
+                                          ->where('status','selesai')
+                                          ->where('verification_status','pending')
+                                          ->count(),
+                ],
+            ]);
+
+        $personTargets = $monthlyTarget->weeklyTargets;
+        $person   = $staff;
+        $pName    = $staff->name;
+        $pDiv     = $staff->division ?? $staff->department;
+        $personKey = $assignee;
+
+        $avatarColors = ['#1B4FD8','#6D28D9','#0E7490','#065F46','#9A3412','#1D4ED8','#7C3AED','#047857'];
+        $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
+        $colorIdx = abs(crc32($pName) % count($avatarColors));
+        $bgColor  = $avatarColors[$colorIdx];
+
+        $pTotalEntry = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
+        $pDoneEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
+        $pProgress   = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
+        $weekRanges  = \App\Models\WeeklyTarget::WEEK_RANGES;
+
+        // Back URL: naik satu level ke period.staff-targets
+        $backUrl = route('period.staff-targets', ['year' => $year, 'month' => $month, 'staff' => $staff->id]);
+
+        return view('monthly-targets.show-staff', compact(
+            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey',
+            'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges',
+            'year', 'month', 'backUrl'
         ));
     }
 

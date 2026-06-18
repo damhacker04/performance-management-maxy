@@ -87,7 +87,7 @@
                     $barColor = $progress >= 80 ? 'var(--success)' : ($progress >= 40 ? 'var(--warning)' : 'var(--maxy-navy)');
                 @endphp
 
-                <a href="{{ route('staff.monthly-targets', ['staff' => $staffId]) }}"
+                <a href="{{ route('period.staff-targets', ['year' => $year, 'month' => $month, 'staff' => $staffId]) }}"
                    class="staff-card">
 
                     {{-- Avatar --}}
