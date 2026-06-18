@@ -157,6 +157,48 @@ class WeeklyTargetController extends Controller
         return view('weekly-targets.show', compact('weeklyTarget', 'dailyTasks', 'summary', 'byStaff'));
     }
 
+    /**
+     * [BARU — Level 5] Laporan weekly target dalam konteks period hierarchy.
+     * URL: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}/{weeklyTarget}
+     * Back → period.staff-weekly (level 4)
+     */
+    public function showInPeriod(int $year, int $month, \App\Models\User $staff, \App\Models\MonthlyTarget $monthlyTarget, WeeklyTarget $weeklyTarget)
+    {
+        $this->authorizeWeekly($weeklyTarget);
+
+        $weeklyTarget->load('monthlyTarget');
+
+        $dailyTasks = $weeklyTarget->dailyTaskEntries()
+            ->with('user')
+            ->orderByDesc('task_date')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $summary = [
+            'total'        => $dailyTasks->count(),
+            'selesai'      => $dailyTasks->where('status', 'selesai')->count(),
+            'dalam_proses' => $dailyTasks->where('status', 'dalam_proses')->count(),
+            'terhambat'    => $dailyTasks->where('status', 'terhambat')->count(),
+            'belum_mulai'  => $dailyTasks->where('status', 'belum_mulai')->count(),
+        ];
+
+        $byStaff = $dailyTasks->groupBy('user_id');
+
+        // Back URL naik 1 level ke period.staff-weekly (level 4)
+        $backUrl = route('period.staff-weekly', [
+            'year'          => $year,
+            'month'         => $month,
+            'staff'         => $staff->id,
+            'monthlyTarget' => $monthlyTarget->id,
+        ]);
+
+        return view('weekly-targets.show', compact(
+            'weeklyTarget', 'dailyTasks', 'summary', 'byStaff', 'backUrl',
+            'year', 'month', 'staff', 'monthlyTarget'
+        ));
+    }
+
+
     public function edit(WeeklyTarget $weeklyTarget)
     {
         $this->authorizeWeekly($weeklyTarget);

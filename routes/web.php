@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
         // Level 2: /monthly-targets/period/{year}/{month}/staff
         // Level 3: /monthly-targets/period/{year}/{month}/staff/{staff}
         // Level 4: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}
+        // Level 5: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}/{weeklyTarget}
         Route::prefix('monthly-targets/period/{year}/{month}')->group(function () {
             Route::get('staff', [MonthlyTargetController::class, 'staffListForMonth'])
                 ->name('period.staff-list');
@@ -46,6 +47,8 @@ Route::middleware(['auth'])->group(function () {
                 ->name('period.staff-targets');
             Route::get('staff/{staff}/{monthlyTarget}', [MonthlyTargetController::class, 'showStaffInPeriod'])
                 ->name('period.staff-weekly');
+            Route::get('staff/{staff}/{monthlyTarget}/{weeklyTarget}', [WeeklyTargetController::class, 'showInPeriod'])
+                ->name('period.weekly-show');
         });
 
         // ── LEGACY ROUTES (deprecated \u2014 redirect ke period hierarchy) ────────────

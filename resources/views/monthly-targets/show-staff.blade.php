@@ -157,7 +157,15 @@
 
                             {{-- Footer: link laporan + pending badge --}}
                             <div style="display:flex;align-items:center;gap:8px;padding-top:4px;border-top:1px solid var(--neutral-100);margin-top:6px;">
-                                <a href="{{ route('weekly-targets.show', $wt) }}"
+                                <a href="{{ isset($year, $month, $person)
+                                        ? route('period.weekly-show', [
+                                            'year'          => $year,
+                                            'month'         => $month,
+                                            'staff'         => $person->id,
+                                            'monthlyTarget' => $monthlyTarget->id,
+                                            'weeklyTarget'  => $wt->id,
+                                          ])
+                                        : route('weekly-targets.show', $wt) }}"
                                    style="font-size:12px;color:var(--maxy-navy);font-weight:600;display:inline-flex;align-items:center;gap:5px;text-decoration:none;flex:1;">
                                     <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Lihat {{ $wtTotal }} laporan
