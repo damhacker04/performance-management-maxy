@@ -37,17 +37,48 @@ class MonthlyTargetController extends Controller
 
     public function create()
     {
-        return view('monthly-targets.create');
+        $user = auth()->user();
+
+        // Daftar staf yang bisa di-assign (sesuai dept leader/c-level)
+        if (in_array($user->role, ['c_level', 'super_admin'])) {
+            $staffList = \App\Models\User::where('role', 'staff')
+                ->where('is_active', true)
+                ->orderBy('department')
+                ->orderBy('name')
+                ->get()
+                ->groupBy('department');
+        } else {
+            $staffList = \App\Models\User::where('role', 'staff')
+                ->where('department', $user->department)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
+                ->groupBy('department');
+        }
+
+        // KPI aktif untuk ditampilkan sebagai acuan
+        $kpiRefs = \App\Models\KpiTarget::whereNotNull('department')
+            ->where('is_active', true)
+            ->when(!in_array($user->role, ['c_level', 'super_admin']), fn($q) =>
+                $q->where('department', $user->department)
+            )
+            ->orderBy('department')
+            ->get()
+            ->groupBy('department');
+
+        return view('monthly-targets.create', compact('staffList', 'kpiRefs'));
     }
 
     public function store(Request $request)
     {
         $user  = auth()->user();
         $rules = [
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'month'       => 'required|integer|min:1|max:12',
-            'year'        => 'required|integer|min:2024|max:2030',
+            'title'         => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2024|max:2030',
+            'assigned_to'   => 'nullable|exists:users,id',
+            'kpi_target_id' => 'nullable|exists:kpi_targets,id',
         ];
 
         // C-Level dan Super Admin wajib pilih departemen dari dropdown
@@ -62,32 +93,15 @@ class MonthlyTargetController extends Controller
             ? $validated['department']
             : ($user->department ?? 'ceo_office');
 
-        // Tentukan pemilik target (user_id)
-        $targetUserId = $user->id;
-        
-        if ($user->role === 'super_admin') {
-            // Cari Leader di departemen tersebut
-            $leader = \App\Models\User::where('department', $department)
-                ->where('role', 'leader')
-                ->where('is_active', true)
-                ->first();
-                
-            if ($leader) {
-                $targetUserId = $leader->id;
-            } else {
-                // Jika tidak ada leader, fallback ke C-Level (CEO)
-                $cLevel = \App\Models\User::where('role', 'c_level')->where('is_active', true)->first();
-                $targetUserId = $cLevel ? $cLevel->id : $user->id;
-            }
-        }
-
         MonthlyTarget::create([
-            'user_id'     => $targetUserId,
-            'department'  => $department,
-            'title'       => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'month'       => $validated['month'],
-            'year'        => $validated['year'],
+            'user_id'       => $user->id,           // Leader pembuat
+            'assigned_to'   => $validated['assigned_to'] ?? null,  // Staf pemilik
+            'kpi_target_id' => $validated['kpi_target_id'] ?? null,
+            'department'    => $department,
+            'title'         => $validated['title'],
+            'description'   => $validated['description'] ?? null,
+            'month'         => $validated['month'],
+            'year'          => $validated['year'],
         ]);
 
         return redirect()->route('monthly-targets.index')

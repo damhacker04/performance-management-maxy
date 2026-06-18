@@ -46,7 +46,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leader-targets', [LeaderTargetController::class, 'index'])->name('leader-targets.index');
         Route::get('/leader-targets/{monthlyTarget}', [LeaderTargetController::class, 'show'])->name('leader-targets.show');
 
+        // KPI — C-Level & Admin HR bisa CRUD, Leader/Staff view-only
         Route::get('/kpi', [KpiController::class, 'index'])->name('kpi');
+        Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
+        Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
+        Route::get('/kpi/{kpiTarget}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
+        Route::put('/kpi/{kpiTarget}', [KpiController::class, 'update'])->name('kpi.update');
+        Route::delete('/kpi/{kpiTarget}', [KpiController::class, 'destroy'])->name('kpi.destroy');
     });
 
     // Daily Task — Staff, Leader, dan C-Level semua bisa input laporan harian
