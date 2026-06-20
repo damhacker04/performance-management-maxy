@@ -8,10 +8,10 @@ try {
     $u = App\Models\User::first();
     auth()->login($u);
     $c = app()->make(App\Http\Controllers\WorkloadReportController::class);
-    $req = Illuminate\Http\Request::create('/workload-report', 'GET');
-    $c->index($req);
+    $staff = App\Models\User::find(6); // Anisa has ID 6 maybe? Or ID 20? Let's check. 
+    $c->show($staff, 6, 2026);
     echo "OK";
 } catch (\Throwable $e) {
     echo "ERROR: " . get_class($e) . " - " . $e->getMessage() . "\n";
-    echo $e->getTraceAsString();
+    echo $e->getFile() . ':' . $e->getLine() . "\n";
 }
