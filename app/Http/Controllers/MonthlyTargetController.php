@@ -54,103 +54,33 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        // Ambil semua monthly target di bulan ini
-        $monthlyTargetsQuery = MonthlyTarget::with([
+        // Ambil semua monthly target di bulan ini, untuk dept leader
+        $monthlyTargets = MonthlyTarget::with([
             'assignedStaff',
-            'weeklyTargets.assignee',
             'weeklyTargets.dailyTaskEntries',
         ])
         ->where('month', $month)
-        ->where('year', $year);
+        ->where('year', $year)
+        ->when(!in_array($user->role, ['c_level', 'super_admin']),
+            fn($q) => $q->where('department', $user->department)
+        )
+        ->whereNotNull('assigned_to')
+        ->get();
 
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
-            $monthlyTargetsQuery->where('department', $user->department);
-        }
-
-        $monthlyTargets = $monthlyTargetsQuery->get();
-
-        $staffData = [];
-        $umumData = [
-            'staff' => null,
-            'targets' => collect(),
-            'targetCount' => 0,
-            'totalEntries' => 0,
-            'doneEntries' => 0,
-        ];
-
-        foreach ($monthlyTargets as $mt) {
-            if ($mt->assigned_to) {
-                // Target Individu
-                $staffId = $mt->assigned_to;
-                if (!isset($staffData[$staffId])) {
-                    $staffData[$staffId] = [
-                        'staff' => $mt->assignedStaff,
-                        'targets' => collect(),
-                        'targetCount' => 0,
-                        'totalEntries' => 0,
-                        'doneEntries' => 0,
-                    ];
-                }
-                if (!$staffData[$staffId]['targets']->contains('id', $mt->id)) {
-                    $staffData[$staffId]['targets']->push($mt);
-                    $staffData[$staffId]['targetCount']++;
-                }
-                $staffData[$staffId]['totalEntries'] += $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count());
-                $staffData[$staffId]['doneEntries']  += $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
-            } else {
-                // Target Bersama
-                if ($mt->weeklyTargets->isEmpty()) {
-                    if (!$umumData['targets']->contains('id', $mt->id)) {
-                        $umumData['targets']->push($mt);
-                        $umumData['targetCount']++;
-                    }
-                } else {
-                    $hasStaff = false;
-                    foreach ($mt->weeklyTargets as $wt) {
-                        if ($wt->assigned_to) {
-                            $hasStaff = true;
-                            $staffId = $wt->assigned_to;
-                            if (!isset($staffData[$staffId])) {
-                                $staffData[$staffId] = [
-                                    'staff' => $wt->assignee,
-                                    'targets' => collect(),
-                                    'targetCount' => 0,
-                                    'totalEntries' => 0,
-                                    'doneEntries' => 0,
-                                ];
-                            }
-                            if (!$staffData[$staffId]['targets']->contains('id', $mt->id)) {
-                                $staffData[$staffId]['targets']->push($mt);
-                                $staffData[$staffId]['targetCount']++;
-                            }
-                            $staffData[$staffId]['totalEntries'] += $wt->dailyTaskEntries->count();
-                            $staffData[$staffId]['doneEntries']  += $wt->dailyTaskEntries->where('status','selesai')->count();
-                        } else {
-                            if (!$umumData['targets']->contains('id', $mt->id)) {
-                                $umumData['targets']->push($mt);
-                                $umumData['targetCount']++;
-                            }
-                            $umumData['totalEntries'] += $wt->dailyTaskEntries->count();
-                            $umumData['doneEntries']  += $wt->dailyTaskEntries->where('status','selesai')->count();
-                        }
-                    }
-                    if (!$hasStaff && !$umumData['targets']->contains('id', $mt->id)) {
-                        $umumData['targets']->push($mt);
-                        $umumData['targetCount']++;
-                    }
-                }
-            }
-        }
-
-        $byStaff = collect($staffData)->map(function ($data) {
-            $data['progress'] = $data['totalEntries'] > 0 ? round($data['doneEntries'] / $data['totalEntries'] * 100) : 0;
-            return $data;
+        // Group by assigned staff
+        $byStaff = $monthlyTargets->groupBy('assigned_to')->map(function ($staffTargets) {
+            $staff       = $staffTargets->first()->assignedStaff;
+            $totalEntries = $staffTargets->sum(fn($mt) => $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->count()));
+            $doneEntries  = $staffTargets->sum(fn($mt) => $mt->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count()));
+            return [
+                'staff'        => $staff,
+                'targets'      => $staffTargets,
+                'targetCount'  => $staffTargets->count(),
+                'totalEntries' => $totalEntries,
+                'doneEntries'  => $doneEntries,
+                'progress'     => $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0,
+            ];
         })->sortBy(fn($s) => $s['staff']?->name ?? '');
-
-        if ($umumData['targetCount'] > 0 || $umumData['totalEntries'] > 0) {
-            $umumData['progress'] = $umumData['totalEntries'] > 0 ? round($umumData['doneEntries'] / $umumData['totalEntries'] * 100) : 0;
-            $byStaff->prepend($umumData, 'umum');
-        }
 
         $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni',
                        'Juli','Agustus','September','Oktober','November','Desember'];
@@ -350,12 +280,7 @@ class MonthlyTargetController extends Controller
             'weeklyTargets.dailyTaskEntries',
             'kpiTarget',
         ])
-        ->where(function ($q) use ($staff) {
-            $q->where('assigned_to', $staff->id)
-              ->orWhereHas('weeklyTargets', function ($wq) use ($staff) {
-                  $wq->where('assigned_to', $staff->id);
-              });
-        })
+        ->where('assigned_to', $staff->id)
         ->where('year',  $year)
         ->where('month', $month)
         ->orderByDesc('year')
