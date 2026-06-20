@@ -24,8 +24,8 @@
     // Null-safe active tab detection
     $onDashboard    = request()->routeIs('dashboard');
     $onTasks        = request()->routeIs('daily-tasks.*');
-    // Tab Target aktif jika di monthly-targets ATAU weekly-targets ATAU leader-targets
-    $onTargets      = request()->routeIs('monthly-targets.*') || request()->routeIs('weekly-targets.*') || request()->routeIs('leader-targets.*');
+    // Tab Target aktif jika di monthly-targets ATAU weekly-targets ATAU leader-targets ATAU period (hierarki baru)
+    $onTargets      = request()->routeIs('monthly-targets.*') || request()->routeIs('weekly-targets.*') || request()->routeIs('leader-targets.*') || request()->routeIs('period.*');
     $onMyTargets    = request()->routeIs('staff-targets.*');
     $onKpi          = request()->routeIs('kpi') || request()->routeIs('kpi.*');
     $onWorkload     = request()->routeIs('workload-report.*');
