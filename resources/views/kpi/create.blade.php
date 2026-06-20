@@ -10,20 +10,20 @@
     <div class="m-card">
         <h2 style="font-size:17px;font-weight:800;color:var(--maxy-navy);margin:0 0 20px;">Tambah KPI Baru</h2>
 
-        <form method="POST" action="{{ route('kpi.store') }}">
+        <form method="POST" action="{{ route('kpi.store') }}" style="display:flex;flex-direction:column;gap:16px;">
             @csrf
 
             {{-- Departemen --}}
-            <div class="form-group">
-                <label class="form-label">Departemen <span style="color:var(--danger);">*</span></label>
-                <select name="department" class="form-control @error('department') is-invalid @enderror" required>
+            <div class="field">
+                <label class="">Departemen <span style="color:var(--danger);">*</span></label>
+                <div class="select-wrap"><select name="department" class="m-select @error('department') is-invalid @enderror" required>
                     <option value="">-- Pilih Departemen --</option>
                     @foreach($departments as $key => $label)
                         <option value="{{ $key }}" {{ old('department') == $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
-                </select>
+                </select></div>
                 @error('department')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -31,10 +31,10 @@
             </div>
 
             {{-- Nama KPI --}}
-            <div class="form-group">
-                <label class="form-label">Nama KPI <span style="color:var(--danger);">*</span></label>
+            <div class="field">
+                <label class="">Nama KPI <span style="color:var(--danger);">*</span></label>
                 <input type="text" name="kpi_name"
-                       class="form-control @error('kpi_name') is-invalid @enderror"
+                       class="m-input @error('kpi_name') is-invalid @enderror"
                        value="{{ old('kpi_name') }}"
                        placeholder="cth: Jumlah Closing Deal, Revenue Bulanan, Interview Kandidat"
                        required>
@@ -45,20 +45,20 @@
 
             {{-- Target & Satuan --}}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                    <label class="form-label">Target Nilai <span style="color:var(--danger);">*</span></label>
+                <div class="field">
+                    <label class="">Target Nilai <span style="color:var(--danger);">*</span></label>
                     <input type="number" name="target_value" step="0.01" min="0"
-                           class="form-control @error('target_value') is-invalid @enderror"
+                           class="m-input @error('target_value') is-invalid @enderror"
                            value="{{ old('target_value') }}"
                            placeholder="50" required>
                     @error('target_value')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Satuan <span style="color:var(--danger);">*</span></label>
+                <div class="field">
+                    <label class="">Satuan <span style="color:var(--danger);">*</span></label>
                     <input type="text" name="unit"
-                           class="form-control @error('unit') is-invalid @enderror"
+                           class="m-input @error('unit') is-invalid @enderror"
                            value="{{ old('unit') }}"
                            placeholder="deal, %, kandidat, rupiah..."
                            required>
@@ -70,9 +70,9 @@
 
             {{-- Berlaku Bulan & Tahun --}}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group">
-                    <label class="form-label">Berlaku Mulai Bulan <span style="color:var(--danger);">*</span></label>
-                    <select name="month" class="form-control @error('month') is-invalid @enderror" required>
+                <div class="field">
+                    <label class="">Berlaku Mulai Bulan <span style="color:var(--danger);">*</span></label>
+                    <div class="select-wrap"><select name="month" class="m-select @error('month') is-invalid @enderror" required>
                         @foreach(['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'] as $i => $m)
                             @if($i > 0)
                                 <option value="{{ $i }}" {{ old('month', date('n')) == $i ? 'selected' : '' }}>
@@ -80,18 +80,18 @@
                                 </option>
                             @endif
                         @endforeach
-                    </select>
+                    </select></div>
                     @error('month')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Tahun <span style="color:var(--danger);">*</span></label>
-                    <select name="year" class="form-control @error('year') is-invalid @enderror" required>
+                <div class="field">
+                    <label class="">Tahun <span style="color:var(--danger);">*</span></label>
+                    <div class="select-wrap"><select name="year" class="m-select @error('year') is-invalid @enderror" required>
                         @foreach(range(2024, 2030) as $y)
                             <option value="{{ $y }}" {{ old('year', date('Y')) == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
-                    </select>
+                    </select></div>
                     @error('year')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -99,10 +99,10 @@
             </div>
 
             {{-- Catatan --}}
-            <div class="form-group">
-                <label class="form-label">Catatan <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
+            <div class="field">
+                <label class="">Catatan <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
                 <textarea name="notes" rows="3"
-                          class="form-control @error('notes') is-invalid @enderror"
+                          class="m-textarea @error('notes') is-invalid @enderror"
                           placeholder="Konteks atau penjelasan tambahan tentang KPI ini...">{{ old('notes') }}</textarea>
                 @error('notes')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -133,3 +133,5 @@
     </div>
 </div>
 </x-app-layout>
+
+

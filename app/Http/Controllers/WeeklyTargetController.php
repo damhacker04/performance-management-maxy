@@ -32,34 +32,42 @@ class WeeklyTargetController extends Controller
         $context = $request->input('context', null);
 
         // ── Target DARI C-Level (untuk leader pribadi) ────────────────────
+        // Jika ada pre-selected monthly_target_id, ambil bulan/tahunnya
+        // agar dropdown hanya tampilkan target dari bulan yang sama (bukan hardcode now())
+        $preSelected = $request->filled('monthly_target_id')
+            ? (int) $request->monthly_target_id
+            : null;
+
+        $preSelectedMonthly = $preSelected
+            ? MonthlyTarget::find($preSelected)
+            : null;
+
+        // Gunakan bulan/tahun dari target yang dipilih; jika tidak ada, fallback ke bulan ini
+        $filterMonth = $preSelectedMonthly ? $preSelectedMonthly->month : now()->month;
+        $filterYear  = $preSelectedMonthly ? $preSelectedMonthly->year  : now()->year;
+
+        // ── Target DARI C-Level (untuk leader pribadi) ───────────────────
         $cLevelTargetsQuery = MonthlyTarget::query()
             ->whereHas('user', fn($q) => $q->where('role', 'c_level'))
-            ->where('month', now()->month)
-            ->where('year',  now()->year)
+            ->where('month', $filterMonth)
+            ->where('year',  $filterYear)
             ->orderBy('title');
 
         // ── Target BUATAN LEADER (untuk tim/staff) ────────────────────────
         $teamTargetsQuery = MonthlyTarget::query()
+            ->where('month', $filterMonth)
+            ->where('year',  $filterYear)
             ->orderBy('title');
 
         if ($user->role === 'leader') {
             $cLevelTargetsQuery->where('department', $user->department);
-            $teamTargetsQuery
-                ->where('department', $user->department)
-                ->where('month', now()->month)
-                ->where('year',  now()->year);
+            $teamTargetsQuery->where('department', $user->department);
         } elseif ($user->role === 'c_level') {
-            $teamTargetsQuery
-                ->where('month', now()->month)
-                ->where('year',  now()->year);
+            // c_level bisa lihat semua departemen, tidak perlu filter dept
         }
 
         $cLevelTargets = $cLevelTargetsQuery->get();
         $teamTargets   = $teamTargetsQuery->get();
-
-        $preSelected = $request->filled('monthly_target_id')
-            ? (int) $request->monthly_target_id
-            : null;
 
         $preSelectedUser = $request->filled('assigned_to')
             ? (int) $request->assigned_to
@@ -67,11 +75,8 @@ class WeeklyTargetController extends Controller
 
         // Tentukan departemen target (berguna untuk super_admin / c_level yang tidak punya departemen tetap)
         $targetDepartment = $user->department;
-        if ($preSelected) {
-            $monthlyTarget = \App\Models\MonthlyTarget::find($preSelected);
-            if ($monthlyTarget) {
-                $targetDepartment = $monthlyTarget->department;
-            }
+        if ($preSelectedMonthly) {
+            $targetDepartment = $preSelectedMonthly->department;
         }
 
         $staffList = \App\Models\User::when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
@@ -83,8 +88,14 @@ class WeeklyTargetController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Ambil object user yang pre-selected agar bisa ditampilkan di locked UI
+        $preSelectedUserModel = $preSelectedUser
+            ? $staffList->firstWhere('id', $preSelectedUser)
+            : null;
+
         return view('weekly-targets.create', compact(
-            'cLevelTargets', 'teamTargets', 'preSelected', 'preSelectedUser', 'context', 'staffList'
+            'cLevelTargets', 'teamTargets', 'preSelected', 'preSelectedUser',
+            'preSelectedUserModel', 'context', 'staffList'
         ));
     }
 
@@ -260,7 +271,14 @@ class WeeklyTargetController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('weekly-targets.edit', compact('weeklyTarget', 'cLevelTargets', 'teamTargets', 'context', 'staffList'));
+        // Ambil object user yang sudah di-assign agar bisa ditampilkan sebagai locked card
+        $assignedUserModel = $weeklyTarget->assigned_to
+            ? $staffList->firstWhere('id', $weeklyTarget->assigned_to)
+            : null;
+
+        return view('weekly-targets.edit', compact(
+            'weeklyTarget', 'cLevelTargets', 'teamTargets', 'context', 'staffList', 'assignedUserModel'
+        ));
     }
 
     public function update(Request $request, WeeklyTarget $weeklyTarget)

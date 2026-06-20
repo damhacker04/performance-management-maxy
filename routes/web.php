@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BackdateRequestController;
 use App\Http\Controllers\AiEvaluationController;
 use App\Http\Controllers\KpiController;
+use App\Http\Controllers\WorkloadReportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -75,6 +76,21 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/kpi/{kpiTarget}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
         Route::put('/kpi/{kpiTarget}', [KpiController::class, 'update'])->name('kpi.update');
         Route::delete('/kpi/{kpiTarget}', [KpiController::class, 'destroy'])->name('kpi.destroy');
+
+        // KPI L3 (Staff Individual) & KPI Actual — hanya C-Level & Admin HR
+        Route::get('/kpi/staff/create', [KpiController::class, 'createStaffKpi'])->name('kpi.staff.create');
+        Route::post('/kpi/staff', [KpiController::class, 'storeStaffKpi'])->name('kpi.staff.store');
+        Route::get('/kpi/actuals', [KpiController::class, 'indexActuals'])->name('kpi.actuals.index');
+        Route::get('/kpi/actuals/create', [KpiController::class, 'createActual'])->name('kpi.actuals.create');
+        Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
+        Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
+        Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+
+        // AI Workload & Performance Report — C-Level, Admin HR, Leader
+        Route::get('/workload-report', [WorkloadReportController::class, 'index'])->name('workload-report.index');
+        Route::get('/workload-report/{staff}/{month}/{year}', [WorkloadReportController::class, 'show'])->name('workload-report.show');
+        Route::post('/workload-report/generate', [WorkloadReportController::class, 'generateReport'])->name('workload-report.generate');
+        Route::post('/workload-report/generate-batch', [WorkloadReportController::class, 'generateBatch'])->name('workload-report.generateBatch');
     });
 
     // Daily Task — Staff, Leader, dan C-Level semua bisa input laporan harian

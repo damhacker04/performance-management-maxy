@@ -66,20 +66,54 @@
     </div>
     @endif
 
+    {{-- ── Filter Periode (wajib) ── --}}
+    @php
+        $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+        $currentYear = now()->year;
+    @endphp
+    <form method="GET" action="{{ route('monthly-targets.index') }}"
+          style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        {{-- Bulan --}}
+        <div class="select-wrap" style="width:140px;">
+            <select name="month" class="m-select m-input" style="font-size:13px;">
+                @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" {{ $filterMonth == $m ? 'selected' : '' }}>{{ $monthNames[$m] }}</option>
+                @endfor
+            </select>
+        </div>
+        {{-- Tahun --}}
+        <div class="select-wrap" style="width:100px;">
+            <select name="year" class="m-select m-input" style="font-size:13px;">
+                @for($y = 2024; $y <= $currentYear + 1; $y++)
+                    <option value="{{ $y }}" {{ $filterYear == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Tampilkan
+        </button>
+    </form>
+
+
     @if($targets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
                 <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                <p style="font-size:14px;margin-bottom:8px;">Belum ada target bulanan.</p>
-                <a href="{{ route('monthly-targets.create') }}" style="font-size:13px;font-weight:600;color:var(--maxy-navy);">Buat target pertama →</a>
+                <p style="font-size:14px;margin-bottom:4px;">Belum ada target untuk <strong>{{ $monthNames[$filterMonth] }} {{ $filterYear }}</strong>.</p>
+                <p style="font-size:12px;color:var(--fg-4);margin-bottom:8px;">Coba pilih bulan lain di filter di atas.</p>
+                <a href="{{ route('monthly-targets.create') }}" style="font-size:13px;font-weight:600;color:var(--maxy-navy);">Buat target baru →</a>
             </div>
         </div>
 
     @elseif($isCLevel)
+        @php
+            // Re-group dari paginated collection (sudah difilter periode di controller)
+            $groupedByDept = $targets->getCollection()->groupBy('department');
+        @endphp
 
-        {{-- ════════════════════════════════════════
-             C-LEVEL VIEW: Accordion per departemen
-             ════════════════════════════════════════ --}}
+        {{-- C-LEVEL VIEW: Accordion per departemen --}}
         <div style="display:flex;flex-direction:column;gap:8px;">
             @foreach($groupedByDept as $dept => $deptTargets)
                 @php
@@ -278,6 +312,36 @@
 
         </div>
 
+    @endif
+
+    {{-- Pagination --}}
+    @if($targets->hasPages())
+    <div style="padding:8px 0 4px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div style="font-size:12px;color:var(--fg-3);">
+            Menampilkan {{ $targets->firstItem() }}–{{ $targets->lastItem() }} dari {{ $targets->total() }} target
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+            @if($targets->onFirstPage())
+                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">← Sebelumnya</span>
+            @else
+                <a href="{{ $targets->previousPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">← Sebelumnya</a>
+            @endif
+
+            @foreach($targets->getUrlRange(max(1,$targets->currentPage()-2), min($targets->lastPage(),$targets->currentPage()+2)) as $page => $url)
+                @if($page == $targets->currentPage())
+                    <span style="padding:6px 12px;border-radius:8px;background:var(--maxy-navy);color:#fff;font-size:13px;font-weight:700;">{{ $page }}</span>
+                @else
+                    <a href="{{ $url }}" style="padding:6px 12px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--fg-2);font-size:13px;font-weight:600;text-decoration:none;">{{ $page }}</a>
+                @endif
+            @endforeach
+
+            @if($targets->hasMorePages())
+                <a href="{{ $targets->nextPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">Berikutnya →</a>
+            @else
+                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">Berikutnya →</span>
+            @endif
+        </div>
+    </div>
     @endif
 
 </div>

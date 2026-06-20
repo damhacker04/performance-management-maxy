@@ -8,28 +8,43 @@ use Illuminate\Http\Request;
 
 class MonthlyTargetController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
+        // Filter periode — wajib, default ke bulan & tahun berjalan
+        $filterMonth = (int) $request->get('month', now()->month);
+        $filterYear  = (int) $request->get('year',  now()->year);
+
+        // Validasi: bulan 1–12, tahun 2024–sekarang+1
+        $filterMonth = max(1, min(12, $filterMonth));
+        $filterYear  = max(2024, min(now()->year + 1, $filterYear));
+
         $targets = MonthlyTarget::with(['user', 'weeklyTargets', 'weeklyTargets.dailyTaskEntries'])
-            ->when($user->role === 'leader' || $user->role === 'staff', fn($q) => 
-                $q->where('department', $user->department)
+            ->where('month', $filterMonth)
+            ->where('year',  $filterYear)
+            ->when(
+                $user->role === 'leader' || $user->role === 'staff',
+                fn($q) => $q->where('department', $user->department)
             )
             ->orderByDesc('year')
             ->orderByDesc('month')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
-        // ── Leader: group Bulan (terbaru di atas) — hanya untuk index display ──
+        // Leader: group by bulan (untuk tampilan accordion bulan, sudah difilter periode)
         $leaderGrouped = null;
         if ($user->role === 'leader') {
-            $leaderGrouped = $targets
+            $leaderGrouped = $targets->getCollection()
                 ->groupBy(fn($t) => $t->year . '-' . str_pad($t->month, 2, '0', STR_PAD_LEFT))
                 ->sortKeysDesc();
         }
 
-        return view('monthly-targets.index', compact('targets', 'leaderGrouped'));
+        return view('monthly-targets.index', compact(
+            'targets', 'leaderGrouped', 'filterMonth', 'filterYear'
+        ));
     }
+
 
     /**
      * Halaman perantara: daftar staf yang punya target di bulan tertentu.

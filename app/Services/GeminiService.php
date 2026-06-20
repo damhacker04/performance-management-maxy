@@ -292,4 +292,178 @@ PROMPT;
 
         return $data;
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // AI WORKLOAD & PERFORMANCE REPORT
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Generate AI Workload & Performance Report untuk satu staf.
+     * Input: 6 sumber data (KPI L2, L3, Actual, Monthly, Weekly, Daily Tasks)
+     * Output: JSON terstruktur (achievement, optimization_areas, score, recommendations)
+     */
+    public function generateWorkloadReport(array $data): array
+    {
+        $prompt = $this->buildWorkloadPrompt($data);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type'  => 'application/json',
+        ])->timeout(120)->post($this->apiUrl, [
+            'model'       => $this->model,
+            'messages'    => [
+                ['role' => 'system', 'content' => 'Kamu adalah analis kinerja HR senior yang ahli membaca pola kerja dari log aktivitas harian. Selalu balas dalam format JSON yang valid.'],
+                ['role' => 'user',   'content' => $prompt],
+            ],
+            'temperature'      => 0.3,
+            'max_tokens'       => 3000,
+            'response_format'  => ['type' => 'json_object'],
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('WorkloadReport Groq error', ['status' => $response->status(), 'body' => $response->body()]);
+            throw new \RuntimeException('Groq API error: ' . $response->status());
+        }
+
+        $content = $response->json('choices.0.message.content', '{}');
+        $parsed  = json_decode($content, true);
+
+        if (!$parsed) {
+            throw new \RuntimeException('Gagal parse JSON dari AI response.');
+        }
+
+        return $parsed;
+    }
+
+    /**
+     * Build prompt lengkap untuk Workload Report — kirim ke Groq.
+     */
+    private function buildWorkloadPrompt(array $data): string
+    {
+        $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        $monthLabel = $monthNames[$data['month']] . ' ' . $data['year'];
+
+        // ── Bagian 1: Header ──────────────────────────────────────────
+        $prompt  = "═══ DATA KARYAWAN ═══\n";
+        $prompt .= "Nama    : {$data['staff_name']}\n";
+        $prompt .= "Divisi  : {$data['division']}\n";
+        $prompt .= "Periode : {$data['date_range'][0]} – {$data['date_range'][1]}\n\n";
+
+        // ── Bagian 2: KPI L2 (Benchmark Dept) ────────────────────────
+        $prompt .= "═══ KPI DEPARTEMEN (Benchmark) ═══\n";
+        if ($data['kpi_l2']->isEmpty()) {
+            $prompt .= "Tidak ada KPI departemen yang terdaftar.\n";
+        } else {
+            foreach ($data['kpi_l2'] as $kpi) {
+                $prompt .= "- {$kpi->kpi_name}: target {$kpi->target_value} {$kpi->unit}\n";
+            }
+        }
+
+        // ── Bagian 3: KPI L3 (Target Individu) ───────────────────────
+        $prompt .= "\n═══ KPI INDIVIDU — Target Personal {$data['staff_name']} ═══\n";
+        if ($data['kpi_l3']->isEmpty()) {
+            $prompt .= "Belum ada KPI individu yang di-assign.\n";
+        } else {
+            foreach ($data['kpi_l3'] as $kpi) {
+                $prompt .= "- {$kpi->kpi_name}: target {$kpi->target_value} {$kpi->unit}";
+                if ($kpi->parent) {
+                    $prompt .= " (dari benchmark dept: {$kpi->parent->target_value} {$kpi->parent->unit})";
+                }
+                $prompt .= "\n";
+            }
+        }
+
+        // ── Bagian 4: KPI Actual ──────────────────────────────────────
+        $prompt .= "\n═══ KPI AKTUAL — Realisasi {$monthLabel} ═══\n";
+        if ($data['kpi_actuals']->isEmpty()) {
+            $prompt .= "Belum ada data aktual KPI yang diinput untuk periode ini.\n";
+        } else {
+            foreach ($data['kpi_actuals'] as $actual) {
+                $kpiName = $actual->kpiTarget?->kpi_name ?? 'Unknown KPI';
+                $target  = $actual->kpiTarget?->target_value ?? 0;
+                $unit    = $actual->kpiTarget?->unit ?? '';
+                $pct     = $target > 0 ? round($actual->actual_value / $target * 100, 1) : 0;
+                $prompt .= "- {$kpiName}: actual {$actual->actual_value} {$unit} dari target {$target} {$unit} ({$pct}%)\n";
+            }
+        }
+
+        // ── Bagian 5: Monthly Targets ─────────────────────────────────
+        $prompt .= "\n═══ TARGET BULANAN ═══\n";
+        if ($data['monthly_targets']->isEmpty()) {
+            $prompt .= "Tidak ada target bulanan yang terdaftar.\n";
+        } else {
+            foreach ($data['monthly_targets'] as $mt) {
+                $prompt .= "- {$mt->title}";
+                if ($mt->description) $prompt .= ": {$mt->description}";
+                $prompt .= "\n";
+            }
+        }
+
+        // ── Bagian 6: Weekly Targets ──────────────────────────────────
+        $prompt .= "\n═══ TARGET MINGGUAN ═══\n";
+        if ($data['weekly_targets']->isEmpty()) {
+            $prompt .= "Tidak ada target mingguan yang terdaftar.\n";
+        } else {
+            foreach ($data['weekly_targets'] as $week => $targets) {
+                $prompt .= "Minggu {$week}:\n";
+                foreach ($targets as $wt) {
+                    $prompt .= "  - {$wt->title}";
+                    if ($wt->description) $prompt .= ": {$wt->description}";
+                    $prompt .= "\n";
+                }
+            }
+        }
+
+        // ── Bagian 7: Daily Task Entries (LENGKAP) ────────────────────
+        $attendPct = $data['working_days'] > 0
+            ? round($data['active_days'] / $data['working_days'] * 100, 1)
+            : 0;
+
+        $prompt .= "\n═══ LOG AKTIVITAS HARIAN ═══\n";
+        $prompt .= "Total task   : {$data['task_count']} entri\n";
+        $prompt .= "Hari aktif   : {$data['active_days']} dari {$data['working_days']} hari kerja ({$attendPct}%)\n";
+        $prompt .= "Rata-rata    : {$data['avg_per_day']} task/hari\n\n";
+        $prompt .= "Detail per tanggal (Format: Tanggal | Judul Task | Status):\n";
+
+        foreach ($data['tasks'] as $task) {
+            $date   = $task->task_date->format('d/m');
+            $title  = $task->task_description ?? 'Tanpa Judul';
+            $status = $task->status ?? '-';
+            
+            $aiData = '';
+            if ($task->aiEvaluation) {
+                $score = $task->aiEvaluation->final_score;
+                $feedback = str_replace("\n", " ", $task->aiEvaluation->ai_feedback);
+                $aiData = " | Skor Kualitas Task (by AI): {$score}/100 | Analisis Isi Bukti: {$feedback}";
+            }
+            
+            $prompt .= "{$date} | {$title} | {$status}{$aiData}\n";
+        }
+
+        // ── Instruksi Output ──────────────────────────────────────────
+        $prompt .= "\n═══ INSTRUKSI ═══\n";
+        $prompt .= "Analisis data di atas secara mendalam dan buat Workload & Performance Report untuk {$data['staff_name']}.\n";
+        $prompt .= "Sebut nama {$data['staff_name']} secara langsung dalam narasi.\n";
+        $prompt .= "Berikan penilaian objektif berdasarkan HANYA data yang diberikan di atas. Jangan mengarang masalah jika tidak ada. Jika ada 'Skor Kualitas Task (by AI)', wajib sertakan analisis kualitas bukti di dalam laporan.\n";
+        $prompt .= "Bandingkan rencana (Monthly/Weekly Target) vs realita (Daily Task) jika ada.\n\n";
+        $prompt .= "Kembalikan JSON dengan struktur berikut (WAJIB valid JSON):\n";
+        $prompt .= "{\n";
+        $prompt .= '  "achievement": {' . "\n";
+        $prompt .= '    "target_name": "narasi analisis pencapaian per target..."' . "\n";
+        $prompt .= "  },\n";
+        $prompt .= '  "optimization_areas": [' . "\n";
+        $prompt .= '    {"title": "...", "detail": "..."}' . "\n";
+        $prompt .= "  ],\n";
+        $prompt .= '  "score": (Berikan skor dinamis 0-100 sesuai performa sesungguhnya),' . "\n";
+        $prompt .= '  "score_reasoning": "Penjelasan detail kenapa skor tersebut diberikan...",' . "\n";
+        $prompt .= '  "ceo_recommendations": ["Rekomendasi konkret 1...", "Rekomendasi konkret 2..."],' . "\n";
+        $prompt .= '  "summary_flag": "🟡",' . "\n";
+        $prompt .= '  "flag_reason": "Ringkasan satu kalimat untuk tabel summary"' . "\n";
+        $prompt .= "}\n";
+        $prompt .= "Catatan: summary_flag harus 🔴 (skor <60), 🟡 (60-79), atau ✅ (80+).\n";
+
+        return $prompt;
+    }
 }
