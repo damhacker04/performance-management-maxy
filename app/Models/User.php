@@ -82,8 +82,15 @@ class User extends Authenticatable
         return self::DEPARTMENTS[$this->department] ?? ucfirst(str_replace('_', ' ', $this->department));
     }
 
+    /** Legacy: KPI lama per-individu (sebelum refactor) */
     public function kpiTargets()
     {
         return $this->hasMany(KpiTarget::class);
+    }
+
+    /** Monthly targets yang di-assign ke user ini sebagai staf */
+    public function assignedMonthlyTargets()
+    {
+        return $this->hasMany(MonthlyTarget::class, 'assigned_to');
     }
 }

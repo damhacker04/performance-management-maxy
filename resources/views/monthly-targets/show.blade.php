@@ -203,7 +203,9 @@
             $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
         @endphp
 
-        <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => $personKey]) }}"
+        <a href="{{ $isUmum
+                ? route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => 'umum'])
+                : route('staff.monthly-targets', ['staff' => $personKey]) }}"
            class="person-accordion"
            style="margin-bottom:10px; display:block; text-decoration:none; color:inherit; transition:all .15s;"
            onmouseenter="this.style.borderColor='var(--maxy-navy)'"

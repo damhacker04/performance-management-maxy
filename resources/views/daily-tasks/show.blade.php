@@ -15,14 +15,16 @@
     $sChip = $statusMap[$dailyTask->status] ?? 'neutral';
     $pChip = $priorityChip[$dailyTask->priority] ?? 'neutral';
 
-    // Smart back: kembali ke halaman sebelumnya (referrer)
-    $prev = url()->previous();
-    $fromReview = request()->query('from') === 'review';
-    $backUrl = $fromReview
-        ? route('daily-tasks.index', ['tab' => 'review'])
-        : (($prev !== url()->current() && !str_contains($prev, '/edit'))
-            ? $prev 
-            : route('daily-tasks.index'));
+    // Smart back: prioritas ?back= (dari period hierarchy), lalu referrer, lalu index
+    $backFromQuery  = request()->query('back') ? urldecode(request()->query('back')) : null;
+    $fromReview     = request()->query('from') === 'review';
+    $prev           = url()->previous();
+    $backUrl = $backFromQuery
+        ?? ($fromReview
+            ? route('daily-tasks.index', ['tab' => 'review'])
+            : (($prev !== url()->current() && !str_contains($prev, '/edit'))
+                ? $prev
+                : route('daily-tasks.index')));
 @endphp
 
 <div class="page">

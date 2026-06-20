@@ -642,6 +642,29 @@
                 if (count) count.innerHTML = pendingTotal + '<span class="kc-sub"> laporan</span>';
                 if (bar) bar.style.width = Math.min(pendingTotal * 20, 100) + '%';
             });
+
+            // Toggle "Lihat X lainnya" untuk review cards
+            const _reviewState = { target: false, adhoc: false };
+            function toggleReviewList(type) {
+                const list = document.getElementById('extra-' + type + '-list');
+                const btn  = document.getElementById('btn-show-more-' + type);
+                const txt  = document.getElementById('btn-' + type + '-text');
+                const ico  = document.getElementById('btn-' + type + '-icon');
+                const remaining = type === 'target'
+                    ? {{ max(0, ($pendingWithTarget->count() ?? 0) - 5) }}
+                    : {{ max(0, ($pendingAdHoc->count() ?? 0) - 5) }};
+
+                _reviewState[type] = !_reviewState[type];
+                if (_reviewState[type]) {
+                    list.style.display = 'block';
+                    txt.textContent = '− Sembunyikan';
+                    ico.style.transform = 'rotate(180deg)';
+                } else {
+                    list.style.display = 'none';
+                    txt.textContent = '+ Lihat ' + remaining + ' lainnya';
+                    ico.style.transform = 'rotate(0deg)';
+                }
+            }
         </script>
 
         {{-- ═══════════════════════════════════════════════════════════════ --}}
@@ -791,8 +814,10 @@
                     </div>
                     <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:var(--maxy-navy);text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
+                @php $countTarget = $pendingWithTarget->count(); @endphp
                 <div style="padding:0 16px 8px;">
-                    @forelse($pendingWithTarget as $entry)
+                    {{-- 5 item pertama selalu tampil --}}
+                    @forelse($pendingWithTarget->take(5) as $entry)
                         @php
                             $isRevised = $entry->verification_status === 'revision'
                                 && $entry->reviewed_at
@@ -821,6 +846,51 @@
                     @empty
                         <div class="empty-state" style="padding:16px 0;">✅ Tidak ada laporan dari target yang menunggu review</div>
                     @endforelse
+
+                    {{-- Item ke-6 dst, tersembunyi lalu muncul inline --}}
+                    @if($countTarget > 5)
+                        <div id="extra-target-list" style="display:none;">
+                            @foreach($pendingWithTarget->skip(5) as $entry)
+                                @php
+                                    $isRevised = $entry->verification_status === 'revision'
+                                        && $entry->reviewed_at
+                                        && $entry->updated_at->gt($entry->reviewed_at);
+                                    $targetLabel = $entry->weeklyTarget?->title ?? $entry->monthlyTarget?->title;
+                                @endphp
+                                <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                                   class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
+                                    <div class="row-body">
+                                        <div class="row-title">
+                                            {{ Str::limit($entry->task_description, 38) }}
+                                            @if($isRevised)
+                                                <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
+                                            @endif
+                                        </div>
+                                        <div class="row-meta">
+                                            <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
+                                            <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                            @if($targetLabel)
+                                                <span>· {{ Str::limit($targetLabel, 22) }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                                </a>
+                            @endforeach
+                        </div>
+
+                        {{-- Tombol show more --}}
+                        <button id="btn-show-more-target" onclick="toggleReviewList('target')"
+                                style="width:100%;padding:10px;border:none;background:var(--neutral-50);
+                                       border-top:1px solid var(--neutral-100);
+                                       font-size:12px;font-weight:700;color:var(--maxy-navy);
+                                       cursor:pointer;border-radius:0 0 12px 12px;
+                                       display:flex;align-items:center;justify-content:center;gap:6px;
+                                       transition:background .15s;">
+                            <span id="btn-target-text">+ Lihat {{ $countTarget - 5 }} lainnya</span>
+                            <svg id="btn-target-icon" class="lucide sm" style="transition:transform .2s;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -835,8 +905,10 @@
                     </div>
                     <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" style="font-size:11px;font-weight:600;color:#B45309;text-decoration:none;">Lihat Semua &rarr;</a>
                 </div>
+                @php $countAdhoc = $pendingAdHoc->count(); @endphp
                 <div style="padding:0 16px 8px;">
-                    @forelse($pendingAdHoc as $entry)
+                    {{-- 5 item pertama selalu tampil --}}
+                    @forelse($pendingAdHoc->take(5) as $entry)
                         @php
                             $isRevised = $entry->verification_status === 'revision'
                                 && $entry->reviewed_at
@@ -862,6 +934,48 @@
                     @empty
                         <div class="empty-state" style="padding:16px 0;">✅ Tidak ada tugas tambahan yang menunggu review</div>
                     @endforelse
+
+                    {{-- Item ke-6 dst, tersembunyi lalu muncul inline --}}
+                    @if($countAdhoc > 5)
+                        <div id="extra-adhoc-list" style="display:none;">
+                            @foreach($pendingAdHoc->skip(5) as $entry)
+                                @php
+                                    $isRevised = $entry->verification_status === 'revision'
+                                        && $entry->reviewed_at
+                                        && $entry->updated_at->gt($entry->reviewed_at);
+                                @endphp
+                                <a href="{{ route('daily-tasks.show', $entry->id) }}"
+                                   class="m-row" style="text-decoration:none;color:inherit;cursor:pointer;">
+                                    <div class="row-body">
+                                        <div class="row-title">
+                                            {{ Str::limit($entry->task_description, 38) }}
+                                            @if($isRevised)
+                                                <span class="chip chip-warning" style="font-size:10px;margin-left:4px;">↩ Direvisi</span>
+                                            @endif
+                                        </div>
+                                        <div class="row-meta">
+                                            <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name)[0] }}</span>
+                                            <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                                            <span style="color:#B45309;font-weight:600;">· Tugas Tambahan</span>
+                                        </div>
+                                    </div>
+                                    <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                                </a>
+                            @endforeach
+                        </div>
+
+                        {{-- Tombol show more --}}
+                        <button id="btn-show-more-adhoc" onclick="toggleReviewList('adhoc')"
+                                style="width:100%;padding:10px;border:none;background:var(--neutral-50);
+                                       border-top:1px solid var(--neutral-100);
+                                       font-size:12px;font-weight:700;color:#B45309;
+                                       cursor:pointer;border-radius:0 0 12px 12px;
+                                       display:flex;align-items:center;justify-content:center;gap:6px;
+                                       transition:background .15s;">
+                            <span id="btn-adhoc-text">+ Lihat {{ $countAdhoc - 5 }} lainnya</span>
+                            <svg id="btn-adhoc-icon" class="lucide sm" style="transition:transform .2s;" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                    @endif
                 </div>
             </div>
 
