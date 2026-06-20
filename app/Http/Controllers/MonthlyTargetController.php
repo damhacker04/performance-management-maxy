@@ -312,57 +312,61 @@ class MonthlyTargetController extends Controller
      */
     public function showStaffInPeriod(int $year, int $month, User $staff, MonthlyTarget $monthlyTarget)
     {
-        $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
-            abort_if($monthlyTarget->department !== $user->department, 403);
-        }
+        try {
+            $user = auth()->user();
+            if (!in_array($user->role, ['c_level', 'super_admin'])) {
+                abort_if($monthlyTarget->department !== $user->department, 403);
+            }
 
-        // Delegasi ke logika showStaff, tambah period context
-        $assignee = (string) $staff->id;
+            // Delegasi ke logika showStaff, tambah period context
+            $assignee = (string) $staff->id;
 
-        $monthlyTarget->load([
-            'user',
-            'weeklyTargets' => fn($q) => $q->where('assigned_to', $staff->id)->orderBy('week_number')->orderBy('id'),
-            'weeklyTargets.assignee',
-            'weeklyTargets.dailyTaskEntries.user',
-        ]);
-
-        $entriesByWeek = $monthlyTarget->weeklyTargets
-            ->mapWithKeys(fn($wt) => [
-                $wt->id => [
-                    'total'          => $wt->dailyTaskEntries->count(),
-                    'done'           => $wt->dailyTaskEntries->where('status','selesai')->count(),
-                    'pending_review' => $wt->dailyTaskEntries
-                                          ->where('status','selesai')
-                                          ->where('verification_status','pending')
-                                          ->count(),
-                ],
+            $monthlyTarget->load([
+                'user',
+                'weeklyTargets' => fn($q) => $q->where('assigned_to', $staff->id)->orderBy('week_number')->orderBy('id'),
+                'weeklyTargets.assignee',
+                'weeklyTargets.dailyTaskEntries.user',
             ]);
 
-        $personTargets = $monthlyTarget->weeklyTargets;
-        $person   = $staff;
-        $pName    = $staff->name;
-        $pDiv     = $staff->division ?? $staff->department;
-        $personKey = $assignee;
+            $entriesByWeek = $monthlyTarget->weeklyTargets
+                ->mapWithKeys(fn($wt) => [
+                    $wt->id => [
+                        'total'          => $wt->dailyTaskEntries->count(),
+                        'done'           => $wt->dailyTaskEntries->where('status','selesai')->count(),
+                        'pending_review' => $wt->dailyTaskEntries
+                                              ->where('status','selesai')
+                                              ->where('verification_status','pending')
+                                              ->count(),
+                    ],
+                ]);
 
-        $avatarColors = ['#1B4FD8','#6D28D9','#0E7490','#065F46','#9A3412','#1D4ED8','#7C3AED','#047857'];
-        $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-        $colorIdx = abs(crc32($pName) % count($avatarColors));
-        $bgColor  = $avatarColors[$colorIdx];
+            $personTargets = $monthlyTarget->weeklyTargets;
+            $person   = $staff;
+            $pName    = $staff->name;
+            $pDiv     = $staff->division ?? $staff->department;
+            $personKey = $assignee;
 
-        $pTotalEntry = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
-        $pDoneEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
-        $pProgress   = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
-        $weekRanges  = \App\Models\WeeklyTarget::WEEK_RANGES;
+            $avatarColors = ['#1B4FD8','#6D28D9','#0E7490','#065F46','#9A3412','#1D4ED8','#7C3AED','#047857'];
+            $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
+            $colorIdx = abs(crc32($pName) % count($avatarColors));
+            $bgColor  = $avatarColors[$colorIdx];
 
-        // Back URL: naik satu level ke period.staff-targets
-        $backUrl = route('period.staff-targets', ['year' => $year, 'month' => $month, 'staff' => $staff->id]);
+            $pTotalEntry = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
+            $pDoneEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
+            $pProgress   = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
+            $weekRanges  = \App\Models\WeeklyTarget::WEEK_RANGES;
 
-        return view('monthly-targets.show-staff', compact(
-            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey',
-            'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges',
-            'year', 'month', 'backUrl'
-        ));
+            // Back URL: naik satu level ke period.staff-targets
+            $backUrl = route('period.staff-targets', ['year' => $year, 'month' => $month, 'staff' => $staff->id]);
+
+            return view('monthly-targets.show-staff', compact(
+                'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey',
+                'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges',
+                'year', 'month', 'backUrl'
+            ));
+        } catch (\Throwable $e) {
+            return response("<pre style='background:#111;color:#f00;padding:20px;white-space:pre-wrap;'>" . htmlspecialchars("ERROR:\n" . $e->getMessage() . "\nFILE: " . $e->getFile() . "\nLINE: " . $e->getLine()) . "\n\n" . htmlspecialchars($e->getTraceAsString()) . "</pre>", 500);
+        }
     }
 
     public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
