@@ -46,41 +46,49 @@ class MigrateLegacyTargets extends Command
                 // Ambil daftar user_id (staf) yang pernah mengisi progress di weekly target ini
                 $staffIds = $weekly->dailyTaskEntries->pluck('user_id')->unique()->filter();
 
+                $dept = $monthly->department; // Menggunakan department dari MonthlyTarget
+                $month = $monthly->month;
+                $year = $monthly->year;
+
+                // Cari leader di departemen ini untuk dijadikan owner (user_id)
+                $leader = User::where('department', $dept)->where('role', 'leader')->first();
+                $fallbackUser = User::where('role', 'c_level')->first();
+                
+                $ownerId = $leader ? $leader->id : ($fallbackUser ? $fallbackUser->id : 1);
+
+                // 1. Kloning Target Bulanan Lama (Menggunakan Judul Asli!)
+                $clonedMonthly = MonthlyTarget::firstOrCreate(
+                    [
+                        'department' => $dept,
+                        'month' => $month,
+                        'year' => $year,
+                        'title' => $monthly->title, // MENGGUNAKAN JUDUL ASLI
+                        'user_id' => $ownerId,      // KEPEMILIKAN BARU
+                    ],
+                    [
+                        'description' => $monthly->description ?? 'Data migrasi dari target lama.',
+                    ]
+                );
+
                 if ($staffIds->isEmpty()) {
+                    // JIKA KOSONG: Pindahkan ke target bulanan yang benar (Leader)
+                    // Status assigned_to biarkan seperti semula (Umum)
+                    if ($weekly->monthly_target_id !== $clonedMonthly->id || $weekly->user_id !== $ownerId) {
+                        $weekly->update([
+                            'monthly_target_id' => $clonedMonthly->id,
+                            'user_id' => $ownerId
+                        ]);
+                        $migratedCount++;
+                    }
                     continue;
                 }
 
+                // JIKA ADA TASK: Pecah berdasarkan staf
                 foreach ($staffIds as $staffId) {
                     $staff = User::find($staffId);
                     if (!$staff) continue;
 
-                    $dept = $staff->department;
-                    $month = $monthly->month;
-                    $year = $monthly->year;
-
-                    // Cari leader di departemen ini untuk dijadikan owner (user_id)
-                    $leader = User::where('department', $dept)->where('role', 'leader')->first();
-                    $fallbackUser = User::where('role', 'c_level')->first();
-                    
-                    $ownerId = $leader ? $leader->id : ($fallbackUser ? $fallbackUser->id : 1);
-
-                    // 1. Kloning Target Bulanan Lama (Menggunakan Judul Asli!)
-                    // Kita cari apakah Target Bulanan dengan Judul & Dept yang sama sudah dikloning
-                    $clonedMonthly = MonthlyTarget::firstOrCreate(
-                        [
-                            'department' => $dept,
-                            'month' => $month,
-                            'year' => $year,
-                            'title' => $monthly->title, // MENGGUNAKAN JUDUL ASLI
-                            'user_id' => $ownerId,      // KEPEMILIKAN BARU
-                        ],
-                        [
-                            'description' => $monthly->description ?? 'Data migrasi dari target lama.',
-                        ]
-                    );
-
                     // Skip jika monthly target yang sedang diproses ini memang sudah punya owner yang benar
-                    // (misalnya kita run ulang pada target yang sudah termigrasi)
                     if ($monthly->id === $clonedMonthly->id && $monthly->user_id === $ownerId) {
                         continue;
                     }
@@ -112,9 +120,8 @@ class MigrateLegacyTargets extends Command
                     }
                 }
 
-                // Setelah dipecah ke masing-masing staf, hapus weekly target original-nya jika bukan milik khusus staf tersebut
-                // Cek apakah weekly target lama ini sudah dikosongkan daily task-nya
-                if ($weekly->dailyTaskEntries()->count() === 0) {
+                // Setelah dipecah ke masing-masing staf, hapus weekly target original-nya
+                if ($weekly->dailyTaskEntries()->count() === 0 && $weekly->monthly_target_id !== $clonedMonthly->id) {
                     $weekly->delete();
                 }
             }
