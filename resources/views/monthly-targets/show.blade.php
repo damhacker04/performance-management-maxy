@@ -203,8 +203,24 @@
             $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
         @endphp
 
-        <a href="{{ route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => $personKey]) }}" class="person-accordion m-card" style="margin-bottom:12px; border:1.5px solid var(--bd-1); display:block; text-decoration:none; color:inherit; padding:14px 16px; transition:border-color .15s;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+        <a href="{{ $isUmum
+                ? route('monthly-targets.staff', ['monthlyTarget' => $monthlyTarget->id, 'assignee' => 'umum'])
+                : route('staff.monthly-targets', ['staff' => $personKey]) }}"
+           class="person-accordion"
+           style="margin-bottom:10px; display:block; text-decoration:none; color:inherit; transition:all .15s;"
+           onmouseenter="this.style.borderColor='var(--maxy-navy)'"
+           onmouseleave="this.style.borderColor='var(--neutral-200)'">
+
+            <div style="display:flex; align-items:center; gap:12px; padding:14px 16px;">
+                {{-- Avatar --}}
+                <div style="width:40px;height:40px;border-radius:10px;background:{{ $bgColor }};
+                            color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
+                            font-size:14px;font-weight:700;letter-spacing:0.01em;
+                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    {{ $initials }}
+                </div>
+
+                {{-- Info --}}
                 <div style="flex:1;min-width:0;">
                     {{-- Chips --}}
                     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;">

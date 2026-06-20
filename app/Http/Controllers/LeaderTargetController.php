@@ -25,7 +25,7 @@ class LeaderTargetController extends Controller
 
         // Hitung progres laporan saya per monthly target
         $myEntries = DailyTaskEntry::where('user_id', $user->id)
-            ->get(['monthly_target_id', 'status'])
+            ->get(['monthly_target_id', 'status', 'user_id'])
             ->groupBy('monthly_target_id');
 
         $myCounts = $myEntries->map(fn($entries) => [

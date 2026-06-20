@@ -9,6 +9,34 @@
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Target Baru</h1>
     </div>
 
+    {{-- KPI Acuan (read-only info box) --}}
+    @if($kpiRefs->isNotEmpty())
+        <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
+                    border-radius:var(--r-md);padding:14px 16px;">
+            <div style="font-size:12px;font-weight:700;color:var(--info,#2563eb);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;">
+                📊 KPI Departemen Aktif (Acuan)
+            </div>
+            @foreach($kpiRefs as $deptKey => $kpis)
+                @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
+                <div style="font-size:11px;font-weight:700;color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px;">
+                    {{ $deptLabel }}
+                </div>
+                @foreach($kpis as $kpi)
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:var(--info,#2563eb);flex-shrink:0;"></span>
+                        <span style="font-size:13px;color:var(--fg-2);">
+                            <strong>{{ $kpi->kpi_name }}</strong>:
+                            {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bulan
+                        </span>
+                    </div>
+                @endforeach
+            @endforeach
+            <div style="font-size:11px;color:var(--fg-4);margin-top:8px;">
+                Target yang dibuat harus mendukung pencapaian KPI di atas.
+            </div>
+        </div>
+    @endif
+
     <div class="m-card">
         <form method="POST" action="{{ route('monthly-targets.store') }}"
               style="display:flex;flex-direction:column;gap:16px;">
@@ -20,7 +48,8 @@
                 <div class="field">
                     <label for="department">Departemen <span style="color:var(--danger);">*</span></label>
                     <div class="select-wrap">
-                        <select id="department" name="department" class="m-select" required>
+                        <select id="department" name="department" class="m-select" required
+                                onchange="filterStaffByDept(this.value)">
                             <option value="">Pilih departemen...</option>
                             @foreach(\App\Models\User::DEPARTMENTS as $key => $label)
                                 <option value="{{ $key }}" {{ old('department') === $key ? 'selected' : '' }}>
@@ -43,12 +72,68 @@
                 </div>
             @endif
 
+            <!-- Assign ke Staf -->
+            <div class="field">
+                <label for="assigned_to">
+                    Target untuk Staf
+                    <span style="color:var(--fg-4);font-weight:400;">(opsional — kosongkan jika target tim)</span>
+                </label>
+                <div class="select-wrap">
+                    <select id="assigned_to" name="assigned_to" class="m-select">
+                        <option value="">-- Target Tim (tidak spesifik per orang) --</option>
+                        @foreach($staffList as $deptKey => $staffs)
+                            @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
+                            <optgroup label="{{ $deptLabel }}" data-dept="{{ $deptKey }}">
+                                @foreach($staffs as $staff)
+                                    <option value="{{ $staff->id }}"
+                                            data-dept="{{ $staff->department }}"
+                                            {{ old('assigned_to') == $staff->id ? 'selected' : '' }}>
+                                        {{ $staff->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
+                <small style="color:var(--fg-4);font-size:11px;">
+                    Jika diisi, target ini akan muncul secara personal untuk staf tersebut dan digunakan sebagai acuan AI.
+                </small>
+            </div>
+
+            <!-- KPI Acuan (opsional) -->
+            @if($kpiRefs->flatten()->isNotEmpty())
+                <div class="field">
+                    <label for="kpi_target_id">
+                        Acuan KPI
+                        <span style="color:var(--fg-4);font-weight:400;">(opsional)</span>
+                    </label>
+                    <div class="select-wrap">
+                        <select id="kpi_target_id" name="kpi_target_id" class="m-select">
+                            <option value="">-- Tidak dikaitkan ke KPI spesifik --</option>
+                            @foreach($kpiRefs as $deptKey => $kpis)
+                                @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
+                                <optgroup label="{{ $deptLabel }}">
+                                    @foreach($kpis as $kpi)
+                                        <option value="{{ $kpi->id }}"
+                                                {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
+                                            {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('kpi_target_id')<span class="err">{{ $message }}</span>@enderror
+                </div>
+            @endif
+
             <!-- Judul -->
             <div class="field">
                 <label for="title">Judul Target <span style="color:var(--danger);">*</span></label>
                 <input id="title" type="text" name="title" value="{{ old('title') }}"
                        class="m-input {{ $errors->has('title') ? 'err' : '' }}"
-                       placeholder="cth. Tingkatkan konversi leads 20%" required />
+                       placeholder="cth. Campaign 3 kota, Follow up 50 leads" required />
                 @error('title')<span class="err">{{ $message }}</span>@enderror
             </div>
 
@@ -79,7 +164,7 @@
                     <label for="year">Tahun <span style="color:var(--danger);">*</span></label>
                     <div class="select-wrap">
                         <select id="year" name="year" class="m-select" required>
-                            @foreach(range(now()->year, now()->year + 1) as $y)
+                            @foreach(range(now()->year - 1, now()->year + 1) as $y)
                                 <option value="{{ $y }}" {{ old('year', now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endforeach
                         </select>
@@ -94,4 +179,21 @@
         </form>
     </div>
 </div>
+
+<script>
+// Filter dropdown staf berdasarkan departemen yang dipilih (untuk C-Level)
+function filterStaffByDept(selectedDept) {
+    const select = document.getElementById('assigned_to');
+    const options = select.querySelectorAll('option[data-dept]');
+    const groups  = select.querySelectorAll('optgroup[data-dept]');
+
+    groups.forEach(g => {
+        g.hidden = selectedDept ? g.dataset.dept !== selectedDept : false;
+    });
+
+    // Reset pilihan staf kalau dept berubah
+    select.value = '';
+}
+</script>
+
 </x-app-layout>

@@ -47,3 +47,11 @@ Artisan::command('db:clean-dummy', function () {
 
 // Jalankan auto-reject setiap jam
 Schedule::command('tasks:auto-reject-revisions')->hourly();
+
+// Hapus notifikasi lama (> 90 hari, sudah dibaca) setiap Minggu tengah malam
+// Menjaga tabel notifications tetap ramping di production jangka panjang
+Schedule::command('notifications:cleanup')->weekly()->sundays()->at('00:00');
+
+// Opsional: hapus juga failed jobs yang menumpuk (> 30 hari) setiap hari
+Schedule::command('queue:flush')->daily();
+

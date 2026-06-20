@@ -13,7 +13,11 @@
 <div class="page">
     <!-- Back -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.show', $weeklyTarget->monthly_target_id) }}" class="icon-btn" style="margin-left:-8px;">
+@php
+    $backParam = request()->query('back') ? urldecode(request()->query('back')) : null;
+    $backHref  = $backParam ?? route('monthly-targets.show', $weeklyTarget->monthly_target_id);
+@endphp
+        <a href="{{ $backHref }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Edit Target Mingguan</h1>
@@ -24,12 +28,14 @@
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
             @method('PATCH')
+            {{-- Teruskan ?back= agar setelah update bisa redirect ke period context --}}
+            @if($backParam ?? null)
+                <input type="hidden" name="back" value="{{ $backParam }}">
+            @endif
 
-            <!-- Monthly Target (required) -->
+            <!-- Monthly Target (LOCKED on edit — tidak bisa diubah) -->
             <div class="field">
-                <label for="monthly_target_id">
-                    Terkait Target Bulanan <span style="color:var(--danger);">*</span>
-                </label>
+                <label>Terkait Target Bulanan <span style="color:var(--danger);">*</span></label>
 
                 @if($contextBanner)
                     <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;
@@ -44,40 +50,34 @@
                     </div>
                 @endif
 
-                <div class="select-wrap">
-                    <select id="monthly_target_id" name="monthly_target_id"
-                            class="m-select {{ $errors->has('monthly_target_id') ? 'err' : '' }}" required>
-                        <option value="" disabled {{ empty($selectedMonthly) ? 'selected' : '' }}>
-                            Pilih target bulanan...
-                        </option>
-
-                        {{-- Grup C-Level (hanya muncul jika konteks = leader) --}}
-                        @if($cLevelTargets->isNotEmpty())
-                            <optgroup label="🎯 Target Saya — dari C-Level">
-                                @foreach($cLevelTargets as $mt)
-                                    <option value="{{ $mt->id }}"
-                                            {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
-                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-
-                        {{-- Grup Tim (hanya muncul jika konteks = team) --}}
-                        @if($teamTargets->isNotEmpty())
-                            <optgroup label="👥 Target Tim — untuk Staff">
-                                @foreach($teamTargets as $mt)
-                                    <option value="{{ $mt->id }}"
-                                            {{ (int)$selectedMonthly === $mt->id ? 'selected' : '' }}>
-                                        {{ $mt->title }} ({{ $months[$mt->month] }} {{ $mt->year }})
-                                    </option>
-                                @endforeach
-                            </optgroup>
-                        @endif
-                    </select>
+                {{-- Selalu terkunci saat edit: monthly target tidak boleh diubah --}}
+                <input type="hidden" name="monthly_target_id" value="{{ $weeklyTarget->monthly_target_id }}">
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                            border-radius:10px;background:var(--bg-2);border:1.5px solid var(--bd-1);">
+                    <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:10px;font-weight:600;color:var(--fg-4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">
+                            Target Bulanan
+                        </div>
+                        <div style="font-size:13px;font-weight:700;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ $weeklyTarget->monthlyTarget->title }}
+                        </div>
+                        <div style="font-size:11px;color:var(--fg-4);margin-top:2px;">
+                            {{ $months[$weeklyTarget->monthlyTarget->month] }} {{ $weeklyTarget->monthlyTarget->year }}
+                            &nbsp;·&nbsp; {{ ucfirst(str_replace('_',' ', $weeklyTarget->monthlyTarget->department)) }}
+                            @if($weeklyTarget->monthlyTarget->description)
+                                &nbsp;·&nbsp; <span style="font-style:italic;">{{ Str::limit($weeklyTarget->monthlyTarget->description, 60) }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    <span class="chip chip-neutral" style="font-size:10px;flex-shrink:0;">Terkunci</span>
                 </div>
                 @error('monthly_target_id')<span class="err">{{ $message }}</span>@enderror
             </div>
+
 
             <!-- Minggu -->
             <div class="field">
@@ -96,20 +96,49 @@
                 @error('week_number')<span class="err">{{ $message }}</span>@enderror
             </div>
 
-            <!-- Ditugaskan Kepada (Opsional) -->
+            <!-- Ditugaskan Kepada -->
             <div class="field">
                 <label for="assigned_to">Ditugaskan Kepada <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
-                <div class="select-wrap">
-                    <select id="assigned_to" name="assigned_to"
-                            class="m-select {{ $errors->has('assigned_to') ? 'err' : '' }}">
-                        <option value="">-- Umum (Semua staf di departemen dapat mengambil target ini) --</option>
-                        @foreach($staffList as $staff)
-                            <option value="{{ $staff->id }}" {{ old('assigned_to', $weeklyTarget->assigned_to) == $staff->id ? 'selected' : '' }}>
-                                {{ $staff->name }} ({{ $staff->role == 'leader' ? 'Leader' : 'Staff' }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+
+                @if($assignedUserModel)
+                    {{-- ✅ LOCKED: Target ini sudah ditugaskan ke staf tertentu --}}
+                    <input type="hidden" name="assigned_to" value="{{ $assignedUserModel->id }}">
+                    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                                border-radius:10px;background:var(--bg-2);border:1.5px solid var(--bd-1);">
+                        <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:10px;font-weight:600;color:var(--fg-4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">
+                                Ditugaskan Kepada
+                            </div>
+                            <div style="font-size:13px;font-weight:700;color:var(--fg-1);">
+                                {{ $assignedUserModel->name }}
+                            </div>
+                            <div style="font-size:11px;color:var(--fg-4);margin-top:2px;">
+                                {{ $assignedUserModel->role === 'leader' ? 'Leader' : 'Staff' }}
+                                @if($assignedUserModel->department)
+                                    &nbsp;·&nbsp; {{ ucfirst(str_replace('_',' ', $assignedUserModel->department)) }}
+                                @endif
+                            </div>
+                        </div>
+                        <span class="chip chip-neutral" style="font-size:10px;flex-shrink:0;">Terkunci</span>
+                    </div>
+                @else
+                    {{-- Belum ada assignee → bisa dipilih --}}
+                    <div class="select-wrap">
+                        <select id="assigned_to" name="assigned_to"
+                                class="m-select {{ $errors->has('assigned_to') ? 'err' : '' }}">
+                            <option value="">-- Umum (Semua staf di departemen dapat mengambil target ini) --</option>
+                            @foreach($staffList as $staff)
+                                <option value="{{ $staff->id }}" {{ old('assigned_to', $weeklyTarget->assigned_to) == $staff->id ? 'selected' : '' }}>
+                                    {{ $staff->name }} ({{ $staff->role == 'leader' ? 'Leader' : 'Staff' }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
                 @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
             </div>
 

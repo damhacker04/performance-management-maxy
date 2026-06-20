@@ -12,21 +12,42 @@
 @endphp
 
 <div class="page">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-            <a href="{{ route('monthly-targets.show', $monthlyTarget->id) }}" class="icon-btn" style="margin-left:-8px;">
-                <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </a>
-            <div style="flex:1;min-width:0;">
-                <h1 style="font-size:17px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.3;">Target: {{ $pName }}</h1>
-                <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ $monthlyTarget->title }} ({{ $monthName }} {{ $monthlyTarget->year }})</p>
+@php
+    // URL halaman ini (L4) — dipakai sebagai ?back= untuk Tambah/Edit agar
+    // setelah save bisa redirect kembali ke sini
+    $currentUrl = isset($backUrl)
+        ? url()->current()  // sudah dalam period context
+        : url()->current();
+@endphp
+
+    {{-- ── HEADER ──────────────────────────────────────────────────────────────── --}}
+    <div style="display:flex;align-items:center;gap:8px;">
+        {{-- Back URL di-set oleh controller (period.staff-targets untuk flow baru,
+             monthly-targets.show untuk target umum via legacy showStaff) --}}
+        <a href="{{ $backUrl ?? ($personKey === 'umum' || !$personKey
+                ? route('monthly-targets.show', $monthlyTarget->id)
+                : route('period.staff-targets', ['year' => now()->year, 'month' => now()->month, 'staff' => $personKey])) }}"
+           class="icon-btn" style="margin-left:-8px;">
+            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+        <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
+                <span class="chip chip-neutral" style="font-size:10px;">{{ $monthName }} {{ $monthlyTarget->year }}</span>
+                @if($isCurrentMonth)
+                    <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
+                @endif
             </div>
         </div>
 
         @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
-           class="btn btn-sm" style="background:#FBBF24;color:#1E3A8A;border:none;font-weight:700;padding:8px 16px;display:flex;align-items:center;gap:6px;border-radius:8px;text-decoration:none;">
-            <svg class="lucide sm" style="width:16px;height:16px;stroke-width:3px;" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <a href="{{ route('weekly-targets.create', [
+                'monthly_target_id' => $monthlyTarget->id,
+                'context'           => 'team',
+                'assigned_to'       => $personKey === 'umum' ? '' : $personKey,
+                'back'              => urlencode(url()->current()),
+            ]) }}"
+           class="btn btn-primary btn-sm" style="flex-shrink:0;">
+            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Tambah
         </a>
         @endif
@@ -92,9 +113,20 @@
                         @endif
                     </div>
 
-                    {{-- Judul --}}
-                    <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;margin-bottom:4px;">
-                        {{ $wt->title }}
+                    {{-- Tombol Edit & Hapus --}}
+                    @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                    <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+                        <a href="{{ route('weekly-targets.edit', $wt) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
+                            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </a>
+                        <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
+                              onsubmit="return confirm('Hapus target mingguan ini?\n\nPerhatian: {{ $wtTotal }} laporan terkait akan tetap tersimpan.');"
+                              style="margin:0;">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="icon-btn" title="Hapus" style="color:var(--danger);width:32px;height:32px;">
+                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </form>
                     </div>
                     @if($wt->description)
                         <p style="font-size:12px;color:var(--fg-3);margin:0 0 8px;line-height:1.4;">
@@ -113,20 +145,32 @@
                     </a>
                 </div>
 
-                {{-- Tombol aksi --}}
-                <div style="display:flex;align-items:flex-start;gap:2px;flex-shrink:0;">
-                    <a href="{{ route('weekly-targets.edit', $wt) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
-                        <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </a>
-                    <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
-                          onsubmit="return confirm('Hapus target mingguan ini?\n\nPerhatian: {{ $wtTotal }} laporan terkait akan tetap tersimpan.');"
-                          style="margin:0;">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="icon-btn" title="Hapus"
-                                style="color:var(--danger);width:32px;height:32px;">
-                            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                    </form>
+                            {{-- Footer: link laporan + pending badge --}}
+                            <div style="display:flex;align-items:center;gap:8px;padding-top:4px;border-top:1px solid var(--neutral-100);margin-top:6px;">
+                                <a href="{{ isset($year, $month, $person)
+                                        ? route('period.weekly-show', [
+                                            'year'          => $year,
+                                            'month'         => $month,
+                                            'staff'         => $person->id,
+                                            'monthlyTarget' => $monthlyTarget->id,
+                                            'weeklyTarget'  => $wt->id,
+                                          ])
+                                        : route('weekly-targets.show', $wt) }}"
+                                   style="font-size:12px;color:var(--maxy-navy);font-weight:600;display:inline-flex;align-items:center;gap:5px;text-decoration:none;flex:1;">
+                                    <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Lihat {{ $wtTotal }} laporan
+                                </a>
+                                @if($wtPending > 0)
+                                    <span style="background:var(--danger-100);color:var(--danger);font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;">
+                                        {{ $wtPending }} pending
+                                    </span>
+                                @endif
+                                @if($wtTotal > 0)
+                                    <span style="font-size:11px;color:var(--fg-4);">{{ $wtDone }}/{{ $wtTotal }} selesai</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         @empty
