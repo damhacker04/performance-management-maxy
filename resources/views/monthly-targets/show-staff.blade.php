@@ -112,6 +112,11 @@
                             <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
                         @endif
                     </div>
+                    
+                    {{-- Judul Target --}}
+                    <div style="font-size:15px; font-weight:700; color:var(--maxy-navy); margin-bottom:8px; line-height:1.3;">
+                        {{ $wt->title }}
+                    </div>
 
                     {{-- Tombol Edit & Hapus --}}
                     @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
