@@ -18,13 +18,13 @@ use Illuminate\Support\Facades\Log;
  */
 class GeminiService
 {
-    private string $apiKey;
+    private ?string $apiKey;
     private string $apiUrl  = 'https://api.groq.com/openai/v1/chat/completions';
     private string $model   = 'llama-3.3-70b-versatile';
 
     public function __construct()
     {
-        $this->apiKey = config('services.groq.api_key');
+        $this->apiKey = config('services.groq.api_key') ?: '';
     }
 
     /**
