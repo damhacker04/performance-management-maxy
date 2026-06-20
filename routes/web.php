@@ -255,3 +255,11 @@ Route::get('/deploy-update', function() {
 
 
 require __DIR__ . '/auth.php';
+
+Route::get('/debug/run-migration', function () {
+    \Illuminate\Support\Facades\Artisan::call('app:migrate-legacy-targets');
+    return "<pre style='background:#111; color:#0f0; padding:20px; font-size:14px; border-radius:8px; line-height:1.5; font-family:monospace;'>" . 
+           "EXECUTING MIGRATION...\n\n" . 
+           \Illuminate\Support\Facades\Artisan::output() . 
+           "</pre>";
+});
