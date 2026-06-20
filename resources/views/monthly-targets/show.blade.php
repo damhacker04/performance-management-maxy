@@ -36,7 +36,7 @@
     cursor:pointer; user-select:none;
     transition:all .15s;
 }
-.person-header:hover { background:var(--bg-2); }
+.person-header:hover { border-color:var(--maxy-navy) !important; }
 .person-body { overflow:hidden; transition:max-height .3s ease; padding:0 12px 12px; display:flex; flex-direction:column; gap:8px; }
 .person-body.collapsed { max-height:0 !important; padding-top:0; padding-bottom:0; }
 .wt-row {
@@ -222,37 +222,50 @@
 
                 {{-- Info --}}
                 <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px;">
-                        <span style="font-size:15px;font-weight:700;color:var(--fg-1);">{{ $pName }}</span>
+                    {{-- Chips --}}
+                    <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+                        <span class="chip chip-success" style="font-size:10px;">Aktif</span>
                         @if($pDiv)
                             <span class="chip chip-dept-{{ str_replace('_','-', strtolower($pDiv)) }}" style="font-size:10px;">{{ $pDiv }}</span>
                         @endif
                     </div>
+                    
+                    {{-- Nama dan Avatar --}}
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:24px;height:24px;border-radius:6px;background:{{ $bgColor }};
+                                    color:{{ $isUmum ? 'var(--fg-3)' : '#fff' }};
+                                    font-size:10px;font-weight:700;
+                                    display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            {{ $initials }}
+                        </div>
+                        <div style="font-size:15px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ $pName }}
+                        </div>
+                    </div>
+
+                    {{-- Progress --}}
                     @if($pTotalEntry > 0)
-                        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
-                            <div style="flex:1;height:4px;background:var(--neutral-100);border-radius:99px;overflow:hidden;">
-                                <div style="height:100%;width:{{ $pProgress }}%;border-radius:99px;
-                                            background:{{ $pProgress >= 80 ? 'var(--success)' : ($pProgress >= 40 ? 'var(--warning)' : 'var(--maxy-navy)') }};
-                                            transition:width .4s ease;">
-                                </div>
+                        <div style="margin-top:10px;">
+                            <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:{{ $pProgress }}%;background:{{ $pProgress >= 80 ? '#16A571' : ($pProgress >= 40 ? '#F59E0B' : 'var(--maxy-navy)') }};border-radius:4px;"></div>
                             </div>
-                            <span style="font-size:11px;font-weight:600;color:var(--fg-3);white-space:nowrap;min-width:28px;text-align:right;">{{ $pProgress }}%</span>
+                            <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">
+                                {{ $pDoneEntry }}/{{ $pTotalEntry }} laporan selesai
+                            </div>
                         </div>
-                        <div style="font-size:11px;color:var(--fg-4);margin-top:2px;">
-                            {{ $pDoneEntry }} dari {{ $pTotalEntry }} laporan selesai
-                            @if($pPendingRev > 0)
-                                · <span style="color:var(--danger);font-weight:600;">{{ $pPendingRev }} pending review</span>
-                            @endif
-                        </div>
-                    @else
-                        <div style="font-size:12px;color:var(--fg-4);margin-top:2px;">{{ $pTotalWt }} target mingguan · Belum ada laporan</div>
                     @endif
                 </div>
 
-                {{-- Chevron --}}
-                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
-                    <path d="M9 18l6-6-6-6"/>
-                </svg>
+                {{-- Kanan --}}
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
+                    @if($pPendingRev > 0)
+                        <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700;">
+                            {{ $pPendingRev }} pending review
+                        </span>
+                    @endif
+                    <span class="chip chip-info" style="font-size:10px;">{{ $pTotalWt }} target mingguan</span>
+                    <svg class="lucide sm chevron-icon" style="color:var(--fg-3);margin-top:2px;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
             </div>
         </a>
     @endforeach
