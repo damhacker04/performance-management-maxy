@@ -32,6 +32,35 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
+    Route::get('/debug/unassigned-targets', function () {
+        if (!app()->environment('production') && !app()->environment('local')) {
+            // Just a precaution, but we want it available to debug
+        }
+        
+        $targets = \App\Models\WeeklyTarget::with('monthlyTarget')
+            ->whereDoesntHave('dailyTaskEntries')
+            ->get(['id', 'title', 'monthly_target_id', 'assigned_to', 'user_id']);
+            
+        $html = "<h1>Debug: Target Mingguan Kosong</h1>";
+        $html .= "<table border='1' cellpadding='8' style='border-collapse:collapse; width:100%;'>";
+        $html .= "<tr><th>ID Mingguan</th><th>Judul Target Mingguan</th><th>Assigned To</th><th>ID Bulanan</th><th>Judul Target Bulanan Lama</th></tr>";
+        
+        foreach($targets as $t) {
+            $monthlyTitle = $t->monthlyTarget ? $t->monthlyTarget->title : 'N/A';
+            $assigned = $t->assigned_to ?: 'NULL (Umum)';
+            $html .= "<tr>";
+            $html .= "<td>{$t->id}</td>";
+            $html .= "<td>{$t->title}</td>";
+            $html .= "<td>{$assigned}</td>";
+            $html .= "<td>{$t->monthly_target_id}</td>";
+            $html .= "<td>{$monthlyTitle}</td>";
+            $html .= "</tr>";
+        }
+        
+        $html .= "</table>";
+        return $html;
+    });
+
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
