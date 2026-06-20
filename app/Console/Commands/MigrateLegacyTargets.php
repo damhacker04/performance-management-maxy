@@ -90,13 +90,27 @@ class MigrateLegacyTargets extends Command
                     $staff = User::find($staffId);
                     if (!$staff) continue;
 
+                    // Mapping Judul Cerdas (AI Generated)
+                    $aiTitles = [
+                        13 => 'Manajemen Akuntansi & Piutang',
+                        6  => 'Pengelolaan SDM & SOP Produk',
+                        12 => 'Legal, Perizinan Bisnis & Inventaris',
+                        11 => 'Fasilitas Kantor & Manajemen Training',
+                        14 => 'Proyek Studio & Manajemen Komunikasi',
+                        16 => 'Kemitraan Perusahaan & Penempatan Magang',
+                        15 => 'Pengembangan Klien Baru (Leads) & Pitching',
+                        23 => 'Sistem Testing & QA',
+                        17 => 'Pengaturan Sistem Dasar',
+                    ];
+                    $mappedTitle = array_key_exists($staffId, $aiTitles) ? $aiTitles[$staffId] : $monthly->title;
+
                     // Buat/Cari Target Bulanan SPESIFIK untuk staf ini
                     $clonedMonthlyPerStaff = MonthlyTarget::firstOrCreate(
                         [
                             'department' => $dept,
                             'month' => $month,
                             'year' => $year,
-                            'title' => $monthly->title,
+                            'title' => $mappedTitle,
                             'user_id' => $ownerId,
                             'assigned_to' => $staffId, // TARGET BULANAN PER STAF!
                         ],
