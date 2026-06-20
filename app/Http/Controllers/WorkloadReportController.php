@@ -326,10 +326,12 @@ class WorkloadReportController extends Controller
     private function countWorkingDays(int $month, int $year): int
     {
         $count = 0;
-        $days  = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        $days = \Carbon\Carbon::createFromDate($year, $month, 1)->daysInMonth;
         for ($d = 1; $d <= $days; $d++) {
-            $dow = date('N', mktime(0, 0, 0, $month, $d, $year));
-            if ($dow < 6) $count++;  // Mon=1 ... Fri=5
+            $currentDate = \Carbon\Carbon::createFromDate($year, $month, $d);
+            if ($currentDate->isWeekday()) {
+                $count++;
+            }
         }
         return $count;
     }
