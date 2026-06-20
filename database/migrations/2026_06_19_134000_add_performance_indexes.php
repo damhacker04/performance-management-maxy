@@ -25,83 +25,54 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // ─── 1. daily_task_entries ────────────────────────────────────────────
-        // Tabel paling kritikal — bisa mencapai 70.000+ baris dalam 2 tahun.
-        Schema::table('daily_task_entries', function (Blueprint $table) {
+        $indexes = [
+            'daily_task_entries' => [
+                'dte_user_date' => ['user_id', 'task_date'],
+                'dte_vstatus_date' => ['verification_status', 'task_date'],
+                'dte_user_vstatus' => ['user_id', 'verification_status'],
+                'dte_montarget_date' => ['monthly_target_id', 'task_date'],
+                'dte_weektarget_date' => ['weekly_target_id', 'task_date'],
+            ],
+            'monthly_targets' => [
+                'mt_dept_period' => ['department', 'month', 'year'],
+                'mt_user_period' => ['user_id', 'month', 'year'],
+            ],
+            'weekly_targets' => [
+                'wt_monthly_target' => ['monthly_target_id'],
+                'wt_assigned_monthly' => ['assigned_to', 'monthly_target_id'],
+            ],
+            'notifications' => [
+                'notif_user_created' => ['user_id', 'created_at'],
+            ],
+            'kpi_targets' => [
+                'kpi_dept_period' => ['department', 'month', 'year'],
+                'kpi_level_dept' => ['level', 'department'],
+                'kpi_parent' => ['parent_id'],
+            ],
+            'kpi_actuals' => [
+                'ka_staff_period' => ['staff_id', 'month', 'year'],
+                'ka_dept_period' => ['department', 'month', 'year'],
+            ],
+            'workload_reports' => [
+                'wr_period' => ['month', 'year'],
+            ],
+            'users' => [
+                'users_dept_active' => ['department', 'is_active'],
+                'users_role_active' => ['role', 'is_active'],
+            ],
+        ];
 
-            // Query: "ambil semua laporan milik user X pada tanggal Y"
-            // Dipakai di: DailyTaskEntryController::index(), dashboard staff
-            $table->index(['user_id', 'task_date'], 'dte_user_date');
-
-            // Query: "ambil semua laporan pending di departemen X"
-            // Dipakai di: dashboard leader (card "Menunggu Review")
-            $table->index(['verification_status', 'task_date'], 'dte_vstatus_date');
-
-            // Query: "laporan milik user X yang statusnya pending/revision"
-            // Dipakai di: notifikasi, auto-reject scheduler
-            $table->index(['user_id', 'verification_status'], 'dte_user_vstatus');
-
-            // Query: "laporan untuk monthly_target X" (eager loading check)
-            // Dipakai di: MonthlyTargetController::show()
-            $table->index(['monthly_target_id', 'task_date'], 'dte_montarget_date');
-
-            // Query: "laporan untuk weekly_target X"
-            $table->index(['weekly_target_id', 'task_date'], 'dte_weektarget_date');
-        });
-
-        // ─── 2. monthly_targets ───────────────────────────────────────────────
-        // Query: "target departemen X bulan Y tahun Z"
-        // Dipakai di: dashboard, workload report summary
-        Schema::table('monthly_targets', function (Blueprint $table) {
-            $table->index(['department', 'month', 'year'], 'mt_dept_period');
-            $table->index(['user_id', 'month', 'year'], 'mt_user_period');
-        });
-
-        // ─── 3. weekly_targets ────────────────────────────────────────────────
-        // Query: "weekly target milik monthly target X"
-        Schema::table('weekly_targets', function (Blueprint $table) {
-            $table->index(['monthly_target_id'], 'wt_monthly_target');
-            $table->index(['assigned_to', 'monthly_target_id'], 'wt_assigned_monthly');
-        });
-
-        // ─── 4. notifications (app_notifications) ────────────────────────────
-        // Sudah ada index ['user_id', 'read_at'] dari migration awal.
-        // Tambah index untuk query "notifikasi hari ini yang belum dibaca"
-        Schema::table('notifications', function (Blueprint $table) {
-            $table->index(['user_id', 'created_at'], 'notif_user_created');
-        });
-
-        // ─── 5. kpi_targets ───────────────────────────────────────────────────
-        // Query: "KPI untuk departemen X periode Y"
-        // Dipakai di: KpiController::index(), workload report AI context
-        Schema::table('kpi_targets', function (Blueprint $table) {
-            $table->index(['department', 'month', 'year'], 'kpi_dept_period');
-            $table->index(['level', 'department'], 'kpi_level_dept');
-            $table->index(['parent_id'], 'kpi_parent');
-        });
-
-        // ─── 6. kpi_actuals ───────────────────────────────────────────────────
-        // Query: "realisasi KPI staf X bulan Y"
-        Schema::table('kpi_actuals', function (Blueprint $table) {
-            $table->index(['staff_id', 'month', 'year'], 'ka_staff_period');
-            $table->index(['department', 'month', 'year'], 'ka_dept_period');
-        });
-
-        // ─── 7. workload_reports ──────────────────────────────────────────────
-        // Sudah ada unique(['staff_id', 'month', 'year']) dari migration awal.
-        // Unique constraint otomatis membuat index — tidak perlu tambah lagi.
-        // Tambah index untuk query "semua laporan bulan Y departemen X"
-        Schema::table('workload_reports', function (Blueprint $table) {
-            $table->index(['month', 'year'], 'wr_period');
-        });
-
-        // ─── 8. users ─────────────────────────────────────────────────────────
-        // Query: "semua staf aktif di departemen X"
-        // Dipakai di: hampir semua controller (leader view, batch generate)
-        Schema::table('users', function (Blueprint $table) {
-            $table->index(['department', 'is_active'], 'users_dept_active');
-            $table->index(['role', 'is_active'], 'users_role_active');
-        });
+        foreach ($indexes as $tableName => $tableIndexes) {
+            foreach ($tableIndexes as $indexName => $columns) {
+                try {
+                    Schema::table($tableName, function (Blueprint $table) use ($indexName, $columns) {
+                        $table->index($columns, $indexName);
+                    });
+                } catch (\Exception $e) {
+                    // Abaikan jika index sudah ada (misal: gagal di tengah jalan saat deploy sebelumnya)
+                }
+            }
+        }
     }
 
     public function down(): void
