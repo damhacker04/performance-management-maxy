@@ -52,7 +52,7 @@ class DailyTaskEntryController extends Controller
                 ->when($staffFilter, fn($q) => $q->where('user_id', $staffFilter))
                 ->orderByDesc('task_date')
                 ->orderByDesc('id')
-                ->get();
+                ->paginate(20)->withQueryString();
         } else {
             // Laporan milik sendiri (default)
             $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget'])
@@ -62,7 +62,7 @@ class DailyTaskEntryController extends Controller
                 ->when($dateFilter, fn($q) => $q->whereDate('task_date', $dateFilter))
                 ->orderByDesc('task_date')
                 ->orderByDesc('id')
-                ->get();
+                ->paginate(20)->withQueryString();
         }
 
         // Hitung jumlah menunggu review untuk badge di UI Tab (tanpa filter)

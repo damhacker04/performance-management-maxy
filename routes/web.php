@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BackdateRequestController;
 use App\Http\Controllers\AiEvaluationController;
 use App\Http\Controllers\KpiController;
+use App\Http\Controllers\WorkloadReportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -34,8 +35,30 @@ Route::middleware(['auth'])->group(function () {
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
         Route::resource('monthly-targets', MonthlyTargetController::class);
+
+        // ── PERIOD HIERARCHY (URL bersih & konsisten) ────────────────────────────
+        // Level 2: /monthly-targets/period/{year}/{month}/staff
+        // Level 3: /monthly-targets/period/{year}/{month}/staff/{staff}
+        // Level 4: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}
+        // Level 5: /monthly-targets/period/{year}/{month}/staff/{staff}/{monthlyTarget}/{weeklyTarget}
+        Route::prefix('monthly-targets/period/{year}/{month}')->group(function () {
+            Route::get('staff', [MonthlyTargetController::class, 'staffListForMonth'])
+                ->name('period.staff-list');
+            Route::get('staff/{staff}', [MonthlyTargetController::class, 'staffTargetsForPeriod'])
+                ->name('period.staff-targets');
+            Route::get('staff/{staff}/{monthlyTarget}', [MonthlyTargetController::class, 'showStaffInPeriod'])
+                ->name('period.staff-weekly');
+            Route::get('staff/{staff}/{monthlyTarget}/{weeklyTarget}', [WeeklyTargetController::class, 'showInPeriod'])
+                ->name('period.weekly-show');
+        });
+
+        // ── LEGACY ROUTES (deprecated \u2014 redirect ke period hierarchy) ────────────
         Route::get('monthly-targets/{monthlyTarget}/staff/{assignee}', [MonthlyTargetController::class, 'showStaff'])
-            ->name('monthly-targets.staff');
+            ->name('monthly-targets.staff'); // lama, masih dipakai show.blade.php
+        Route::get('staff/{staff}/monthly-targets', [MonthlyTargetController::class, 'staffMonthlyTargets'])
+            ->name('staff.monthly-targets'); // deprecated \u2014 redirect ke period.staff-targets
+        // (period.staff-list sudah mencakup ini, lihat prefix group di atas)
+
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.
@@ -46,7 +69,28 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leader-targets', [LeaderTargetController::class, 'index'])->name('leader-targets.index');
         Route::get('/leader-targets/{monthlyTarget}', [LeaderTargetController::class, 'show'])->name('leader-targets.show');
 
+        // KPI — C-Level & Admin HR bisa CRUD, Leader/Staff view-only
         Route::get('/kpi', [KpiController::class, 'index'])->name('kpi');
+        Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
+        Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
+        Route::get('/kpi/{kpiTarget}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
+        Route::put('/kpi/{kpiTarget}', [KpiController::class, 'update'])->name('kpi.update');
+        Route::delete('/kpi/{kpiTarget}', [KpiController::class, 'destroy'])->name('kpi.destroy');
+
+        // KPI L3 (Staff Individual) & KPI Actual — hanya C-Level & Admin HR
+        Route::get('/kpi/staff/create', [KpiController::class, 'createStaffKpi'])->name('kpi.staff.create');
+        Route::post('/kpi/staff', [KpiController::class, 'storeStaffKpi'])->name('kpi.staff.store');
+        Route::get('/kpi/actuals', [KpiController::class, 'indexActuals'])->name('kpi.actuals.index');
+        Route::get('/kpi/actuals/create', [KpiController::class, 'createActual'])->name('kpi.actuals.create');
+        Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
+        Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
+        Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+
+        // AI Workload & Performance Report — C-Level, Admin HR, Leader
+        Route::get('/workload-report', [WorkloadReportController::class, 'index'])->name('workload-report.index');
+        Route::get('/workload-report/{staff}/{month}/{year}', [WorkloadReportController::class, 'show'])->name('workload-report.show');
+        Route::post('/workload-report/generate', [WorkloadReportController::class, 'generateReport'])->name('workload-report.generate');
+        Route::post('/workload-report/generate-batch', [WorkloadReportController::class, 'generateBatch'])->name('workload-report.generateBatch');
     });
 
     // Daily Task — Staff, Leader, dan C-Level semua bisa input laporan harian

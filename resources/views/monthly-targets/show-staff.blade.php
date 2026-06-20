@@ -14,10 +14,22 @@
 @endphp
 
 <div class="page">
+@php
+    // URL halaman ini (L4) — dipakai sebagai ?back= untuk Tambah/Edit agar
+    // setelah save bisa redirect kembali ke sini
+    $currentUrl = isset($backUrl)
+        ? url()->current()  // sudah dalam period context
+        : url()->current();
+@endphp
 
     {{-- ── HEADER ──────────────────────────────────────────────────────────────── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.show', $monthlyTarget->id) }}" class="icon-btn" style="margin-left:-8px;">
+        {{-- Back URL di-set oleh controller (period.staff-targets untuk flow baru,
+             monthly-targets.show untuk target umum via legacy showStaff) --}}
+        <a href="{{ $backUrl ?? ($personKey === 'umum' || !$personKey
+                ? route('monthly-targets.show', $monthlyTarget->id)
+                : route('period.staff-targets', ['year' => now()->year, 'month' => now()->month, 'staff' => $personKey])) }}"
+           class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <div style="flex:1;min-width:0;">
@@ -32,7 +44,12 @@
         </div>
 
         @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
-        <a href="{{ route('weekly-targets.create', ['monthly_target_id' => $monthlyTarget->id, 'context' => 'team', 'assigned_to' => $personKey === 'umum' ? '' : $personKey]) }}"
+        <a href="{{ route('weekly-targets.create', [
+                'monthly_target_id' => $monthlyTarget->id,
+                'context'           => 'team',
+                'assigned_to'       => $personKey === 'umum' ? '' : $personKey,
+                'back'              => urlencode(url()->current()),
+            ]) }}"
            class="btn btn-primary btn-sm" style="flex-shrink:0;">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Tambah
@@ -118,7 +135,7 @@
                     {{-- Tombol Edit & Hapus --}}
                     @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
                     <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
-                        <a href="{{ route('weekly-targets.edit', $wt) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
+                        <a href="{{ route('weekly-targets.edit', $wt) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
                             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </a>
                         <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
@@ -152,7 +169,15 @@
 
                             {{-- Footer: link laporan + pending badge --}}
                             <div style="display:flex;align-items:center;gap:8px;padding-top:4px;border-top:1px solid var(--neutral-100);margin-top:6px;">
-                                <a href="{{ route('weekly-targets.show', $wt) }}"
+                                <a href="{{ isset($year, $month, $person)
+                                        ? route('period.weekly-show', [
+                                            'year'          => $year,
+                                            'month'         => $month,
+                                            'staff'         => $person->id,
+                                            'monthlyTarget' => $monthlyTarget->id,
+                                            'weeklyTarget'  => $wt->id,
+                                          ])
+                                        : route('weekly-targets.show', $wt) }}"
                                    style="font-size:12px;color:var(--maxy-navy);font-weight:600;display:inline-flex;align-items:center;gap:5px;text-decoration:none;flex:1;">
                                     <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Lihat {{ $wtTotal }} laporan

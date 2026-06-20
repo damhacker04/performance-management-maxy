@@ -18,7 +18,7 @@
 <div class="page">
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ $weeklyTarget->monthlyTarget ? route('monthly-targets.show', $weeklyTarget->monthlyTarget) : route('weekly-targets.index') }}"
+        <a href="{{ $backUrl ?? ($weeklyTarget->monthlyTarget ? route('monthly-targets.show', $weeklyTarget->monthlyTarget) : route('weekly-targets.index')) }}"
            class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
@@ -36,7 +36,7 @@
                 @endif
             </p>
         </div>
-        <a href="{{ route('weekly-targets.edit', $weeklyTarget) }}" class="icon-btn" title="Edit">
+        <a href="{{ route('weekly-targets.edit', $weeklyTarget) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
         </a>
     </div>
@@ -133,7 +133,7 @@
                                 'selesai'      => '#16A571',
                             ][$entry->status] ?? '#9CA3AF';
                         @endphp
-                        <a href="{{ route('daily-tasks.show', $entry) }}?from={{ $weeklyTarget->id }}"
+                        <a href="{{ route('daily-tasks.show', $entry) }}?back={{ urlencode(url()->current()) }}"
                            style="text-decoration:none;color:inherit;display:block;
                                   border-radius:8px;margin:0 -8px;
                                   transition:background .15s;"

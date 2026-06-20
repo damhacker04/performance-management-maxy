@@ -261,5 +261,38 @@
                 @endforeach
             </div>
         @endif
+
+        {{-- Pagination --}}
+        @if($entries->hasPages())
+        <div style="padding:16px 0 8px;display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <div style="font-size:12px;color:var(--fg-3);">
+                Menampilkan {{ $entries->firstItem() }}–{{ $entries->lastItem() }} dari {{ $entries->total() }} laporan
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                {{-- Prev --}}
+                @if($entries->onFirstPage())
+                    <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">← Sebelumnya</span>
+                @else
+                    <a href="{{ $entries->previousPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">← Sebelumnya</a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @foreach($entries->getUrlRange(max(1, $entries->currentPage()-2), min($entries->lastPage(), $entries->currentPage()+2)) as $page => $url)
+                    @if($page == $entries->currentPage())
+                        <span style="padding:6px 12px;border-radius:8px;background:var(--maxy-navy);color:#fff;font-size:13px;font-weight:700;">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}" style="padding:6px 12px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--fg-2);font-size:13px;font-weight:600;text-decoration:none;">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($entries->hasMorePages())
+                    <a href="{{ $entries->nextPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">Berikutnya →</a>
+                @else
+                    <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">Berikutnya →</span>
+                @endif
+            </div>
+        </div>
+        @endif
     </div>
 </x-app-layout>
