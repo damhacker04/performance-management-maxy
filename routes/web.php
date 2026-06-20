@@ -263,3 +263,13 @@ Route::get('/debug/run-migration', function () {
            \Illuminate\Support\Facades\Artisan::output() . 
            "</pre>";
 });
+
+Route::get('/debug/logs', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) return "No log file found.";
+    
+    // Read last 100 lines
+    $lines = file($logFile);
+    $lastLines = array_slice($lines, -100);
+    return "<pre style='background:#111; color:#fff; padding:10px; font-size:12px; white-space:pre-wrap;'>" . htmlspecialchars(implode("", $lastLines)) . "</pre>";
+});
