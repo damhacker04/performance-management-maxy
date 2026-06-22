@@ -22,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        // Paksa user yang login lewat Google tapi belum punya password
+        // untuk membuat password dulu sebelum mengakses halaman lain.
+        $middleware->web(append: [
+            \App\Http\Middleware\EnsurePasswordIsSet::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
