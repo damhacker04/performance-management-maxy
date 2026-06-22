@@ -90,7 +90,7 @@
     @endif
 
     {{-- Tombol Override (hanya untuk Leader/C-Level/Admin) --}}
-    @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+    @if(auth()->user()->isLeadership())
     <div style="padding:0 16px 14px;">
         <button type="button"
                 onclick="document.getElementById('modal-override').style.display='flex'"
@@ -104,7 +104,7 @@
 </div>
 
 {{-- Modal Override --}}
-@if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+@if(auth()->user()->isLeadership())
 <div id="modal-override"
      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px;">
     <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">

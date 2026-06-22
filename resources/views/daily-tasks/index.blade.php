@@ -24,7 +24,7 @@
             <input type="hidden" name="tab" value="{{ $tab }}">
 
             {{-- Navigation Tabs --}}
-        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        @if(auth()->user()->isLeadership())
         <div style="display:flex;align-items:center;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;gap:8px;">
             <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
                style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;

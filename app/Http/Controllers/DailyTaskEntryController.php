@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DailyTaskEntryRequest;
 use App\Jobs\EvaluateDailyTaskJob;
 use App\Models\DailyTaskEntry;
 use App\Models\MonthlyTarget;
 use App\Models\WeeklyTarget;
 use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 
 class DailyTaskEntryController extends Controller
@@ -25,7 +25,7 @@ class DailyTaskEntryController extends Controller
 
         // Untuk dropdown filter nama staf
         $subordinateStaff = collect();
-        if (in_array($user->role, ['leader', 'c_level', 'super_admin']) && $tab === 'review') {
+        if ($user->isLeadership() && $tab === 'review') {
             $subordinateStaff = \App\Models\User::query()
                 ->when($user->role === 'leader', fn($q) => 
                     $q->where('department', $user->department)->where('role', 'staff')
@@ -34,7 +34,7 @@ class DailyTaskEntryController extends Controller
                 ->get();
         }
 
-        if ($tab === 'review' && in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if ($tab === 'review' && $user->isLeadership()) {
             // Laporan yang butuh review
             $entries = DailyTaskEntry::with(['monthlyTarget', 'weeklyTarget', 'user'])
                 ->when($user->role === 'leader', fn($q) => 
@@ -67,7 +67,7 @@ class DailyTaskEntryController extends Controller
 
         // Hitung jumlah menunggu review untuk badge di UI Tab (tanpa filter)
         $pendingReviewCount = 0;
-        if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if ($user->isLeadership()) {
             $pendingReviewCount = DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
                 ->when($user->role === 'leader', fn($q) => 
                     $q->whereHas('user', fn($uq) => $uq->where('department', $user->department)->where('role', 'staff'))
@@ -86,7 +86,7 @@ class DailyTaskEntryController extends Controller
         // Leader: boleh lihat laporan staff se-departemen
         // C-Level & Super Admin: boleh lihat semua laporan
         $canView = $dailyTask->user_id === $user->id
-            || in_array($user->role, ['c_level', 'super_admin'])
+            || $user->isExecutive()
             || ($user->role === 'leader' && $dailyTask->user->department === $user->department);
 
         if (!$canView) {
@@ -230,38 +230,14 @@ class DailyTaskEntryController extends Controller
         return view('daily-tasks.edit', compact('dailyTask', 'weeklyTargets'));
     }
 
-    public function update(Request $request, DailyTaskEntry $dailyTask)
+    public function update(DailyTaskEntryRequest $request, DailyTaskEntry $dailyTask)
     {
         $this->authorizeEdit($dailyTask);
 
         $user    = auth()->user();
         $isSales = $user->department === 'sales';
 
-        $validated = $request->validate([
-            'weekly_target_id'  => 'nullable|exists:weekly_targets,id',
-            'task_description'  => 'required|string',
-            'priority'          => ['required', Rule::in(array_keys(DailyTaskEntry::PRIORITIES))],
-            'duration_value'    => 'required|integer|min:1|max:1440',
-            'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
-            'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
-            'notes'             => 'required|string|min:5',
-            'revision_response' => 'nullable|string|min:3',
-            // Multi-evidence
-            'evidences'               => 'nullable|array|max:10',
-            'evidences.*.id'          => 'nullable|exists:daily_task_evidences,id',
-            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
-            'evidences.*.label'       => 'required|string|max:100',
-            'evidences.*.path_or_url' => 'nullable|array',
-            'evidences.*.path_or_url.*' => 'nullable|string',
-            'evidences.*.file'        => 'nullable|array|max:10',
-            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ], [
-            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
-            'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
-            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
-        ]);
+        $validated = $request->validated();
 
         $durationMinutes = $validated['duration_unit'] === 'jam'
             ? $validated['duration_value'] * 60
@@ -456,34 +432,12 @@ class DailyTaskEntryController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(DailyTaskEntryRequest $request)
     {
         $user = auth()->user();
         $isSales = $user->department === 'sales';
 
-        $validated = $request->validate([
-            'weekly_target_id'  => 'nullable|exists:weekly_targets,id',
-            'task_description'  => 'required|string',
-            'priority'          => ['required', Rule::in(array_keys(DailyTaskEntry::PRIORITIES))],
-            'duration_value'    => 'required|integer|min:1|max:1440',
-            'duration_unit'     => ['required', Rule::in(['menit', 'jam'])],
-            'status'            => ['required', Rule::in(array_keys(DailyTaskEntry::STATUSES))],
-            'notes'             => 'required|string|min:5',
-            // Multi-evidence
-            'evidences'               => 'nullable|array|max:10',
-            'evidences.*.type'        => ['required', Rule::in(['link', 'file', 'image'])],
-            'evidences.*.label'       => 'required|string|max:100',
-            'evidences.*.path_or_url' => 'nullable|array',
-            'evidences.*.path_or_url.*' => 'nullable|string',
-            'evidences.*.file'        => 'nullable|array|max:10',
-            'evidences.*.file.*'      => 'file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ], [
-            'notes.required'          => 'Catatan wajib diisi untuk semua status.',
-            'notes.min'               => 'Catatan minimal 5 karakter — jelaskan konteks/progress task.',
-            'evidences.*.label.required' => 'Judul bukti wajib diisi.',
-            'evidences.*.file.*.mimes'  => 'File bukti harus berformat JPG, PNG, atau PDF.',
-            'evidences.*.file.*.max'    => 'Ukuran file maksimal 2MB.',
-        ]);
+        $validated = $request->validated();
 
         // Konversi durasi -> menit
         $durationMinutes = $validated['duration_unit'] === 'jam'
@@ -808,7 +762,7 @@ class DailyTaskEntryController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if (!$user->isLeadership()) {
             abort(403, 'Hanya Leader, C-Level, atau Super Admin yang dapat memverifikasi laporan.');
         }
 

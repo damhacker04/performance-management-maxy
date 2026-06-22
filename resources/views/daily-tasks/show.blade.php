@@ -213,7 +213,7 @@
     @endif
 
     {{-- Panel Aksi LEADER / C-LEVEL --}}
-    @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']) && $dailyTask->user_id !== auth()->id())
+    @if(auth()->user()->isLeadership() && $dailyTask->user_id !== auth()->id())
         @if($dailyTask->verification_status === 'approved')
             <div style="background:#E8F7EE;border:1px solid #16A571;border-radius:10px;padding:12px 14px;display:flex;gap:8px;align-items:center;font-size:12px;color:#0F7A50;">
                 <svg class="lucide" style="width:16px;height:16px;flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
