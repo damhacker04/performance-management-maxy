@@ -241,7 +241,7 @@
              ════════════════════════════════════════════════════════════════ --}}
         <div style="display:flex;flex-direction:column;gap:8px;">
 
-        @foreach($leaderGrouped as $yearMonth => $monthTargets)
+        @foreach(($leaderGrouped ?? []) as $yearMonth => $monthTargets)
             @php
                 [$yr, $mo] = explode('-', $yearMonth);
                 $monthLabel = ['','Januari','Februari','Maret','April','Mei','Juni',

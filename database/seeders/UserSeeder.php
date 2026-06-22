@@ -47,6 +47,14 @@ class UserSeeder extends Seeder
                 'role'          => 'staff', 
                 'is_management' => false,
             ],
+      [
+        'name'          => 'Ghufron',
+        'email'         => 'ghufron.maxy.academy@gmail.com',
+        'department'    => 'Operational',
+        'division'      => 'General Affair',
+        'role'          => 'staff',
+        'is_management' => false,
+      ],
             [
                 'name'          => 'Brigitha', 
                 'email'         => 'brigithap.maxy.academy@gmail.com', 
@@ -154,11 +162,16 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $data) {
+            // Akun whitelist asli (Gmail) sengaja TANPA password, supaya saat
+            // pertama kali login lewat Google mereka diwajibkan membuat password.
+            // Akun dummy @maxy.academy tetap diberi password untuk testing manual.
+            $isGmail = str_ends_with($data['email'], '@gmail.com');
+
             User::updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name'          => $data['name'],
-                    'password'      => Hash::make('maxy2026'),
+                    'password'      => $isGmail ? null : Hash::make('maxy2026'),
                     'role'          => $data['role'],
                     'department'    => strtolower($data['department'] ?? ''), // Gunakan format lowercase untuk logic
                     'division'      => $data['division'],
