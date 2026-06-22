@@ -43,7 +43,7 @@
             @csrf
 
             <!-- Departemen -->
-            @if(in_array(auth()->user()->role, ['c_level', 'super_admin']))
+            @if(auth()->user()->isExecutive())
                 {{-- C-Level / Super Admin: pilih departemen tujuan --}}
                 <div class="field">
                     <label for="department">Departemen <span style="color:var(--danger);">*</span></label>

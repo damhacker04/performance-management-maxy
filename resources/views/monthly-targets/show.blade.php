@@ -22,7 +22,7 @@
         default         => 5,
     };
     $isCurrentMonth = $monthlyTarget->month == now()->month && $monthlyTarget->year == now()->year;
-    $isCLevel       = in_array(auth()->user()->role, ['c_level', 'super_admin']);
+    $isCLevel       = auth()->user()->isExecutive();
 
     // Warna avatar berdasarkan nama (konsisten antar reload)
     $avatarColors = ['#1B4FD8','#6D28D9','#0E7490','#065F46','#9A3412','#1D4ED8','#7C3AED','#047857'];

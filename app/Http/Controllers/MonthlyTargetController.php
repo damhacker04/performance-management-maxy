@@ -61,7 +61,7 @@ class MonthlyTargetController extends Controller
         ])
         ->where('month', $month)
         ->where('year', $year)
-        ->when(!in_array($user->role, ['c_level', 'super_admin']),
+        ->when(!$user->isExecutive(),
             fn($q) => $q->where('department', $user->department)
         )
         ->whereNotNull('assigned_to')
@@ -97,7 +97,7 @@ class MonthlyTargetController extends Controller
         $user = auth()->user();
 
         // Daftar staf yang bisa di-assign (sesuai dept leader/c-level)
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             $staffList = \App\Models\User::where('role', 'staff')
                 ->where('is_active', true)
                 ->orderBy('department')
@@ -116,7 +116,7 @@ class MonthlyTargetController extends Controller
         // KPI aktif untuk ditampilkan sebagai acuan
         $kpiRefs = \App\Models\KpiTarget::whereNotNull('department')
             ->where('is_active', true)
-            ->when(!in_array($user->role, ['c_level', 'super_admin']), fn($q) =>
+            ->when(!$user->isExecutive(), fn($q) =>
                 $q->where('department', $user->department)
             )
             ->orderBy('department')
@@ -139,14 +139,14 @@ class MonthlyTargetController extends Controller
         ];
 
         // C-Level dan Super Admin wajib pilih departemen dari dropdown
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             $deptKeys = implode(',', array_keys(\App\Models\User::DEPARTMENTS));
             $rules['department'] = 'required|string|in:' . $deptKeys;
         }
 
         $validated = $request->validate($rules);
 
-        $department = in_array($user->role, ['c_level', 'super_admin'])
+        $department = $user->isExecutive()
             ? $validated['department']
             : ($user->department ?? 'ceo_office');
 
@@ -168,7 +168,7 @@ class MonthlyTargetController extends Controller
     public function show(MonthlyTarget $monthlyTarget)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
         }
 
@@ -223,7 +223,7 @@ class MonthlyTargetController extends Controller
         // ── Sibling monthly targets (bulan & tahun sama) untuk dropdown dept ─
         // Hanya diisi untuk C-Level & Super Admin
         $siblingMonthlyTargets = collect();
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             $siblingMonthlyTargets = MonthlyTarget::where('month', $monthlyTarget->month)
                 ->where('year', $monthlyTarget->year)
                 ->where('id', '!=', $monthlyTarget->id)
@@ -233,7 +233,7 @@ class MonthlyTargetController extends Controller
 
         // ── Laporan per weekly target digroup per user (untuk C-Level view) ──
         $leaderEntriesByWeek = [];
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             foreach ($monthlyTarget->weeklyTargets as $wt) {
                 $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries->groupBy('user_id');
             }
@@ -271,7 +271,7 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if($staff->department !== $user->department, 403, 'Akses ditolak.');
         }
 
@@ -314,7 +314,7 @@ class MonthlyTargetController extends Controller
     {
         try {
             $user = auth()->user();
-            if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            if (!$user->isExecutive()) {
                 abort_if($monthlyTarget->department !== $user->department, 403);
             }
 
@@ -372,7 +372,7 @@ class MonthlyTargetController extends Controller
     public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
         }
 
@@ -460,7 +460,7 @@ class MonthlyTargetController extends Controller
     private function authorizeEdit(MonthlyTarget $monthlyTarget)
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             return;
         }
 

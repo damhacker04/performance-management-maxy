@@ -25,7 +25,7 @@
         'customer_support'=> 'Customer Support',
         'ceo_office'      => 'CEO Office',
     ];
-    $isCLevel = in_array(auth()->user()->role, ['c_level', 'super_admin']);
+    $isCLevel = auth()->user()->isExecutive();
     $groupedByDept = $isCLevel ? $targets->groupBy('department') : null;
 @endphp
 

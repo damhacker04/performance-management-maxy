@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        @if(auth()->user()->isLeadership())
         <a href="{{ route('weekly-targets.create', [
                 'monthly_target_id' => $monthlyTarget->id,
                 'context'           => 'team',
@@ -119,7 +119,7 @@
                     </div>
 
                     {{-- Tombol Edit & Hapus --}}
-                    @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                    @if(auth()->user()->isLeadership())
                         <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                             <a href="{{ route('weekly-targets.edit', $wt) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
                                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>

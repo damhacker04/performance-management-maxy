@@ -347,7 +347,7 @@ class WeeklyTargetController extends Controller
     private function authorizeMonthly(MonthlyTarget $monthlyTarget): void
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->isExecutive()) return;
         if ($user->role === 'leader' && $monthlyTarget->department === $user->department) return;
 
         abort(403, 'Anda tidak memiliki akses ke target ini.');
@@ -361,7 +361,7 @@ class WeeklyTargetController extends Controller
     private function authorizeWeekly(WeeklyTarget $weeklyTarget): void
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->isExecutive()) return;
 
         if ($weeklyTarget->monthly_target_id) {
             $this->authorizeMonthly($weeklyTarget->monthlyTarget);
