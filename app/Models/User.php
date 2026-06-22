@@ -64,6 +64,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Eksekutif: akses lintas departemen penuh (C-Level & Super Admin).
+     * Satu-satunya sumber kebenaran — pakai ini, jangan hardcode role array.
+     */
+    public function isExecutive(): bool
+    {
+        return in_array($this->role, ['c_level', 'super_admin']);
+    }
+
+    /**
+     * Kepemimpinan: bisa me-review / mengawasi staf (Leader, C-Level, Super Admin).
+     */
+    public function isLeadership(): bool
+    {
+        return in_array($this->role, ['leader', 'c_level', 'super_admin']);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
