@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\KpiTargetRequest;
+use App\Http\Requests\StoreKpiActualRequest;
 use App\Models\User;
 use App\Models\KpiActual;
 use App\Models\KpiTarget;
@@ -18,7 +20,7 @@ class KpiController extends Controller
         $user = auth()->user();
 
         // Query KPI L2 (dept benchmark) — group by dept
-        if (in_array($user->role, ['c_level', 'super_admin']) || $user->is_management) {
+        if ($user->isExecutive() || $user->is_management) {
             $kpiByDept = KpiTarget::level2()
                 ->whereNotNull('department')
                 ->with(['children.staff', 'children.actuals'])
@@ -52,7 +54,7 @@ class KpiController extends Controller
     public function create()
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403, 'Tidak memiliki akses untuk menambah KPI.');
         }
 
@@ -60,22 +62,14 @@ class KpiController extends Controller
         return view('kpi.create', compact('departments'));
     }
 
-    public function store(Request $request)
+    public function store(KpiTargetRequest $request)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'department'   => 'required|string|in:' . implode(',', array_keys(User::DEPARTMENTS)),
-            'kpi_name'     => 'required|string|max:255',
-            'target_value' => 'required|numeric|min:0',
-            'unit'         => 'required|string|max:100',
-            'month'        => 'required|integer|min:1|max:12',
-            'year'         => 'required|integer|min:2024|max:2030',
-            'notes'        => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         KpiTarget::create([
             ...$validated,
@@ -90,7 +84,7 @@ class KpiController extends Controller
     public function edit(KpiTarget $kpiTarget)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -98,23 +92,14 @@ class KpiController extends Controller
         return view('kpi.edit', compact('kpiTarget', 'departments'));
     }
 
-    public function update(Request $request, KpiTarget $kpiTarget)
+    public function update(KpiTargetRequest $request, KpiTarget $kpiTarget)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'department'   => 'required|string|in:' . implode(',', array_keys(User::DEPARTMENTS)),
-            'kpi_name'     => 'required|string|max:255',
-            'target_value' => 'required|numeric|min:0',
-            'unit'         => 'required|string|max:100',
-            'month'        => 'required|integer|min:1|max:12',
-            'year'         => 'required|integer|min:2024|max:2030',
-            'notes'        => 'nullable|string|max:1000',
-            'is_active'    => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $kpiTarget->update($validated);
         return redirect()->route('kpi')->with('success', 'KPI berhasil diperbarui.');
@@ -123,7 +108,7 @@ class KpiController extends Controller
     public function destroy(KpiTarget $kpiTarget)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -139,7 +124,7 @@ class KpiController extends Controller
     public function createStaffKpi()
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -164,7 +149,7 @@ class KpiController extends Controller
     public function storeStaffKpi(Request $request)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -204,7 +189,7 @@ class KpiController extends Controller
     public function indexActuals(Request $request)
     {
         $user  = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -231,7 +216,7 @@ class KpiController extends Controller
     public function createActual()
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -249,21 +234,14 @@ class KpiController extends Controller
     }
 
     /** Simpan KPI Actual */
-    public function storeActual(Request $request)
+    public function storeActual(StoreKpiActualRequest $request)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'kpi_target_id' => 'required|exists:kpi_targets,id',
-            'staff_id'      => 'required|exists:users,id',
-            'month'         => 'required|integer|min:1|max:12',
-            'year'          => 'required|integer|min:2024|max:2030',
-            'actual_value'  => 'required|numeric|min:0',
-            'notes'         => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
         $kpiTarget = KpiTarget::findOrFail($validated['kpi_target_id']);
 
@@ -293,7 +271,7 @@ class KpiController extends Controller
     public function editActual(KpiActual $kpiActual)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 
@@ -308,7 +286,7 @@ class KpiController extends Controller
     public function updateActual(Request $request, KpiActual $kpiActual)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin']) && !$user->is_management) {
+        if (!$user->isExecutive() && !$user->is_management) {
             abort(403);
         }
 

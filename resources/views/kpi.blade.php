@@ -1,6 +1,6 @@
 <x-app-layout>
 @php
-    $canManage = in_array(auth()->user()->role, ['c_level','super_admin']) || auth()->user()->is_management;
+    $canManage = auth()->user()->isExecutive() || auth()->user()->is_management;
     $deptColors = [
         'sales'=>'#1B4FD8','marketing'=>'#7C3AED','operational'=>'#0E7490',
         'hr'=>'#065F46','finance'=>'#9A3412','product_it'=>'#1D4ED8',
