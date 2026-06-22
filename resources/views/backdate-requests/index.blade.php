@@ -214,7 +214,7 @@
                         </td>
                         @if($statusFilter === 'pending')
                         <td style="text-align:right;">
-                            @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                            @if(auth()->user()->isLeadership())
                                 <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
                                     <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" onsubmit="return confirm('Setujui permintaan ini?');">
                                         @csrf @method('PATCH')
@@ -312,7 +312,7 @@
                 {{-- Action buttons (hanya untuk pending) --}}
                 @if($req->status === 'pending')
                     <div style="display:flex;flex-direction:column;gap:8px;">
-                        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                        @if(auth()->user()->isLeadership())
                             {{-- Setujui --}}
                             <form method="POST" action="{{ route('backdate-requests.approve', $req) }}"
                                   onsubmit="return confirm('Setujui permintaan backdating {{ $req->user->name }} untuk tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat("D MMMM") }}?');">

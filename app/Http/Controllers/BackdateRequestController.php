@@ -102,7 +102,7 @@ class BackdateRequestController extends Controller
 
         // Untuk dropdown filter nama staf
         $subordinateStaff = collect();
-        if (in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if ($user->isLeadership()) {
             $subordinateStaff = \App\Models\User::query()
                 ->when($user->role === 'leader', fn($q) => 
                     $q->where('department', $user->department)->where('role', 'staff')
@@ -213,7 +213,7 @@ class BackdateRequestController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if (!$user->isLeadership()) {
             abort(403);
         }
 
