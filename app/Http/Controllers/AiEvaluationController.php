@@ -108,7 +108,7 @@ class AiEvaluationController extends Controller
     private function authorizeOverride(): void
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if (!$user->isLeadership()) {
             abort(403, 'Hanya Leader, C-Level, atau Admin yang dapat mengubah nilai AI.');
         }
     }
