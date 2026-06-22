@@ -25,7 +25,7 @@
         'customer_support'=> 'Customer Support',
         'ceo_office'      => 'CEO Office',
     ];
-    $isCLevel = auth()->user()->role === 'c_level';
+    $isCLevel = in_array(auth()->user()->role, ['c_level', 'super_admin']);
     $groupedByDept = $isCLevel ? $targets->groupBy('department') : null;
 @endphp
 
@@ -241,7 +241,7 @@
              ════════════════════════════════════════════════════════════════ --}}
         <div style="display:flex;flex-direction:column;gap:8px;">
 
-        @foreach($leaderGrouped as $yearMonth => $monthTargets)
+        @foreach(($leaderGrouped ?? []) as $yearMonth => $monthTargets)
             @php
                 [$yr, $mo] = explode('-', $yearMonth);
                 $monthLabel = ['','Januari','Februari','Maret','April','Mei','Juni',
