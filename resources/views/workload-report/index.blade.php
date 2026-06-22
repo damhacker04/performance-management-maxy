@@ -38,7 +38,7 @@
                 </select>
             </div>
 
-            @if(in_array(auth()->user()->role, ['c_level','super_admin']) || auth()->user()->is_management)
+            @if(auth()->user()->isExecutive() || auth()->user()->is_management)
             <div class="form-group" style="margin:0;min-width:160px;">
                 <label class="form-label" style="margin-bottom:4px;">Departemen</label>
                 <select name="department" class="form-control form-control-sm">

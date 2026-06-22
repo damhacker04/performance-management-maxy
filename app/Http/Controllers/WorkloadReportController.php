@@ -41,7 +41,7 @@ class WorkloadReportController extends Controller
             ->orderBy('department')
             ->orderBy('name');
 
-        if (in_array($user->role, ['c_level', 'super_admin']) || $user->is_management) {
+        if ($user->isExecutive() || $user->is_management) {
             // C-Level/HR: bisa filter dept atau lihat semua
             if ($dept) {
                 $query->where('department', $dept);
@@ -318,7 +318,7 @@ class WorkloadReportController extends Controller
 
     private function authorizeAccess(User $user): void
     {
-        if (!in_array($user->role, ['c_level', 'super_admin', 'leader']) && !$user->is_management) {
+        if (!$user->isLeadership() && !$user->is_management) {
             abort(403, 'Akses ditolak. Fitur ini hanya untuk C-Level, Admin HR, dan Leader.');
         }
     }
