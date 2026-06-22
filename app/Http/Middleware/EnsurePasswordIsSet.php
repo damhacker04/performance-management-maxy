@@ -23,9 +23,10 @@ class EnsurePasswordIsSet
 
         // Hanya berlaku untuk user yang sudah login & belum punya password.
         if ($user && empty($user->password)) {
-            // Jangan blokir halaman setup password itu sendiri & logout,
-            // supaya tidak terjadi redirect loop.
-            if (! $request->routeIs('password.setup', 'logout')) {
+            // Jangan blokir halaman setup password (GET form + POST simpan)
+            // & logout, supaya tidak terjadi redirect loop dan user tetap
+            // bisa menyimpan password / keluar.
+            if (! $request->routeIs('password.setup*', 'logout')) {
                 return redirect()->route('password.setup');
             }
         }
