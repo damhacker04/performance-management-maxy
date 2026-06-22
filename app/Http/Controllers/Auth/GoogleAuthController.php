@@ -40,6 +40,13 @@ class GoogleAuthController extends Controller
                 // Log the user in
                 Auth::login($user);
 
+                // Kalau user belum punya password (pertama kali login lewat
+                // Google), wajibkan dia membuat password dulu supaya ke
+                // depannya bisa login lewat Google maupun email + password.
+                if (empty($user->password)) {
+                    return redirect()->route('password.setup');
+                }
+
                 // Redirect to intended page or dashboard
                 return redirect()->intended(route('dashboard', absolute: false));
             } else {
