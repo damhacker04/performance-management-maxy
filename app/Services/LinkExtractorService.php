@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\UrlGuard;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -23,7 +24,16 @@ class LinkExtractorService
      */
     public function extract(string $url): ?string
     {
-        if (!$url) return null;
+        if (! $url) {
+            return null;
+        }
+
+        // Anti-SSRF: hanya host Google/Notion yang di-allowlist boleh di-fetch.
+        if (! UrlGuard::isSafeToFetch($url)) {
+            Log::warning('LinkExtractorService: URL di luar allowlist, dilewati', ['url' => $url]);
+
+            return null;
+        }
 
         if ($this->isGoogleDocsUrl($url)) {
             return $this->extractFromGoogleDocs($url);
@@ -45,20 +55,26 @@ class LinkExtractorService
         preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches);
         $docId = $matches[1] ?? null;
 
-        if (!$docId) return null;
+        if (! $docId) {
+            return null;
+        }
 
         // Export sebagai plain text (tidak perlu login jika publik)
         $exportUrl = "https://docs.google.com/document/d/{$docId}/export?format=txt";
 
         try {
             $response = Http::timeout(15)->get($exportUrl);
-            if (!$response->successful()) return null;
+            if (! $response->successful()) {
+                return null;
+            }
 
             $text = $response->body();
+
             return $this->truncate($text);
 
         } catch (\Exception $e) {
             Log::warning('LinkExtractorService: gagal ekstrak Google Docs', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -70,22 +86,28 @@ class LinkExtractorService
         preg_match('/\/d\/([a-zA-Z0-9_-]+)/', $url, $matches);
         $sheetId = $matches[1] ?? null;
 
-        if (!$sheetId) return null;
+        if (! $sheetId) {
+            return null;
+        }
 
         // Export sebagai CSV (mudah dibaca AI)
         $exportUrl = "https://docs.google.com/spreadsheets/d/{$sheetId}/export?format=csv";
 
         try {
             $response = Http::timeout(15)->get($exportUrl);
-            if (!$response->successful()) return null;
+            if (! $response->successful()) {
+                return null;
+            }
 
             // Konversi CSV ke teks yang lebih mudah dibaca AI
             $csv = $response->body();
             $text = $this->csvToReadableText($csv);
+
             return $this->truncate($text);
 
         } catch (\Exception $e) {
             Log::warning('LinkExtractorService: gagal ekstrak Google Sheets', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -99,7 +121,9 @@ class LinkExtractorService
                 ->withHeaders(['User-Agent' => 'Mozilla/5.0'])
                 ->get($url);
 
-            if (!$response->successful()) return null;
+            if (! $response->successful()) {
+                return null;
+            }
 
             // Strip HTML tags, ambil teks bersih
             $text = strip_tags($response->body());
@@ -110,6 +134,7 @@ class LinkExtractorService
 
         } catch (\Exception $e) {
             Log::warning('LinkExtractorService: gagal ekstrak URL generik', ['error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -135,12 +160,16 @@ class LinkExtractorService
             $cols = str_getcsv($line);
             $readable[] = implode(' | ', array_filter($cols));
         }
+
         return implode("\n", array_filter($readable));
     }
 
     private function truncate(string $text): string
     {
-        if (strlen($text) <= $this->maxChars) return $text;
-        return substr($text, 0, $this->maxChars) . '...[dipotong karena terlalu panjang]';
+        if (strlen($text) <= $this->maxChars) {
+            return $text;
+        }
+
+        return substr($text, 0, $this->maxChars).'...[dipotong karena terlalu panjang]';
     }
 }
