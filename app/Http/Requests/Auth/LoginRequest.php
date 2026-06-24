@@ -50,6 +50,18 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Akun yang dinonaktifkan (is_active = false) tidak boleh login,
+        // walau kredensialnya benar. Logout lalu tolak.
+        if (! Auth::user()->is_active) {
+            Auth::guard('web')->logout();
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda dinonaktifkan. Silakan hubungi HR.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

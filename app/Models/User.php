@@ -22,21 +22,21 @@ class User extends Authenticatable
      * Single source of truth — dipakai di form, validation, dan UI labels.
      */
     public const DEPARTMENTS = [
-        'sales'             => 'Sales',
-        'marketing'         => 'Marketing',
-        'product_it'        => 'Product / IT',
-        'operational'       => 'Operational',
-        'hr'                => 'HR',
-        'finance'           => 'Finance',
-        'ga'                => 'General Affairs',
-        'creative'          => 'Creative',
-        'customer_support'  => 'Customer Support',
+        'sales' => 'Sales',
+        'marketing' => 'Marketing',
+        'product_it' => 'Product / IT',
+        'operational' => 'Operational',
+        'hr' => 'HR',
+        'finance' => 'Finance',
+        'ga' => 'General Affairs',
+        'creative' => 'Creative',
+        'customer_support' => 'Customer Support',
     ];
 
     public const ROLES = [
-        'staff'       => 'Staff',
-        'leader'      => 'Leader',
-        'c_level'     => 'C-Level',
+        'staff' => 'Staff',
+        'leader' => 'Leader',
+        'c_level' => 'C-Level',
         'super_admin' => 'Super Admin',
     ];
 
@@ -90,12 +90,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'is_management' => 'boolean',
         ];
     }
 
     public function getDepartmentLabelAttribute(): ?string
     {
-        if (!$this->department) return null;
+        if (! $this->department) {
+            return null;
+        }
+
         return self::DEPARTMENTS[$this->department] ?? ucfirst(str_replace('_', ' ', $this->department));
     }
 

@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
@@ -26,11 +25,18 @@ class GoogleAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
-            
+
             // Check if user's email exists in our whitelist database
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($user) {
+                // Akun nonaktif tidak boleh masuk walau emailnya ada di whitelist.
+                if (! $user->is_active) {
+                    return redirect()->route('login')->withErrors([
+                        'email' => 'Akun Anda dinonaktifkan. Silakan hubungi HR.',
+                    ]);
+                }
+
                 // If user exists in whitelist, update their google_id and avatar
                 $user->update([
                     'google_id' => $googleUser->getId(),
@@ -52,12 +58,13 @@ class GoogleAuthController extends Controller
             } else {
                 // Email not found in whitelist
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Akun dengan email ' . $googleUser->getEmail() . ' tidak terdaftar dalam sistem.',
+                    'email' => 'Akun dengan email '.$googleUser->getEmail().' tidak terdaftar dalam sistem.',
                 ]);
             }
 
         } catch (\Exception $e) {
-            Log::error('Google Auth Error: ' . $e->getMessage());
+            Log::error('Google Auth Error: '.$e->getMessage());
+
             return redirect()->route('login')->withErrors([
                 'email' => 'Terjadi kesalahan saat otentikasi dengan Google. Silakan coba lagi.',
             ]);
