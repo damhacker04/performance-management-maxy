@@ -18,7 +18,7 @@
 <div class="page">
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ $backUrl ?? ($weeklyTarget->monthlyTarget ? route('monthly-targets.show', $weeklyTarget->monthlyTarget) : route('weekly-targets.index')) }}"
+        <a href="{{ $backUrl ?? (($weeklyTarget->monthlyTarget && ($weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to)) ? route('period.staff-weekly', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month, 'staff' => $weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to, 'monthlyTarget' => $weeklyTarget->monthlyTarget->id]) : ($weeklyTarget->monthlyTarget ? route('period.staff-list', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month]) : route('weekly-targets.index'))) }}"
            class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>

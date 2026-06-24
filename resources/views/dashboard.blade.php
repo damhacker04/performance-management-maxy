@@ -988,7 +988,9 @@
             </div>
             <div style="padding:0 16px 8px;">
                 @forelse ($targets->take(3) as $target)
-                    <a href="{{ route('monthly-targets.show', $target->id) }}"
+                    <a href="{{ $target->assigned_to 
+                        ? route('period.staff-weekly', ['year' => $target->year, 'month' => $target->month, 'staff' => $target->assigned_to, 'monthlyTarget' => $target->id]) 
+                        : route('period.staff-list', ['year' => $target->year, 'month' => $target->month]) }}"
                        class="m-row"
                        style="text-decoration:none;color:inherit;cursor:pointer;">
                         <div class="row-body">

@@ -15,7 +15,17 @@
     <div style="display:flex;align-items:center;gap:8px;">
 @php
     $backParam = request()->query('back') ? urldecode(request()->query('back')) : null;
-    $backHref  = $backParam ?? route('monthly-targets.show', $weeklyTarget->monthly_target_id);
+    $backHref  = $backParam ?? (($weeklyTarget->monthlyTarget && ($weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to))
+        ? route('period.staff-weekly', [
+            'year'          => $weeklyTarget->year,
+            'month'         => $weeklyTarget->month,
+            'staff'         => $weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to,
+            'monthlyTarget' => $weeklyTarget->monthly_target_id
+        ])
+        : route('period.staff-list', [
+            'year'          => $weeklyTarget->year,
+            'month'         => $weeklyTarget->month
+        ]));
 @endphp
         <a href="{{ $backHref }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>

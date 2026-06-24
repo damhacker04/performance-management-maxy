@@ -171,7 +171,9 @@
                                 $doneEntries    = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
                                 $pct            = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
                             @endphp
-                            <a href="{{ route('monthly-targets.show', $target) }}"
+                            <a href="{{ $target->assigned_to 
+                                ? route('period.staff-weekly', ['year' => $target->year, 'month' => $target->month, 'staff' => $target->assigned_to, 'monthlyTarget' => $target]) 
+                                : route('period.staff-list', ['year' => $target->year, 'month' => $target->month]) }}"
                                style="display:block;text-decoration:none;color:inherit;">
                                 <div class="m-card" style="padding:12px 14px;
                                             {{ $isCurrentMonth ? 'border:1.5px solid '.$color.';' : '' }}">

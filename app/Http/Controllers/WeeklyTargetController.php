@@ -136,9 +136,26 @@ class WeeklyTargetController extends Controller
             'year'              => $monthlyTarget->year,
         ]);
 
-        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
-        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
-        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+        // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
+        $backUrl = $request->input('back') ?: null;
+        if ($backUrl) {
+            $redirectTo = $backUrl;
+        } else {
+            $staffId = $validated['assigned_to'] ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                $redirectTo = route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ]);
+            } else {
+                $redirectTo = route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ]);
+            }
+        }
 
         return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil disimpan.');
@@ -316,9 +333,26 @@ class WeeklyTargetController extends Controller
             'assigned_to'       => $validated['assigned_to'] ?? null,
         ]);
 
-        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
-        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
-        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+        // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
+        $backUrl = $request->input('back') ?: null;
+        if ($backUrl) {
+            $redirectTo = $backUrl;
+        } else {
+            $staffId = $validated['assigned_to'] ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                $redirectTo = route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ]);
+            } else {
+                $redirectTo = route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ]);
+            }
+        }
 
         return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil diperbarui.');
@@ -328,12 +362,24 @@ class WeeklyTargetController extends Controller
     {
         $this->authorizeWeekly($weeklyTarget);
 
-        $monthlyTargetId = $weeklyTarget->monthly_target_id;
+        $monthlyTarget = $weeklyTarget->monthlyTarget;
         $weeklyTarget->delete();
 
-        if ($monthlyTargetId) {
-            return redirect()->route('monthly-targets.show', $monthlyTargetId)
-                ->with('success', 'Target mingguan berhasil dihapus.');
+        if ($monthlyTarget) {
+            $staffId = $weeklyTarget->assigned_to ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                return redirect()->route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ])->with('success', 'Target mingguan berhasil dihapus.');
+            } else {
+                return redirect()->route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ])->with('success', 'Target mingguan berhasil dihapus.');
+            }
         }
 
         return redirect()->route('monthly-targets.index')

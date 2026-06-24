@@ -165,89 +165,7 @@ class MonthlyTargetController extends Controller
             ->with('success', 'Target bulanan berhasil disimpan.');
     }
 
-    public function show(MonthlyTarget $monthlyTarget)
-    {
-        $user = auth()->user();
-        if (!$user->isExecutive()) {
-            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
-        }
 
-        $monthlyTarget->load([
-            'user',
-            'weeklyTargets'                        => fn($q) => $q->orderBy('week_number')->orderBy('id'),
-            'weeklyTargets.assignee',
-            'weeklyTargets.dailyTaskEntries.user',
-        ]);
-
-        // ── Statistik laporan per weekly target ───────────────────────────────
-        $entriesByWeek = $monthlyTarget->weeklyTargets
-            ->mapWithKeys(fn($wt) => [
-                $wt->id => [
-                    'total'          => $wt->dailyTaskEntries->count(),
-                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
-                    'pending_review' => $wt->dailyTaskEntries
-                                          ->where('status', 'selesai')
-                                          ->where('verification_status', 'pending')
-                                          ->count(),
-                ],
-            ]);
-
-        // ── Group weekly targets PER ORANG (untuk accordion) ─────────────────
-        // Key = user_id (int) atau 'umum' (null assigned_to)
-        $byPerson = $monthlyTarget->weeklyTargets
-            ->groupBy(fn($wt) => $wt->assigned_to ?? 'umum');
-
-        // Ambil data user untuk semua assignee, diurutkan abjad
-        $assigneeIds = $monthlyTarget->weeklyTargets
-            ->pluck('assigned_to')
-            ->filter()
-            ->unique()
-            ->values();
-
-        $assignees = \App\Models\User::whereIn('id', $assigneeIds)
-            ->orderBy('name')
-            ->get()
-            ->keyBy('id');
-
-        // Urutkan byPerson: abjad berdasarkan nama, 'umum' selalu di paling bawah
-        $byPersonSorted = collect();
-        foreach ($assignees as $uid => $person) {
-            if ($byPerson->has($uid)) {
-                $byPersonSorted->put($uid, $byPerson->get($uid));
-            }
-        }
-        if ($byPerson->has('umum')) {
-            $byPersonSorted->put('umum', $byPerson->get('umum'));
-        }
-
-        // ── Sibling monthly targets (bulan & tahun sama) untuk dropdown dept ─
-        // Hanya diisi untuk C-Level & Super Admin
-        $siblingMonthlyTargets = collect();
-        if ($user->isExecutive()) {
-            $siblingMonthlyTargets = MonthlyTarget::where('month', $monthlyTarget->month)
-                ->where('year', $monthlyTarget->year)
-                ->where('id', '!=', $monthlyTarget->id)
-                ->orderBy('department')
-                ->get();
-        }
-
-        // ── Laporan per weekly target digroup per user (untuk C-Level view) ──
-        $leaderEntriesByWeek = [];
-        if ($user->isExecutive()) {
-            foreach ($monthlyTarget->weeklyTargets as $wt) {
-                $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries->groupBy('user_id');
-            }
-        }
-
-        return view('monthly-targets.show', compact(
-            'monthlyTarget',
-            'entriesByWeek',
-            'byPersonSorted',
-            'assignees',
-            'siblingMonthlyTargets',
-            'leaderEntriesByWeek'
-        ));
-    }
 
     /**
      * [DEPRECATED — redirects ke period.staff-targets]
@@ -364,64 +282,16 @@ class MonthlyTargetController extends Controller
                 'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges',
                 'year', 'month', 'backUrl'
             ));
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            return response("<pre style='background:#111;color:#f00;padding:20px;white-space:pre-wrap;'>" . htmlspecialchars("ERROR:\n" . $e->getMessage() . "\nFILE: " . $e->getFile() . "\nLINE: " . $e->getLine()) . "\n\n" . htmlspecialchars($e->getTraceAsString()) . "</pre>", 500);
+            report($e);
+            return redirect()->route('monthly-targets.index')
+                ->with('error', 'Terjadi kesalahan saat memuat halaman. Silakan coba lagi.');
         }
     }
 
-    public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
-    {
-        $user = auth()->user();
-        if (!$user->isExecutive()) {
-            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
-        }
 
-        $monthlyTarget->load([
-            'user',
-            'weeklyTargets' => fn($q) => $q->where('assigned_to', $assignee === 'umum' ? null : $assignee)->orderBy('week_number')->orderBy('id'),
-            'weeklyTargets.assignee',
-            'weeklyTargets.dailyTaskEntries.user',
-        ]);
-
-        $entriesByWeek = $monthlyTarget->weeklyTargets
-            ->mapWithKeys(fn($wt) => [
-                $wt->id => [
-                    'total'          => $wt->dailyTaskEntries->count(),
-                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
-                    'pending_review' => $wt->dailyTaskEntries
-                                          ->where('status', 'selesai')
-                                          ->where('verification_status', 'pending')
-                                          ->count(),
-                ],
-            ]);
-
-        $personTargets = $monthlyTarget->weeklyTargets;
-
-        if ($assignee !== 'umum') {
-            $person = \App\Models\User::findOrFail($assignee);
-            $pName = $person->name;
-            $pDiv = $person->division ?? $person->department;
-            $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-        } else {
-            $person = null;
-            $pName = 'Target Umum (Seluruh Tim)';
-            $pDiv = '';
-            $initials = '🏢';
-        }
-        $personKey = $assignee;
-
-        // Hitung persentase progress untuk banner atas
-        $pTotalEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
-        $pDoneEntry   = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
-        $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
-        
-        $weekRanges = []; // Biar ga undefined di view if needed
-
-        return view('monthly-targets.show-staff', compact(
-            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey', 'initials',
-            'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges'
-        ));
-    }
 
 
     public function edit(MonthlyTarget $monthlyTarget)
