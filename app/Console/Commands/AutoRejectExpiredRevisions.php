@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\DailyTaskEntry;
-use App\Helpers\NotificationHelper;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class AutoRejectExpiredRevisions extends Command
 {
@@ -44,22 +43,11 @@ class AutoRejectExpiredRevisions extends Command
         $count = 0;
 
         foreach ($expiredEntries as $entry) {
-            $entry->update([
-                'verification_status' => 'rejected',
-                'rejection_note'      => 'Otomatis ditolak karena melewati batas waktu revisi (10 jam).'
-            ]);
-
-            // Kirim notifikasi ke pembuat laporan
-            NotificationHelper::send(
-                $entry->user_id,
-                'auto_rejected',
-                'Batas Waktu Revisi Habis',
-                'Laporan "' . \Illuminate\Support\Str::limit($entry->task_description, 40) . '" otomatis ditolak karena melebihi batas waktu 10 jam.',
-                $entry->id,
-                null // metadata
-            );
-
-            $count++;
+            // Delegasikan ke transisi atomik di model (idempoten + notifikasi
+            // konsisten dengan jalur lazy auto-reject di controller@show).
+            if ($entry->autoRejectExpiredRevision()) {
+                $count++;
+            }
         }
 
         $this->info("Pengecekan selesai. Sebanyak {$count} laporan otomatis ditolak.");

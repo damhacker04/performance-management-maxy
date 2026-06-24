@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DailyTaskEvidence extends Model
 {
+    use HasFactory;
+
     protected $table = 'daily_task_evidences';
 
     protected $fillable = [

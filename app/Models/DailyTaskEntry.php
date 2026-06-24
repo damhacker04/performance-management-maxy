@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Helpers\NotificationHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class DailyTaskEntry extends Model
 {
@@ -34,32 +36,32 @@ class DailyTaskEntry extends Model
     ];
 
     protected $casts = [
-        'task_date'              => 'date',
-        'duration_minutes'       => 'integer',
-        'actual_duration_minutes'=> 'integer',
-        'verified_at'            => 'datetime',
-        'reviewed_at'            => 'datetime',
-        'revision_history'       => 'array',
+        'task_date' => 'date',
+        'duration_minutes' => 'integer',
+        'actual_duration_minutes' => 'integer',
+        'verified_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'revision_history' => 'array',
     ];
 
     protected $appends = ['is_overdue'];
 
     public const STATUSES = [
-        'belum_mulai'  => 'Belum Mulai',
+        'belum_mulai' => 'Belum Mulai',
         'dalam_proses' => 'Dalam Proses',
-        'terhambat'    => 'Terhambat',
-        'selesai'      => 'Selesai',
+        'terhambat' => 'Terhambat',
+        'selesai' => 'Selesai',
     ];
 
     public const PRIORITIES = [
         'critical' => 'Kritis',
-        'high'     => 'Tinggi',
-        'medium'   => 'Sedang',
-        'low'      => 'Rendah',
+        'high' => 'Tinggi',
+        'medium' => 'Sedang',
+        'low' => 'Rendah',
     ];
 
     public const VERIFICATION_STATUSES = [
-        'pending'  => 'Menunggu Verifikasi',
+        'pending' => 'Menunggu Verifikasi',
         'approved' => 'Diverifikasi',
         'revision' => 'Perlu Revisi',
         'rejected' => 'Ditolak',
@@ -89,18 +91,23 @@ class DailyTaskEntry extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
-
-
     /**
      * Apakah task terlambat? task_date sudah lewat tapi belum selesai.
      */
     public function getIsOverdueAttribute(): bool
     {
-        if (!$this->task_date) return false;
-        if ($this->status === 'selesai') return false;
+        if (! $this->task_date) {
+            return false;
+        }
+        if ($this->status === 'selesai') {
+            return false;
+        }
         // Laporan yang sudah diverifikasi/approved tidak tampil sebagai terlambat
-        if ($this->verification_status === 'approved') return false;
-        return $this->task_date->isPast() && !$this->task_date->isToday();
+        if ($this->verification_status === 'approved') {
+            return false;
+        }
+
+        return $this->task_date->isPast() && ! $this->task_date->isToday();
     }
 
     /**
@@ -109,10 +116,15 @@ class DailyTaskEntry extends Model
     public function getDurationLabelAttribute(): string
     {
         $mins = $this->actual_duration_minutes ?? $this->duration_minutes;
-        if (!$mins) return '-';
-        if ($mins < 60) return $mins . 'm';
+        if (! $mins) {
+            return '-';
+        }
+        if ($mins < 60) {
+            return $mins.'m';
+        }
         $h = intdiv($mins, 60);
         $m = $mins % 60;
+
         return $m === 0 ? "{$h}j" : "{$h}j {$m}m";
     }
 
@@ -141,7 +153,9 @@ class DailyTaskEntry extends Model
     public function canBeEdited(): bool
     {
         // Laporan yang sudah approved tidak bisa diedit sama sekali
-        if ($this->verification_status === 'approved') return false;
+        if ($this->verification_status === 'approved') {
+            return false;
+        }
 
         // Pengecualian khusus: jika diminta revisi oleh leader, staf TETAP BISA mengedit
         // meskipun statusnya sudah 'selesai' (asalkan masih dalam batas waktu revisi).
@@ -158,9 +172,53 @@ class DailyTaskEntry extends Model
      */
     public function canBeRevised(): bool
     {
-        if ($this->verification_status !== 'revision') return false;
-        if (!$this->reviewed_at) return false;
+        if ($this->verification_status !== 'revision') {
+            return false;
+        }
+        if (! $this->reviewed_at) {
+            return false;
+        }
+
         return $this->reviewed_at->addHours(10)->isFuture();
+    }
+
+    /**
+     * Auto-reject laporan berstatus 'revision' yang window revisinya (10 jam)
+     * sudah lewat: ubah ke 'rejected', catat alasan, beri tahu leader.
+     *
+     * Transisi state ini milik model (bukan controller) — dipanggil lazily
+     * saat laporan dibuka (DailyTaskEntryController@show). Return true jika
+     * transisi benar-benar terjadi.
+     */
+    public function autoRejectExpiredRevision(): bool
+    {
+        if ($this->verification_status !== 'revision' || $this->canBeRevised()) {
+            return false;
+        }
+
+        // Transisi atomik: hanya satu pemanggil yang berhasil mengubah
+        // 'revision' → 'rejected'. Mencegah double-notify saat dipanggil
+        // bersamaan oleh show() dan scheduler (tasks:auto-reject-revisions).
+        $newNote = ($this->rejection_note ?? '').
+            ' [Otomatis ditolak: staff tidak merevisi dalam 10 jam]';
+
+        $affected = static::query()
+            ->whereKey($this->getKey())
+            ->where('verification_status', 'revision')
+            ->update([
+                'verification_status' => 'rejected',
+                'rejection_note' => $newNote,
+            ]);
+
+        if ($affected === 0) {
+            return false; // sudah ditransisikan proses lain
+        }
+
+        $this->refresh();
+        $this->load('user');
+        NotificationHelper::autoRejected($this);
+
+        return true;
     }
 
     /**
@@ -176,11 +234,11 @@ class DailyTaskEntry extends Model
      */
     public function getVerificationChipAttribute(): string
     {
-        return match($this->verification_status ?? 'pending') {
+        return match ($this->verification_status ?? 'pending') {
             'approved' => 'success',
             'revision' => 'warning',
             'rejected' => 'danger',
-            default    => 'neutral',
+            default => 'neutral',
         };
     }
 
@@ -218,15 +276,19 @@ class DailyTaskEntry extends Model
      * dari entri paling awal (root) hingga entri paling baru,
      * diurutkan ascending berdasarkan tanggal.
      */
-    public function progressHistory(): \Illuminate\Support\Collection
+    public function progressHistory(): Collection
     {
         // Naik ke root
         $root = $this;
         while ($root->parent_entry_id) {
             $root = $root->parentEntry()->first();
-            if (!$root) break;
+            if (! $root) {
+                break;
+            }
         }
-        if (!$root) return collect([$this]);
+        if (! $root) {
+            return collect([$this]);
+        }
 
         // Kumpulkan semua dalam satu rantai
         $chain = collect();
@@ -235,6 +297,7 @@ class DailyTaskEntry extends Model
             $chain->push($current);
             $current = $current->childEntries()->first();
         }
+
         return $chain;
     }
 }
