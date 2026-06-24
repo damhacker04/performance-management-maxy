@@ -46,6 +46,7 @@ class BackdateRequestController extends Controller
         $validated = $request->validate([
             'requested_date' => [
                 'required',
+                'bail',
                 'date',
                 function ($attr, $value, $fail) use ($user) {
                     $date = \Carbon\Carbon::parse($value);
