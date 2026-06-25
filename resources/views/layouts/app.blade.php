@@ -25,7 +25,9 @@
     $onDashboard    = request()->routeIs('dashboard');
     $onTasks        = request()->routeIs('daily-tasks.*');
     // Tab Target aktif jika di monthly-targets ATAU weekly-targets ATAU leader-targets ATAU period (hierarki baru)
-    $onTargets      = request()->routeIs('monthly-targets.*') || request()->routeIs('weekly-targets.*') || request()->routeIs('leader-targets.*') || request()->routeIs('period.*');
+    $onTargets      = request()->routeIs('monthly-targets.*') || request()->routeIs('weekly-targets.*') || request()->routeIs('leader-targets.*') || request()->routeIs('period.*') || request()->routeIs('ceo.targets.*');
+    // Tujuan menu "Target" beda per role: C-Level ke halaman target khusus, leader ke daftar target dept.
+    $targetRoute    = $isCLevel ? route('ceo.targets.index') : route('monthly-targets.index');
     $onMyTargets    = request()->routeIs('staff-targets.*');
     $onKpi          = request()->routeIs('kpi') || request()->routeIs('kpi.*');
     $onWorkload     = request()->routeIs('workload-report.*');
@@ -87,7 +89,7 @@
                 </a>
             @else
                 {{-- Target (leader/c_level) --}}
-                <a href="{{ route('monthly-targets.index') }}"
+                <a href="{{ $targetRoute }}"
                    class="dt-nav-item {{ $onTargets ? 'active' : '' }}">
                     <svg class="dt-nav-icon" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     Target
@@ -319,7 +321,7 @@
                 </a>
             @else
                 {{-- Target (leader/c_level) --}}
-                <a href="{{ route('monthly-targets.index') }}" class="tab {{ $onTargets ? 'active' : '' }}">
+                <a href="{{ $targetRoute }}" class="tab {{ $onTargets ? 'active' : '' }}">
                     <span class="glyph">
                         <svg class="lucide" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     </span>

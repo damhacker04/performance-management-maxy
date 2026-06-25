@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\TargetAssignmentController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AiEvaluationController;
 use App\Http\Controllers\CeoOverviewController;
+use App\Http\Controllers\CeoTargetController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BackdateRequestController;
 use App\Http\Controllers\DailyTaskEntryController;
@@ -40,6 +41,10 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard monitoring C-Level (pengganti page target lama untuk C-Level)
     Route::middleware('role:c_level')->group(function () {
         Route::get('/ceo/overview', [CeoOverviewController::class, 'index'])->name('ceo.overview');
+
+        // Halaman Target khusus C-Level: target yang ditetapkan untuk leader + drill-down read-only.
+        Route::get('/ceo/targets', [CeoTargetController::class, 'index'])->name('ceo.targets.index');
+        Route::get('/ceo/targets/leader/{leader}', [CeoTargetController::class, 'showLeader'])->name('ceo.targets.leader');
     });
 
     // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
