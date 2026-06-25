@@ -224,7 +224,6 @@ class DailyTaskEntryController extends Controller
         $this->authorizeEdit($dailyTask);
 
         $user = auth()->user();
-        $isSales = $user->department === 'sales';
 
         $validated = $request->validated();
 
@@ -429,7 +428,6 @@ class DailyTaskEntryController extends Controller
     public function store(DailyTaskEntryRequest $request)
     {
         $user = auth()->user();
-        $isSales = $user->department === 'sales';
 
         $validated = $request->validated();
 
@@ -579,9 +577,16 @@ class DailyTaskEntryController extends Controller
     /**
      * Tandai entry sebagai selesai.
      *
-     * - Jika catatan SUDAH ada → langsung update status ke 'selesai', redirect ke show.
-     * - Jika catatan BELUM ada → arahkan ke form edit agar staff isi catatan dulu.
-     *   (Sesuai aturan rapat 12 Mei 2026: semua status 'selesai' wajib punya catatan.)
+     * Catatan: `status` (progres kerja) dan `verification_status` (alur review
+     * leader) adalah dua sumbu terpisah. Menyelesaikan tugas HANYA mengubah
+     * `status` → 'selesai', tidak pernah menyentuh `verification_status`.
+     *
+     * - Laporan 'rejected' (ditolak permanen) tidak bisa diselesaikan.
+     * - Laporan 'approved' (sudah di-ACC leader) TETAP bisa ditandai selesai —
+     *   form edit-nya memang sudah terkunci, jadi diselesaikan langsung tanpa
+     *   memaksa isi catatan.
+     * - Laporan lain (pending/revision): jika catatan belum ada → arahkan ke
+     *   form edit dulu (aturan rapat 12 Mei 2026: status 'selesai' wajib catatan).
      */
     public function complete(DailyTaskEntry $dailyTask)
     {
@@ -589,10 +594,10 @@ class DailyTaskEntryController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengubah laporan ini.');
         }
 
-        // Laporan yang sudah final (disetujui/ditolak) tidak boleh diubah statusnya.
-        if (in_array($dailyTask->verification_status, ['approved', 'rejected'], true)) {
+        // Laporan yang ditolak permanen tidak bisa diselesaikan.
+        if ($dailyTask->verification_status === 'rejected') {
             return redirect()->route('daily-tasks.show', $dailyTask)
-                ->with('info', 'Laporan ini sudah final dan tidak dapat diubah.');
+                ->with('info', 'Laporan ini sudah ditolak dan tidak dapat diselesaikan.');
         }
 
         if ($dailyTask->status === 'selesai') {
@@ -600,20 +605,40 @@ class DailyTaskEntryController extends Controller
                 ->with('info', 'Tugas ini sudah ditandai selesai sebelumnya.');
         }
 
-        // Catatan sudah ada → langsung selesaikan tanpa perlu ke form edit
-        // Hanya update kolom 'status' — JANGAN sentuh verification_status
-        if (! empty($dailyTask->notes)) {
-            $dailyTask->update(['status' => 'selesai']);
+        $isApproved = $dailyTask->verification_status === 'approved';
 
-            return redirect()->route('daily-tasks.show', $dailyTask)
-                ->with('success', '✅ Tugas berhasil ditandai selesai!');
+        // Catatan wajib untuk laporan yang BELUM diverifikasi. Laporan yang sudah
+        // di-ACC dikecualikan karena form edit-nya sudah terkunci.
+        if (empty($dailyTask->notes) && ! $isApproved) {
+            return redirect()
+                ->route('daily-tasks.edit', $dailyTask)
+                ->with('complete_mode', true)
+                ->with('info', 'Isi catatan penyelesaian terlebih dahulu, lalu simpan untuk menandai tugas selesai.');
         }
 
-        // Catatan belum ada → wajib isi dulu sebelum bisa selesaikan
-        return redirect()
-            ->route('daily-tasks.edit', $dailyTask)
-            ->with('complete_mode', true)
-            ->with('info', 'Isi catatan penyelesaian terlebih dahulu, lalu simpan untuk menandai tugas selesai.');
+        // Tandai selesai secara atomik. Re-cek di dalam lock untuk cegah balapan
+        // dengan reject/complete paralel (lost-update).
+        $completed = DB::transaction(function () use ($dailyTask) {
+            $fresh = DailyTaskEntry::whereKey($dailyTask->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($fresh->verification_status === 'rejected' || $fresh->status === 'selesai') {
+                return false;
+            }
+
+            $fresh->update(['status' => 'selesai']);
+
+            return true;
+        });
+
+        if (! $completed) {
+            return redirect()->route('daily-tasks.show', $dailyTask)
+                ->with('info', 'Status laporan sudah berubah, tugas tidak dapat ditandai selesai.');
+        }
+
+        return redirect()->route('daily-tasks.show', $dailyTask)
+            ->with('success', '✅ Tugas berhasil ditandai selesai!');
     }
 
     // ─── APPROVAL METHODS ─────────────────────────────────────────────────────
@@ -774,12 +799,6 @@ class DailyTaskEntryController extends Controller
     }
 
     /**
-     * Guard untuk review (approve/revision/reject):
-     * - Hanya leader atau c_level.
-     * - Leader hanya bisa review laporan staff se-departemen (atau laporan sendiri tidak berlaku).
-     * - Laporan yang sudah approved tidak bisa di-review ulang.
-     */
-    /**
      * Jalankan transisi status review secara atomik.
      *
      * Mengunci baris (lockForUpdate) di dalam transaksi lalu memastikan laporan
@@ -802,6 +821,12 @@ class DailyTaskEntryController extends Controller
         });
     }
 
+    /**
+     * Guard untuk review (approve/revision/reject):
+     * - Hanya leader, c_level, atau super_admin.
+     * - Leader hanya bisa review laporan staff se-departemen (C-Level lintas dept).
+     * - Laporan yang sudah approved tidak bisa di-review ulang.
+     */
     private function authorizeReview(DailyTaskEntry $dailyTask): void
     {
         $user = auth()->user();
