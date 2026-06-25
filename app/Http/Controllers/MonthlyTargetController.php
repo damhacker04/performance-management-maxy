@@ -12,6 +12,11 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
+        // C-Level memakai dashboard monitoring baru sebagai pengganti page target lama.
+        if ($user->role === 'c_level') {
+            return redirect()->route('ceo.overview');
+        }
+
         // Filter periode — wajib, default ke bulan & tahun berjalan
         $filterMonth = (int) $request->get('month', now()->month);
         $filterYear  = (int) $request->get('year',  now()->year);
@@ -96,9 +101,11 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        // Daftar staf yang bisa di-assign (sesuai dept leader/c-level)
+        // Daftar penerima target yang bisa di-assign (grouped per departemen).
+        // - C-Level / Super Admin: hanya boleh menargetkan LEADER (bukan staff langsung).
+        // - Leader: menargetkan STAFF di departemennya.
         if ($user->isExecutive()) {
-            $staffList = \App\Models\User::where('role', 'staff')
+            $staffList = \App\Models\User::where('role', 'leader')
                 ->where('is_active', true)
                 ->orderBy('department')
                 ->orderBy('name')
@@ -145,6 +152,16 @@ class MonthlyTargetController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // C-Level hanya boleh menargetkan Leader (tidak langsung ke staff).
+        if ($user->isExecutive() && ! empty($validated['assigned_to'])) {
+            $assignee = User::find($validated['assigned_to']);
+            if (! $assignee || $assignee->role !== 'leader') {
+                return back()->withInput()->withErrors([
+                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader.',
+                ]);
+            }
+        }
 
         $department = $user->isExecutive()
             ? $validated['department']

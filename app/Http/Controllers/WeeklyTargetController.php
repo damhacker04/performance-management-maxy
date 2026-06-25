@@ -80,11 +80,7 @@ class WeeklyTargetController extends Controller
         }
 
         $staffList = \App\Models\User::when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
-            ->when($user->role === 'leader', function($q) {
-                $q->where('role', 'staff');
-            }, function($q) {
-                $q->whereIn('role', ['staff', 'leader']);
-            })
+            ->where(fn($q) => $this->applyAssigneeRoleFilter($q, $user))
             ->orderBy('name')
             ->get();
 
@@ -120,6 +116,10 @@ class WeeklyTargetController extends Controller
         // Authorize: leader hanya boleh ke monthly miliknya
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
         $this->authorizeMonthly($monthlyTarget);
+
+        if ($resp = $this->rejectIfClevelAssignsNonLeader($request)) {
+            return $resp;
+        }
 
         WeeklyTarget::create([
             'monthly_target_id' => $monthlyTarget->id,
@@ -280,11 +280,7 @@ class WeeklyTargetController extends Controller
         $targetDepartment = $currentMonthly ? $currentMonthly->department : $user->department;
 
         $staffList = \App\Models\User::where('department', $targetDepartment)
-            ->when($user->role === 'leader', function($q) {
-                $q->where('role', 'staff');
-            }, function($q) {
-                $q->whereIn('role', ['staff', 'leader']);
-            })
+            ->where(fn($q) => $this->applyAssigneeRoleFilter($q, $user))
             ->orderBy('name')
             ->get();
 
@@ -320,6 +316,10 @@ class WeeklyTargetController extends Controller
 
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
         $this->authorizeMonthly($monthlyTarget);
+
+        if ($resp = $this->rejectIfClevelAssignsNonLeader($request)) {
+            return $resp;
+        }
 
         $weeklyTarget->update([
             'monthly_target_id' => $monthlyTarget->id,
@@ -384,6 +384,44 @@ class WeeklyTargetController extends Controller
 
         return redirect()->route('monthly-targets.index')
             ->with('success', 'Target mingguan berhasil dihapus.');
+    }
+
+    /**
+     * Batasi daftar penerima target sesuai role pembuat:
+     * - leader     → hanya staff (di departemennya)
+     * - c_level    → hanya leader (sesuai aturan: CEO menargetkan leader, bukan staff)
+     * - super_admin→ staff & leader (HR boleh assign ke siapa saja)
+     */
+    private function applyAssigneeRoleFilter($query, \App\Models\User $user): void
+    {
+        if ($user->role === 'leader') {
+            $query->where('role', 'staff');
+        } elseif ($user->role === 'c_level') {
+            $query->where('role', 'leader');
+        } else {
+            $query->whereIn('role', ['staff', 'leader']);
+        }
+    }
+
+    /**
+     * Pastikan C-Level hanya menugaskan ke Leader (bukan staff).
+     * Mengembalikan response redirect bila tidak valid, atau null bila lolos.
+     */
+    private function rejectIfClevelAssignsNonLeader(Request $request)
+    {
+        $user = auth()->user();
+        $assignedTo = $request->input('assigned_to');
+
+        if ($user->role === 'c_level' && ! empty($assignedTo)) {
+            $assignee = \App\Models\User::find($assignedTo);
+            if (! $assignee || $assignee->role !== 'leader') {
+                return back()->withInput()->withErrors([
+                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader.',
+                ]);
+            }
+        }
+
+        return null;
     }
 
     /**

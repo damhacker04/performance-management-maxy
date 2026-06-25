@@ -72,10 +72,11 @@
                 </div>
             @endif
 
-            <!-- Assign ke Staf -->
+            <!-- Assign ke penerima target -->
+            @php $assignLabel = auth()->user()->isExecutive() ? 'Leader' : 'Staf'; @endphp
             <div class="field">
                 <label for="assigned_to">
-                    Target untuk Staf
+                    Target untuk {{ $assignLabel }}
                     <span style="color:var(--fg-4);font-weight:400;">(opsional — kosongkan jika target tim)</span>
                 </label>
                 <div class="select-wrap">
@@ -97,7 +98,7 @@
                 </div>
                 @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
                 <small style="color:var(--fg-4);font-size:11px;">
-                    Jika diisi, target ini akan muncul secara personal untuk staf tersebut dan digunakan sebagai acuan AI.
+                    Jika diisi, target ini akan muncul secara personal untuk {{ strtolower($assignLabel) }} tersebut dan digunakan sebagai acuan AI.
                 </small>
             </div>
 
