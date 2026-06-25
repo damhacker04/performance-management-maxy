@@ -392,7 +392,7 @@
                 <span class="overline-label">Tugas hari ini</span>
                 <span style="font-size:12px;font-weight:600;color:var(--maxy-navy);">{{ $done }}/{{ $total }} selesai</span>
             </div>
-            <div style="padding:0 16px 8px;">
+            <div style="padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px;">
                 @forelse ($todayEntries as $entry)
                     @php
                         $statusMap = [
@@ -409,8 +409,15 @@
                             'medium'   => 'info',
                             'low'      => 'neutral',
                         ][$entry->priority] ?? 'neutral';
+                        // Aksen kiri kartu: hijau bila disetujui/selesai, kuning revisi, merah ditolak/terhambat
+                        $accent = match(true) {
+                            $entry->verification_status === 'approved' || $entry->status === 'selesai' => 'var(--success)',
+                            $entry->verification_status === 'revision' => 'var(--warning)',
+                            $entry->verification_status === 'rejected' || $entry->status === 'terhambat' => 'var(--danger)',
+                            default => 'var(--neutral-300)',
+                        };
                     @endphp
-                    <div class="m-row">
+                    <div class="m-row as-card" style="border-left:3px solid {{ $accent }};">
                         @if($entry->status === 'selesai' || $entry->verification_status === 'approved')
                             <span class="m-checkbox done" aria-hidden="true">
                                 <svg style="width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 16 16"><path d="M3 8l3.5 3.5L13 5"/></svg>

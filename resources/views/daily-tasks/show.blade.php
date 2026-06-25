@@ -107,18 +107,13 @@
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:13px;color:var(--fg-3);">Verifikasi</span>
             <span class="chip chip-{{ $dailyTask->verification_chip }}" style="font-size:12px;">
-                @if($dailyTask->verification_status === 'approved') ✅
-                @elseif($dailyTask->verification_status === 'revision') ↩
-                @elseif($dailyTask->verification_status === 'rejected') ❌
-                @else ⏳
-                @endif
                 {{ $dailyTask->verification_status_label }}
             </span>
         </div>
         @if($dailyTask->is_overdue)
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:13px;color:var(--fg-3);">Peringatan</span>
-                <span class="chip chip-danger" style="font-size:12px;">⏰ Terlambat</span>
+                <span class="chip chip-danger" style="font-size:12px;">Terlambat</span>
             </div>
         @endif
     </div>
@@ -129,9 +124,9 @@
         {{-- Card: revisi sudah terkirim, menunggu persetujuan leader --}}
         @if($dailyTask->verification_status === 'pending' && $dailyTask->reviewed_at)
             <div style="background:#E8F7F4;border:1px solid #16A571;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
-                <span style="font-size:18px;flex-shrink:0;">📨</span>
+                <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;color:#0F7A50;margin-top:1px;"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
                 <div>
-                    <div style="font-size:12px;font-weight:700;color:#0F7A50;margin-bottom:3px;">Revisi Sudah Terkirim</div>
+                    <div style="font-size:13px;font-weight:700;color:#0F7A50;margin-bottom:3px;">Revisi Sudah Terkirim</div>
                     <p style="font-size:12px;color:#0D6A44;margin:0;line-height:1.5;">
                         Laporan revisimu sudah dikirim ke leader pada
                         <strong>{{ $dailyTask->updated_at->isoFormat('D MMM YYYY, HH:mm') }}</strong>.
@@ -143,7 +138,10 @@
 
         @if($dailyTask->verification_status === 'revision')
             <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:12px 14px;">
-                <div style="font-size:12px;font-weight:700;color:#B45309;margin-bottom:10px;">↩ Laporan Perlu Direvisi</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#B45309;margin-bottom:10px;">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
+                    Laporan Perlu Direvisi
+                </div>
 
                 {{-- Timeline riwayat semua catatan revisi --}}
                 @if($dailyTask->revision_history && count($dailyTask->revision_history) > 0)
@@ -165,7 +163,7 @@
                                             {{ $rev['by'] ?? 'Leader' }}
                                             @if($isLatest) · <em>terbaru</em>@endif
                                         </span>
-                                        <span style="font-size:10px;color:#9CA3AF;">{{ \Carbon\Carbon::parse($rev['at'])->isoFormat('D MMM, HH:mm') }}</span>
+                                        <span style="font-size:11px;color:#9CA3AF;">{{ \Carbon\Carbon::parse($rev['at'])->isoFormat('D MMM, HH:mm') }}</span>
                                     </div>
                                     <p style="font-size:12px;color:{{ $isLatest ? '#8B5A00' : '#374151' }};margin:0;line-height:1.5;">{{ $rev['note'] }}</p>
                                 </div>
@@ -189,20 +187,26 @@
                         $sisaStr     = $sisaJam > 0 ? "{$sisaJam} jam {$sisaMinSisa} menit" : "{$sisaMenit} menit";
                         $urgent      = $sisaMenit <= 60; // merah kalau sisa ≤ 1 jam
                     @endphp
-                    <a href="{{ route('daily-tasks.edit', $dailyTask) }}" class="btn btn-primary btn-sm">✏️ Revisi Laporan</a>
-                    <span style="font-size:11px;margin-left:8px;padding:3px 8px;border-radius:6px;
+                    <a href="{{ route('daily-tasks.edit', $dailyTask) }}" class="btn btn-primary btn-sm">
+                        <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                        Revisi Laporan
+                    </a>
+                    <span style="font-size:12px;margin-left:8px;padding:3px 8px;border-radius:6px;
                                  background:{{ $urgent ? '#FEF2F2' : '#FFFBEB' }};
                                  color:{{ $urgent ? '#B91C1C' : '#8B5A00' }};
-                                 font-weight:{{ $urgent ? '700' : '500' }};">
-                        {{ $urgent ? '⚠️' : '⏱' }} Sisa: {{ $sisaStr }}
+                                 font-weight:{{ $urgent ? '700' : '600' }};">
+                        Sisa: {{ $sisaStr }}
                     </span>
                 @else
-                    <span style="font-size:11px;color:#92400E;background:#FEF3C7;padding:4px 8px;border-radius:6px;">⏰ Masa revisi sudah berakhir</span>
+                    <span style="font-size:12px;color:#92400E;background:#FEF3C7;padding:4px 8px;border-radius:6px;">Masa revisi sudah berakhir</span>
                 @endif
             </div>
         @elseif($dailyTask->verification_status === 'rejected')
             <div style="background:#FFF1F2;border:1px solid #F87171;border-radius:10px;padding:12px 14px;">
-                <div style="font-size:12px;font-weight:700;color:#B91C1C;margin-bottom:4px;">❌ Laporan Ditolak</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#B91C1C;margin-bottom:4px;">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                    Laporan Ditolak
+                </div>
                 <p style="font-size:12px;color:#7F1D1D;margin:0;line-height:1.5;">
                     <strong>Alasan dari {{ $dailyTask->verifiedBy->name ?? 'Leader' }}:</strong><br>
                     {{ $dailyTask->rejection_note }}
@@ -247,14 +251,18 @@
                 <form method="POST" action="{{ route('daily-tasks.approve', $actionParams) }}"
                       onsubmit="return confirm('Setujui laporan ini? Laporan akan terkunci setelah disetujui.');">
                     @csrf @method('PATCH')
-                    <button type="submit" class="btn btn-primary btn-block" style="background:#16A571;">
-                        ✅ Setujui Laporan
+                    <button type="submit" class="btn btn-block" style="background:var(--success);color:#fff;">
+                        <svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                        Setujui Laporan
                     </button>
                 </form>
 
                 {{-- Form Kembalikan untuk Revisi --}}
                 <details style="border:1px solid #FBB041;border-radius:8px;padding:12px;">
-                    <summary style="font-size:13px;font-weight:600;color:#B45309;cursor:pointer;">↩ Kembalikan untuk Direvisi</summary>
+                    <summary style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B45309;cursor:pointer;">
+                        <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
+                        Kembalikan untuk Direvisi
+                    </summary>
                     <form method="POST" action="{{ route('daily-tasks.revision', $actionParams) }}" style="margin-top:10px;">
                         @csrf @method('PATCH')
                         <textarea name="rejection_note" rows="3" required minlength="10"
@@ -266,8 +274,11 @@
 
                 {{-- Form Tolak Permanen --}}
                 <details style="border:1px solid #F87171;border-radius:8px;padding:12px;">
-                    <summary style="font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">❌ Tolak Permanen</summary>
-                    <p style="font-size:11px;color:#9CA3AF;margin:6px 0;">Staff tidak akan bisa merevisi laporan ini setelah ditolak.</p>
+                    <summary style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">
+                        <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                        Tolak Permanen
+                    </summary>
+                    <p style="font-size:12px;color:var(--fg-3);margin:6px 0;">Staff tidak akan bisa merevisi laporan ini setelah ditolak.</p>
                     <form method="POST" action="{{ route('daily-tasks.reject', $actionParams) }}" style="margin-top:6px;"
                           onsubmit="return confirm('Tolak permanen laporan ini? Tindakan ini tidak bisa dibatalkan.');">
                         @csrf @method('PATCH')
@@ -313,7 +324,7 @@
                                     <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                                 </svg>
                                 Ditugaskan oleh: <strong>{{ $dailyTask->weeklyTarget->monthlyTarget->user->name }}</strong>
-                                <span style="font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg-2);color:var(--fg-2);">
+                                <span style="font-size:11px;padding:1px 5px;border-radius:4px;background:var(--bg-2);color:var(--fg-2);">
                                     {{ ucfirst(str_replace('_', ' ', $dailyTask->weeklyTarget->monthlyTarget->user->role)) }}
                                 </span>
                             </span>
@@ -325,7 +336,10 @@
         @else
             {{-- Task "Other" — tidak terikat weekly target --}}
             <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 12px;">
-                <div style="font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.05em;">📌 Tugas Tambahan / Mendadak</div>
+                <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#B45309;text-transform:uppercase;letter-spacing:.05em;">
+                    <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+                    Tugas Tambahan / Mendadak
+                </div>
                 <p style="font-size:12px;color:#8B5A00;margin:4px 0 0;line-height:1.5;">
                     Tidak terkait target mingguan — ini merupakan tugas tambahan atau instruksi langsung dari atasan.
                 </p>
@@ -392,9 +406,9 @@
                                     <span style="font-size:11px;font-weight:700;color:var(--fg-2);">
                                         {{ \Carbon\Carbon::parse($ph->task_date)->isoFormat('ddd, D MMM') }}
                                     </span>
-                                    <span class="chip chip-{{ $phStatus }}" style="font-size:10px;">{{ $ph->status_label }}</span>
+                                    <span class="chip chip-{{ $phStatus }}" style="font-size:11px;">{{ $ph->status_label }}</span>
                                     @if($isThis)
-                                        <span style="font-size:10px;color:var(--maxy-navy);font-weight:700;">← Ini</span>
+                                        <span style="font-size:11px;color:var(--maxy-navy);font-weight:700;">← Ini</span>
                                     @endif
                                 </div>
                                 @if($ph->notes)
@@ -423,7 +437,7 @@
                                     border:1px solid var(--bg-3);border-radius:8px;padding:10px 12px;">
                             <svg class="lucide" style="width:14px;height:14px;flex-shrink:0;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:10px;color:var(--fg-4);margin-bottom:2px;">Link Bukti (Legacy)</div>
+                                <div style="font-size:11px;color:var(--fg-4);margin-bottom:2px;">Link Bukti (Legacy)</div>
                                 <a href="{{ $dailyTask->proof_url }}" target="_blank"
                                    style="font-size:12px;color:var(--maxy-navy);font-weight:600;
                                           word-break:break-all;text-decoration:none;"
@@ -444,8 +458,9 @@
 
                         @if($isImage)
                             <div style="border:1px solid var(--bg-3);border-radius:10px;overflow:hidden;">
-                                <div style="padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);border-bottom:1px solid var(--bg-3);">
-                                    📸 Bukti File (Legacy)
+                                <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:11px;color:var(--fg-3);background:var(--bg-2);border-bottom:1px solid var(--bg-3);">
+                                    <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></svg>
+                                    Bukti File (Legacy)
                                 </div>
                                 <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer">
                                     <img src="{{ $fileUrl }}" alt="Bukti laporan"
@@ -460,7 +475,7 @@
                                 <svg class="lucide" style="width:20px;height:20px;flex-shrink:0;color:#E53E3E;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                 <div style="flex:1;min-width:0;">
                                     <div style="font-size:12px;font-weight:600;color:var(--fg-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $fileName }}</div>
-                                    <div style="font-size:10px;color:var(--fg-4);">PDF (Legacy)</div>
+                                    <div style="font-size:11px;color:var(--fg-4);">PDF (Legacy)</div>
                                 </div>
                             </a>
                         @endif
@@ -476,14 +491,15 @@
                                 <div style="padding:10px 12px; font-size:12px; font-weight:700; color:var(--fg-1); background:var(--bg-2); border-bottom:1px solid var(--bg-3); display:flex; align-items:center; gap:8px;">
                                     <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                     {{ $label }}
-                                    <span style="font-size:10px; color:var(--fg-4); font-weight:500; margin-left:auto;">{{ $evs->count() }} Item</span>
+                                    <span style="font-size:11px; color:var(--fg-4); font-weight:500; margin-left:auto;">{{ $evs->count() }} Item</span>
                                 </div>
                                 <div style="padding:12px; display:flex; flex-direction:column; gap:8px;">
                                     @foreach($evs as $ev)
                                         @if($ev->type === 'link')
                                             <a href="{{ $ev->path_or_url }}" target="_blank" rel="noopener noreferrer"
                                                style="display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--maxy-navy); font-size:12px; padding:8px; background:var(--bg-2); border-radius:6px; border:1px solid var(--bg-3);">
-                                                🔗 <span style="word-break:break-all;">{{ Str::limit($ev->path_or_url, 60) }}</span>
+                                                <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                                <span style="word-break:break-all;">{{ Str::limit($ev->path_or_url, 60) }}</span>
                                             </a>
                                         @elseif($ev->type === 'file' || $ev->type === 'image')
                                             @php
@@ -500,7 +516,8 @@
                                             @else
                                                 <a href="{{ $fileUrl }}" target="_blank" rel="noopener noreferrer"
                                                    style="display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--fg-1); font-size:12px; padding:8px; background:var(--bg-2); border-radius:6px; border:1px solid var(--bg-3);">
-                                                    📄 <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $fileName }}</span>
+                                                    <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;color:var(--maxy-navy);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $fileName }}</span>
                                                 </a>
                                             @endif
                                         @endif
@@ -627,10 +644,10 @@
         {{-- Header --}}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:6px;">
-                <span style="font-size:14px;">🕐</span>
-                <span class="overline-label" style="font-size:11px;">Activity Log</span>
+                <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--maxy-navy);"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span class="overline-label">Activity Log</span>
             </div>
-            <span style="font-size:10px;font-weight:600;background:#EDE9FE;color:#6D28D9;padding:2px 8px;border-radius:99px;">
+            <span style="font-size:11px;font-weight:700;background:var(--neutral-100);color:var(--fg-2);padding:2px 8px;border-radius:99px;">
                 {{ count($events) }} aktivitas
             </span>
         </div>
@@ -641,12 +658,12 @@
             @php
                 $isLast = $idx === count($events) - 1;
                 $cfg = match($event['type']) {
-                    'submitted'          => ['icon'=>'📤','color'=>'#3B82F6','bg'=>'#EFF6FF','border'=>'#BFDBFE','label'=>'Laporan Dikirim','labelColor'=>'#1D4ED8'],
-                    'revision_requested' => ['icon'=>'🔄','color'=>'#7C3AED','bg'=>'#F5F3FF','border'=>'#C4B5FD','label'=>'Revisi Diminta','labelColor'=>'#5B21B6'],
-                    'staff_responded'    => ['icon'=>'✏️','color'=>'#059669','bg'=>'#ECFDF5','border'=>'#A7F3D0','label'=>'Staff Memperbarui','labelColor'=>'#065F46'],
-                    'approved'           => ['icon'=>'✅','color'=>'#16A34A','bg'=>'#F0FDF4','border'=>'#86EFAC','label'=>'Disetujui','labelColor'=>'#15803D'],
-                    'rejected'           => ['icon'=>'❌','color'=>'#DC2626','bg'=>'#FFF5F5','border'=>'#FECACA','label'=>'Ditolak','labelColor'=>'#B91C1C'],
-                    default              => ['icon'=>'🔔','color'=>'#64748B','bg'=>'#F8FAFC','border'=>'#E2E8F0','label'=>'Event','labelColor'=>'#475569'],
+                    'submitted'          => ['icon'=>'<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/>','color'=>'#3B82F6','bg'=>'#EFF6FF','border'=>'#BFDBFE','label'=>'Laporan Dikirim','labelColor'=>'#1D4ED8'],
+                    'revision_requested' => ['icon'=>'<path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/>','color'=>'#7C3AED','bg'=>'#F5F3FF','border'=>'#C4B5FD','label'=>'Revisi Diminta','labelColor'=>'#5B21B6'],
+                    'staff_responded'    => ['icon'=>'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>','color'=>'#059669','bg'=>'#ECFDF5','border'=>'#A7F3D0','label'=>'Staff Memperbarui','labelColor'=>'#065F46'],
+                    'approved'           => ['icon'=>'<path d="M20 6 9 17l-5-5"/>','color'=>'#16A34A','bg'=>'#F0FDF4','border'=>'#86EFAC','label'=>'Disetujui','labelColor'=>'#15803D'],
+                    'rejected'           => ['icon'=>'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>','color'=>'#DC2626','bg'=>'#FFF5F5','border'=>'#FECACA','label'=>'Ditolak','labelColor'=>'#B91C1C'],
+                    default              => ['icon'=>'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>','color'=>'#64748B','bg'=>'#F8FAFC','border'=>'#E2E8F0','label'=>'Event','labelColor'=>'#475569'],
                 };
                 $initial = strtoupper(mb_substr($event['by'], 0, 1));
             @endphp
@@ -660,8 +677,8 @@
                         background:{{ $cfg['bg'] }};
                         border:2px solid {{ $cfg['border'] }};
                         display:flex;align-items:center;justify-content:center;
-                        font-size:13px;flex-shrink:0;z-index:1;
-                    ">{{ $cfg['icon'] }}</div>
+                        flex-shrink:0;z-index:1;color:{{ $cfg['labelColor'] }};
+                    "><svg class="lucide" style="width:15px;height:15px;" viewBox="0 0 24 24">{!! $cfg['icon'] !!}</svg></div>
                     {{-- Connector line --}}
                     @if(!$isLast)
                     <div style="width:2px;flex:1;min-height:16px;background:linear-gradient({{ $cfg['color'] }}40,#E5E7EB);margin:2px 0;"></div>
@@ -679,12 +696,12 @@
                                 {{ $cfg['label'] }}
                             </span>
                             <span style="font-size:12px;font-weight:600;color:var(--fg-1);">{{ $event['by'] }}</span>
-                            <span style="font-size:10px;color:var(--fg-3);background:var(--bg-2);padding:1px 5px;border-radius:4px;">
+                            <span style="font-size:11px;color:var(--fg-3);background:var(--bg-2);padding:1px 5px;border-radius:4px;">
                                 {{ $event['role'] === 'leader' ? 'Leader' : 'Staff' }}
                             </span>
                         </div>
                         @if($event['at'])
-                        <span style="font-size:10px;color:var(--fg-3);">{{ $event['at']->isoFormat('D MMM, HH:mm') }}</span>
+                        <span style="font-size:11px;color:var(--fg-3);">{{ $event['at']->isoFormat('D MMM, HH:mm') }}</span>
                         @endif
                     </div>
 
@@ -709,13 +726,13 @@
         @if($dailyTask->verification_status === 'revision')
         <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:8px 12px;
                     font-size:12px;color:#92400E;display:flex;align-items:center;gap:6px;margin-top:8px;">
-            <span>⏳</span>
+            <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             <span>Menunggu staff merespons catatan revisi terbaru.</span>
         </div>
         @elseif($dailyTask->verification_status === 'pending' && !empty($dailyTask->revision_history))
         <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;
                     font-size:12px;color:#166534;display:flex;align-items:center;gap:6px;margin-top:8px;">
-            <span>📬</span>
+            <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
             <span>Staff sudah merespons — laporan menunggu review Anda.</span>
         </div>
         @endif
