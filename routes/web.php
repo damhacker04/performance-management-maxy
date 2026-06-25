@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\KpiSettingsController;
 use App\Http\Controllers\Admin\TargetAssignmentController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AiEvaluationController;
+use App\Http\Controllers\CeoOverviewController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\BackdateRequestController;
 use App\Http\Controllers\DailyTaskEntryController;
@@ -35,6 +36,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+
+    // Dashboard monitoring C-Level (pengganti page target lama untuk C-Level)
+    Route::middleware('role:c_level')->group(function () {
+        Route::get('/ceo/overview', [CeoOverviewController::class, 'index'])->name('ceo.overview');
+    });
 
     // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
     Route::get('/debug/unassigned-targets', function () {
