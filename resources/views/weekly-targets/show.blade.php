@@ -25,14 +25,14 @@
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
                 <span class="chip chip-neutral">Minggu {{ $weeklyTarget->week_number }}</span>
-                <span style="font-size:11px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $months[$weeklyTarget->month] }} {{ $weeklyTarget->year }}</span>
+                <span style="font-size:11px;color:var(--fg-3);">{{ $rStart }}–{{ $rEnd }} {{ $months[$weeklyTarget->month] }} {{ $weeklyTarget->year }}</span>
             </div>
             <h1 style="font-size:17px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.3;">{{ $weeklyTarget->title }}</h1>
             <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">
                 @if($weeklyTarget->monthlyTarget)
                     ↳ {{ $weeklyTarget->monthlyTarget->title }}
                 @else
-                    <span style="color:#B45309;font-weight:600;">📌 Aktivitas Lain</span> — tidak terikat target bulanan
+                    <span style="color:#B45309;font-weight:600;">Aktivitas Lain</span> — tidak terikat target bulanan
                 @endif
             </p>
         </div>
@@ -98,7 +98,7 @@
     @if($dailyTasks->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada laporan dari anggota tim</p>
                 <p style="font-size:12px;color:var(--fg-3);">Laporan akan muncul di sini setelah anggota tim mengisi tugas untuk target ini.</p>
             </div>
@@ -147,7 +147,7 @@
                                 <div class="row-body">
                                     <div class="row-title" style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
                                         <span>{{ $entry->task_description }}</span>
-                                        <svg style="width:13px;height:13px;flex-shrink:0;color:var(--fg-4);margin-top:2px;"
+                                        <svg style="width:13px;height:13px;flex-shrink:0;color:var(--fg-3);margin-top:2px;"
                                              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                             <path d="M9 18l6-6-6-6"/>
                                         </svg>
@@ -157,13 +157,13 @@
                                         <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
                                         <span>· {{ $entry->duration_label }}</span>
                                         @if($entry->is_overdue)
-                                            <span class="chip chip-danger" style="font-size:10px;">⏰ Terlambat</span>
+                                            <span class="chip chip-danger" style="font-size:11px;">Terlambat</span>
                                         @endif
                                     </div>
                                     @if($entry->notes)
                                         <div style="margin-top:6px;background:var(--bg-2);border-radius:8px;
                                                     padding:8px 10px;border-left:3px solid var(--maxy-navy);">
-                                            <div style="font-size:10px;font-weight:700;letter-spacing:.04em;
+                                            <div style="font-size:11px;font-weight:700;letter-spacing:.04em;
                                                         text-transform:uppercase;color:var(--maxy-navy);
                                                         opacity:.7;margin-bottom:3px;">Catatan</div>
                                             <div style="font-size:12px;color:var(--fg-2);line-height:1.5;">{{ $entry->notes }}</div>

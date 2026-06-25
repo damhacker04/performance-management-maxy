@@ -222,12 +222,17 @@
                                           background:{{ $notif->read_at ? '#fff' : '#F0F7FF' }};
                                           transition:background .15s;">
                                     <div style="display:flex;gap:8px;align-items:flex-start;">
-                                        <span style="font-size:16px;flex-shrink:0;margin-top:1px;">
-                                            @if($notif->type === 'revision_requested') ↩
-                                            @elseif($notif->type === 'revision_submitted') 📨
-                                            @elseif($notif->type === 'auto_rejected') ❌
-                                            @elseif($notif->type === 'not_submitted') ⚠️
-                                            @else 🔔
+                                        <span style="flex-shrink:0;margin-top:1px;color:var(--maxy-navy);">
+                                            @if($notif->type === 'revision_requested')
+                                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
+                                            @elseif($notif->type === 'revision_submitted')
+                                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                                            @elseif($notif->type === 'auto_rejected')
+                                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--danger);"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                                            @elseif($notif->type === 'not_submitted')
+                                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--warning);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+                                            @else
+                                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                                             @endif
                                         </span>
                                         <div style="flex:1;min-width:0;">

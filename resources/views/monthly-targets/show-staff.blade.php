@@ -30,9 +30,9 @@
         </a>
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
-                <span class="chip chip-neutral" style="font-size:10px;">{{ $monthName }} {{ $monthlyTarget->year }}</span>
+                <span class="chip chip-neutral" style="font-size:11px;">{{ $monthName }} {{ $monthlyTarget->year }}</span>
                 @if($isCurrentMonth)
-                    <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
+                    <span class="chip chip-success" style="font-size:11px;">Bulan ini</span>
                 @endif
             </div>
         </div>
@@ -96,18 +96,18 @@
                 <div style="flex:1;min-width:0;">
                     {{-- Badges --}}
                     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px;">
-                        <span class="chip chip-neutral" style="font-size:10px;font-weight:700;">Minggu {{ $wt->week_number }}</span>
-                        <span style="font-size:10px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[(int) $monthlyTarget->month] }}</span>
+                        <span class="chip chip-neutral" style="font-size:11px;font-weight:700;">Minggu {{ $wt->week_number }}</span>
+                        <span style="font-size:11px;color:var(--fg-3);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[(int) $monthlyTarget->month] }}</span>
                         @if($isActiveWeek)
-                            <span class="chip chip-success" style="font-size:10px;">Minggu ini</span>
+                            <span class="chip chip-success" style="font-size:11px;">Minggu ini</span>
                         @endif
                         @if($hasOverdue2w)
-                            <span class="chip" style="font-size:10px;background:#F97316;color:#fff;border:none;">⏰ >2 minggu</span>
+                            <span class="chip" style="font-size:11px;background:#F97316;color:#fff;border:none;">&gt;2 minggu</span>
                         @endif
                         @if($wt->target_type === 'quantitative')
-                            <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>
+                            <span class="chip chip-info" style="font-size:11px;">{{ $wt->target_label }}</span>
                         @else
-                            <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
+                            <span class="chip chip-neutral" style="font-size:11px;">Kualitatif</span>
                         @endif
                     </div>
                     
@@ -155,19 +155,19 @@
                             Lihat {{ $wtTotal }} laporan
                         </a>
                         @if($wtPending > 0)
-                            <span style="background:var(--danger-100);color:var(--danger);font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;">
+                            <span style="background:var(--danger-100);color:var(--danger);font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;">
                                 {{ $wtPending }} pending
                             </span>
                         @endif
                         @if($wtTotal > 0)
-                            <span style="font-size:11px;color:var(--fg-4);">{{ $wtDone }}/{{ $wtTotal }} selesai</span>
+                            <span style="font-size:11px;color:var(--fg-3);">{{ $wtDone }}/{{ $wtTotal }} selesai</span>
                         @endif
                     </div>
                 </div>
             </div>
         @empty
-            <div style="padding:32px;text-align:center;color:var(--fg-4);font-size:13px;background:var(--bg-1);border-radius:12px;border:1.5px dashed var(--bd-1);">
-                <div style="font-size:24px;margin-bottom:8px;">🎯</div>
+            <div style="padding:32px;text-align:center;color:var(--fg-3);font-size:13px;background:var(--bg-1);border-radius:12px;border:1.5px dashed var(--bd-1);">
+                <div style="font-size:24px;margin-bottom:8px;"></div>
                 Belum ada target mingguan untuk {{ explode(' ', $pName)[0] }}.
             </div>
         @endforelse

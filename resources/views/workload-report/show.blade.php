@@ -19,11 +19,11 @@
                     {{ $staff->name }}
                 </h1>
                 <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--fg-3);">
-                    <span>🏢 {{ $staff->department ?? '—' }}</span>
+                    <span>{{ $staff->department ?? '—' }}</span>
                     <span>·</span>
-                    <span>📅 {{ $monthNames[$month] }} {{ $year }}</span>
+                    <span>{{ $monthNames[$month] }} {{ $year }}</span>
                     <span>·</span>
-                    <span>📋 {{ $data['task_count'] }} entri task</span>
+                    <span>{{ $data['task_count'] }} entri task</span>
                     <span>·</span>
                     <span>📆 {{ $data['active_days'] }} dari {{ $data['working_days'] }} hari kerja
                         ({{ $data['working_days'] > 0 ? round($data['active_days']/$data['working_days']*100,1) : 0 }}%)</span>
@@ -52,7 +52,7 @@
                 @endif
                 @foreach($data['monthly_targets'] as $mt)
                 <span style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:3px 10px;border-radius:20px;font-size:12px;">
-                    📌 {{ Str::limit($mt->title, 40) }}
+                    {{ Str::limit($mt->title, 40) }}
                 </span>
                 @endforeach
             </div>
@@ -260,7 +260,7 @@ function renderReport(report) {
     if (report.achievement && typeof report.achievement === 'object') {
         for (const [target, narasi] of Object.entries(report.achievement)) {
             achHTML += `<div style="margin-bottom:14px;">
-                <div style="font-weight:600;color:var(--maxy-navy);margin-bottom:4px;">📌 ${escHtml(target)}</div>
+                <div style="font-weight:600;color:var(--maxy-navy);margin-bottom:4px;">${escHtml(target)}</div>
                 <div style="color:var(--fg-2);line-height:1.7;">${escHtml(narasi)}</div>
             </div>`;
         }
@@ -273,7 +273,7 @@ function renderReport(report) {
     if (Array.isArray(report.optimization_areas)) {
         report.optimization_areas.forEach((item, i) => {
             optHTML += `<div style="display:flex;gap:12px;margin-bottom:12px;padding:12px;background:var(--bg-2);border-radius:var(--r-md);">
-                <div style="font-size:18px;flex-shrink:0;">⚠️</div>
+                <div style="flex-shrink:0;color:var(--warning);"><svg class="lucide sm" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg></div>
                 <div>
                     <div style="font-weight:600;color:var(--maxy-navy);margin-bottom:3px;">${escHtml(item.title ?? '')}</div>
                     <div style="font-size:13px;color:var(--fg-2);line-height:1.6;">${escHtml(item.detail ?? '')}</div>

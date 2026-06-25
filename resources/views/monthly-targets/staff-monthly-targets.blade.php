@@ -56,16 +56,16 @@
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
                 {{-- Avatar mini --}}
                 <div style="width:28px;height:28px;border-radius:8px;background:{{ $bgColor }};
-                            color:#fff;font-size:10px;font-weight:700;
+                            color:#fff;font-size:11px;font-weight:700;
                             display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     {{ $initials }}
                 </div>
                 <span style="font-size:18px;font-weight:800;color:var(--fg-1);">{{ $staff->name }}</span>
-                <span class="chip chip-dept-{{ str_replace('_','-', $staff->department ?? 'neutral') }}" style="font-size:10px;">
+                <span class="chip chip-dept-{{ str_replace('_','-', $staff->department ?? 'neutral') }}" style="font-size:11px;">
                     {{ \App\Models\User::DEPARTMENTS[$staff->department] ?? $staff->department }}
                 </span>
             </div>
-            <div style="font-size:12px;color:var(--fg-4);margin-left:36px;">
+            <div style="font-size:12px;color:var(--fg-3);margin-left:36px;">
                 @if(isset($monthLabel))
                     Target {{ $monthLabel }}
                 @else
@@ -86,7 +86,7 @@
         <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
                     border-radius:var(--r-md);padding:12px 14px;">
             <div style="font-size:11px;font-weight:700;color:var(--info,#2563eb);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
-                📊 KPI Departemen — Acuan Evaluasi
+                KPI Departemen — Acuan Evaluasi
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
                 @foreach($kpisForDept as $kpi)
@@ -104,7 +104,7 @@
     @if($monthlyTargets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                     <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
                     <line x1="3" y1="10" x2="21" y2="10"/>
@@ -131,11 +131,11 @@
             <div>
                 {{-- Label bulan --}}
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                    <span style="font-size:11px;font-weight:700;color:var(--fg-4);text-transform:uppercase;letter-spacing:.06em;">
+                    <span style="font-size:11px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.06em;">
                         {{ $monthNames[(int)$mo] }} {{ $yr }}
                     </span>
                     @if($isCurrentMonth)
-                        <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
+                        <span class="chip chip-success" style="font-size:11px;">Bulan ini</span>
                     @endif
                 </div>
 
@@ -155,7 +155,7 @@
 
                         {{-- Icon --}}
                         <div class="mt-icon" style="background: {{ $isActive ? '#FEF3C7' : 'var(--neutral-100)' }};">
-                            <svg class="lucide sm" style="color: {{ $isActive ? 'var(--warning)' : 'var(--fg-4)' }};" viewBox="0 0 24 24">
+                            <svg class="lucide sm" style="color: {{ $isActive ? 'var(--warning)' : 'var(--fg-3)' }};" viewBox="0 0 24 24">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                                 <line x1="16" y1="2" x2="16" y2="6"/>
                                 <line x1="8" y1="2" x2="8" y2="6"/>
@@ -193,18 +193,18 @@
                                     <div class="progress-bar-fill"
                                          style="width:{{ $progress }}%;background:{{ $barColor }};"></div>
                                 </div>
-                                <div style="font-size:11px;color:var(--fg-4);margin-top:3px;text-align:right;">
+                                <div style="font-size:11px;color:var(--fg-3);margin-top:3px;text-align:right;">
                                     {{ $progress }}% selesai
                                 </div>
                             @else
-                                <div style="font-size:11px;color:var(--fg-4);margin-top:4px;">
+                                <div style="font-size:11px;color:var(--fg-3);margin-top:4px;">
                                     Belum ada laporan masuk
                                 </div>
                             @endif
                         </div>
 
                         {{-- Chevron --}}
-                        <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24">
                             <path d="M9 18l6-6-6-6"/>
                         </svg>
                     </a>

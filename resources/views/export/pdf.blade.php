@@ -78,7 +78,7 @@
 
 {{-- Cover --}}
 <div class="cover">
-    <h1>📊 Laporan KPI Tim</h1>
+    <h1>Laporan KPI Tim</h1>
     <p>{{ $periodLabel }}</p>
     <div class="meta">
         Dicetak: {{ now()->isoFormat('dddd, D MMMM YYYY · HH:mm') }}
@@ -153,8 +153,8 @@
                 <td>Total: {{ $total }} tugas</td>
                 <td></td>
                 <td></td>
-                <td>✅ {{ $selesai }} selesai</td>
-                <td>⚙️ {{ $proses }} proses &nbsp; ⚠️ {{ $hambat }} terhambat</td>
+                <td>{{ $selesai }} selesai</td>
+                <td>{{ $proses }} proses &nbsp; {{ $hambat }} terhambat</td>
             </tr>
         </tbody>
     </table>

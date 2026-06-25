@@ -23,7 +23,7 @@
         <div style="background:#FFF8E8;border:1px solid #FBB041;border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;">
             <svg class="lucide" style="width:15px;height:15px;flex-shrink:0;color:#B45309;margin-top:1px;" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
             <div style="flex:1;font-size:12px;color:#8B5A00;line-height:1.6;">
-                📅 <strong>Mode Backdating</strong> — Laporan ini akan tercatat untuk tanggal
+<strong>Mode Backdating</strong> — Laporan ini akan tercatat untuk tanggal
                 <strong>{{ \Carbon\Carbon::parse($backdateRequest->requested_date)->isoFormat('dddd, D MMMM YYYY') }}</strong>
                 (disetujui oleh {{ $backdateRequest->reviewer?->name ?? 'Leader' }}).
                 Token berlaku hingga <strong>{{ $backdateRequest->token_expires_at?->isoFormat('D MMM, HH:mm') }}</strong>.
@@ -90,7 +90,7 @@
         </div>
 
         {{-- Divider visual antara opsi "lanjutkan" dan "buat baru" --}}
-        <div style="display:flex;align-items:center;gap:10px;color:var(--fg-4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:4px 0;">
+        <div style="display:flex;align-items:center;gap:10px;color:var(--fg-3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:4px 0;">
             <div style="flex:1;height:1px;background:var(--bg-3);"></div>
             atau buat laporan baru
             <div style="flex:1;height:1px;background:var(--bg-3);"></div>
@@ -132,7 +132,7 @@
                     <div style="background:#E8F0FE;border:1px solid var(--maxy-navy);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start;">
                         <svg class="lucide sm" style="color:var(--maxy-navy);flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9M3 12V3m0 9h9"/></svg>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:10px;color:var(--maxy-navy);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Melanjutkan task</div>
+                            <div style="font-size:11px;color:var(--maxy-navy);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Melanjutkan task</div>
                             <div style="font-size:13px;font-weight:600;color:var(--fg-1);margin-top:2px;line-height:1.4;">{{ Str::limit($continueFrom->task_description, 80) }}</div>
                             <div style="font-size:11px;color:var(--fg-3);margin-top:3px;">
                                 {{ \Carbon\Carbon::parse($continueFrom->task_date)->isoFormat('D MMM') }} · {{ $continueFrom->status_label }}
@@ -158,7 +158,7 @@
                                 });
                             @endphp
                             <option value="" {{ empty($defaultWeekly) ? 'selected' : '' }}>
-                                📌 Tidak terkait target mingguan (tugas tambahan/mendadak)
+                                Tidak terkait target mingguan (tugas tambahan/mendadak)
                             </option>
                             @foreach($groupedTargets as $monthlyId => $wTargets)
                                 @php
@@ -168,7 +168,7 @@
                                 <optgroup label="{{ Str::limit($groupLabel, 80) }}">
                                     @foreach($wTargets as $wt)
                                         @php
-                                            $indicator = $wt->assigned_to ? '🎯 Pribadi' : '🏢 Umum';
+                                            $indicator = $wt->assigned_to ? 'Pribadi' : 'Umum';
                                         @endphp
                                         <option value="{{ $wt->id }}" {{ (int)$defaultWeekly === $wt->id ? 'selected' : '' }}>
                                             [{{ $indicator }}] Minggu {{ $wt->week_number }} — {{ Str::limit($wt->title, 50) }}
@@ -179,7 +179,7 @@
                         </select>
                     </div>
                     @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
-                    <span style="font-size:11px;color:var(--fg-4);margin-top:4px;">
+                    <span style="font-size:12px;color:var(--fg-3);margin-top:4px;">
                         Pilih target mingguan yang sedang kamu kerjakan.
                     </span>
                 </div>
@@ -187,7 +187,7 @@
                 <!-- Tanggal (locked ke hari ini atau backdate) -->
                 <div class="field">
                     <label>Tanggal Tugas 
-                        <span style="color:var(--fg-4);font-weight:400;">
+                        <span style="color:var(--fg-3);font-weight:400;">
                             {{ (isset($backdateRequest) && $backdateRequest) ? '(mode backdating)' : '(otomatis hari ini)' }}
                         </span>
                     </label>
@@ -212,7 +212,7 @@
                               placeholder="Apa yang kamu kerjakan hari ini?" required>{{ $defaultDesc }}</textarea>
                     @error('task_description')<span class="err">{{ $message }}</span>@enderror
                     @if($continueFrom)
-                        <span style="font-size:11px;color:#8B5A00;margin-top:4px;">💡 Edit deskripsi untuk menjelaskan progres hari ini.</span>
+                        <span style="font-size:12px;color:#8B5A00;margin-top:4px;">Edit deskripsi untuk menjelaskan progres hari ini.</span>
                     @endif
                 </div>
 
@@ -224,10 +224,10 @@
                             <select id="priority" name="priority"
                                     class="m-select {{ $errors->has('priority') ? 'err' : '' }}" required>
                                 @php $defaultPriority = old('priority', $continueFrom?->priority ?? 'medium'); @endphp
-                                <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Kritis</option>
-                                <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 Tinggi</option>
-                                <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Sedang</option>
-                                <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Rendah</option>
+                                <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>Kritis</option>
+                                <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>Tinggi</option>
+                                <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>Sedang</option>
+                                <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>Rendah</option>
                             </select>
                         </div>
                         @error('priority')<span class="err">{{ $message }}</span>@enderror
@@ -282,7 +282,7 @@
                               placeholder="Jelaskan apa yang sudah dikerjakan / progres / hambatan…"
                               minlength="5"
                               required>{{ old('notes') }}</textarea>
-                    <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
+                    <small style="color:var(--fg-3);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                     @error('notes')<span class="err">{{ $message }}</span>@enderror
                 </div>
 
@@ -294,9 +294,9 @@
                             <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
                             Bukti Laporan (Multi)
                             @if($isSales)
-                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
+                                <span style="font-size:11px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
                             @else
-                                <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                                <span style="font-size:11px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
                             @endif
                         </div>
                     </label>
@@ -328,9 +328,9 @@
             <div style="flex:1;">
                 <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Tipe Bukti</label>
                 <select name="evidences[__INDEX__][type]" class="m-input" onchange="changeEvidenceType(this)" style="padding: 6px; font-size:13px; height:auto;">
-                    <option value="link">🔗 Link URL</option>
-                    <option value="file">📄 Upload File (PDF/Image)</option>
-                    <option value="image">🖼️ Screenshot (Ctrl+V)</option>
+                    <option value="link">Link URL</option>
+                    <option value="file">Upload File (PDF/Image)</option>
+                    <option value="image">Screenshot (Ctrl+V)</option>
                 </select>
             </div>
             <div style="flex:2;">
@@ -373,7 +373,7 @@
         <div class="evidence-input-image" style="display: none;">
             <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa paste lebih dari 1 screenshot secara berurutan</div>
             <div class="paste-zone" tabindex="0"
-                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
+                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-3);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
                  title="Klik di sini lalu tekan Ctrl+V">
                 <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
                 Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
@@ -384,7 +384,7 @@
         </div>
         
         <div style="display:flex; justify-content:flex-end; margin-top:12px; padding-top:12px; border-top:1px dashed var(--bg-3);">
-            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:10px;">✖</span></button>
+            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:11px;">✖</span></button>
         </div>
     </div>
 </template>
@@ -436,7 +436,7 @@ function addEvidenceRow() {
                 
                 const nameSpan = document.createElement('span');
                 nameSpan.style = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
-                nameSpan.textContent = '📄 ' + file.name;
+                nameSpan.textContent = file.name;
                 
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
@@ -573,7 +573,7 @@ function clearRowImage(btn) {
 
                     const data = await resp.json();
                     if (resp.ok && data.path) {
-                        status.textContent = '✅ Gambar berhasil disimpan.';
+                        status.textContent = 'Gambar berhasil disimpan.';
                         status.style.color = '#16A571';
                         
                         const div = document.createElement('div');
@@ -587,11 +587,11 @@ function clearRowImage(btn) {
                         
                         setTimeout(() => status.textContent = '', 3000);
                     } else {
-                        status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
+                        status.textContent = 'Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
                         status.style.color = 'var(--danger)';
                     }
                 } catch (err) {
-                    status.textContent = '⚠️ Gagal terhubung ke server.';
+                    status.textContent = 'Gagal terhubung ke server.';
                     status.style.color = 'var(--danger)';
                 }
             };
@@ -650,13 +650,13 @@ async function doValidateLink(input, url, badge) {
 
         if (data.status === 'public') {
             badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px; background:#ECFDF5; color:#065F46; border:1px solid #6EE7B7;';
-            badge.innerHTML = `✅ Link dapat diakses publik — AI akan membaca isinya secara otomatis.`;
+            badge.innerHTML = `Link dapat diakses publik — AI akan membaca isinya secara otomatis.`;
         } else if (data.status === 'restricted') {
             badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:flex-start; gap:6px; background:#FEF2F2; color:#991B1B; border:1px solid #FCA5A5;';
             badge.innerHTML = `🚫 <span><strong>Link Terkunci!</strong> AI tidak bisa memproses penilaian. Ubah akses file Google menjadi <strong>"Anyone with the link"</strong> terlebih dahulu.</span>`;
         } else {
             badge.style.cssText = 'display:flex; font-size:11px; padding:6px 10px; border-radius:6px; align-items:center; gap:6px; background:#FFFBEB; color:#92400E; border:1px solid #FCD34D;';
-            badge.innerHTML = `⚠️ ${data.message}`;
+            badge.innerHTML = `${data.message}`;
         }
     } catch (e) {
         badge.style.display = 'none';

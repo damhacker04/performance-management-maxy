@@ -18,10 +18,10 @@
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v3m0 4h.01"/>
             </svg>
             <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;">
-                🤖 AI GAP ANALYSIS — {{ $isMonthly ? 'LAPORAN STRATEGIS (C-Level)' : 'INVESTIGASI MINGGUAN' }}
+                AI GAP ANALYSIS — {{ $isMonthly ? 'LAPORAN STRATEGIS (C-Level)' : 'INVESTIGASI MINGGUAN' }}
             </span>
         </div>
-        <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">
+        <span style="background:rgba(255,255,255,.25);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;">
             {{ $gapReport->tasks_analyzed }} {{ $isMonthly ? 'minggu' : 'tugas' }} dianalisis
         </span>
     </div>
@@ -37,9 +37,12 @@
             $chip = $chipColors[$gapReport->root_cause_type] ?? $chipColors['mixed'];
         @endphp
         <div style="display:inline-flex;align-items:center;gap:6px;background:{{ $chip['bg'] }};color:{{ $chip['text'] }};border:1px solid {{ $chip['border'] }};padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;">
-            @if($gapReport->root_cause_type === 'internal') ⚠️
-            @elseif($gapReport->root_cause_type === 'external') 🔧
-            @else 🔄
+            @if($gapReport->root_cause_type === 'internal')
+                <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>
+            @elseif($gapReport->root_cause_type === 'external')
+                <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/></svg>
+            @else
+                <svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
             @endif
             {{ $gapReport->root_cause_label }}
         </div>
@@ -47,8 +50,8 @@
 
     {{-- Narasi Investigasi AI --}}
     <div style="padding:12px 16px;">
-        <div style="font-size:10px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
-            🔎 {{ $isMonthly ? 'Benang Merah Kegagalan (Structural)' : 'Ringkasan Investigasi' }}
+        <div style="font-size:11px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
+            {{ $isMonthly ? 'Benang Merah Kegagalan (Structural)' : 'Ringkasan Investigasi' }}
         </div>
         <p style="font-size:13px;color:#1F2937;margin:0;line-height:1.7;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px;">
             {{ $gapReport->narrative }}
@@ -58,8 +61,8 @@
     {{-- Rekomendasi AI --}}
     @if($gapReport->recommendation)
     <div style="padding:0 16px 14px;">
-        <div style="font-size:10px;color:#1D4ED8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
-            💡 {{ $isMonthly ? 'Rekomendasi Strategis untuk Manajemen' : 'Rekomendasi untuk Leader' }}
+        <div style="font-size:11px;color:#1D4ED8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
+            {{ $isMonthly ? 'Rekomendasi Strategis untuk Manajemen' : 'Rekomendasi untuk Leader' }}
         </div>
         <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px;font-size:12px;color:#1E3A8A;line-height:1.7;">
             {{ $gapReport->recommendation }}
@@ -69,7 +72,7 @@
 
     {{-- Footer: kapan dianalisis --}}
     <div style="padding:8px 16px 12px;border-top:1px dashed #FDE68A;">
-        <span style="font-size:10px;color:#D97706;">
+        <span style="font-size:11px;color:#D97706;">
             Dianalisis oleh AI pada {{ $gapReport->generated_at->isoFormat('D MMMM YYYY, HH:mm') }}
         </span>
     </div>

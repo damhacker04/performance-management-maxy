@@ -22,7 +22,7 @@
         </a>
         <div style="flex:1;min-width:0;">
             {{-- Breadcrumb konteks --}}
-            <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+            <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
                         color:var(--maxy-navy);opacity:.6;margin-bottom:5px;">
                 Target dari C-Level
             </div>
@@ -77,14 +77,14 @@
             Target Mingguan
         </span>
         @if($monthlyTarget->weeklyTargets->isNotEmpty())
-            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
+            <span class="chip chip-neutral" style="font-size:11px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
         @endif
     </div>
 
     @if($monthlyTarget->weeklyTargets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada target mingguan</p>
@@ -122,16 +122,16 @@
                                 <span class="chip chip-neutral" style="font-weight:700;font-size:11px;">
                                     Minggu {{ $wt->week_number }}
                                 </span>
-                                <span style="font-size:11px;color:var(--fg-4);">
+                                <span style="font-size:11px;color:var(--fg-3);">
                                     {{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }} {{ $wt->year }}
                                 </span>
                                 @if($isActiveWeek)
-                                    <span class="chip chip-success" style="font-size:10px;">Minggu ini</span>
+                                    <span class="chip chip-success" style="font-size:11px;">Minggu ini</span>
                                 @endif
                                 @if($wt->target_type === 'quantitative')
-                                    <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>
+                                    <span class="chip chip-info" style="font-size:11px;">{{ $wt->target_label }}</span>
                                 @else
-                                    <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
+                                    <span class="chip chip-neutral" style="font-size:11px;">Kualitatif</span>
                                 @endif
                             </div>
                             <div style="font-size:14px;font-weight:600;color:var(--fg-1);line-height:1.4;">
@@ -180,7 +180,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                                <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                             </a>
                         @endforeach
                     </div>

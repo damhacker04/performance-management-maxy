@@ -19,7 +19,7 @@
             </svg>
             <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.04em;">PENILAIAN AI (Groq)</span>
             @if($eval->is_overridden)
-                <span style="background:rgba(255,255,255,.25);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;">✏️ Dikoreksi Leader</span>
+                <span style="background:rgba(255,255,255,.25);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;">Dikoreksi Leader</span>
             @endif
         </div>
         <div style="color:#fff;font-size:22px;font-weight:800;">
@@ -30,7 +30,7 @@
     {{-- Peringatan jika link restricted --}}
     @if($eval->link_status === 'restricted')
     <div style="background:#FEF2F2;border-bottom:1px solid #FCA5A5;padding:8px 16px;font-size:11px;color:#991B1B;display:flex;gap:6px;align-items:center;">
-        ⚠️ <strong>Catatan:</strong> Link bukti kerja yang dilampirkan terkunci (Restricted). AI hanya menilai berdasarkan teks deskripsi.
+<strong>Catatan:</strong> Link bukti kerja yang dilampirkan terkunci (Restricted). AI hanya menilai berdasarkan teks deskripsi.
     </div>
     @endif
 
@@ -66,7 +66,7 @@
     @if($eval->ai_feedback)
     <div style="padding:0 16px 14px;">
         <div style="background:#F8FAFF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 12px;">
-            <div style="font-size:10px;color:#1D4ED8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">💡 Catatan AI</div>
+            <div style="font-size:11px;color:#1D4ED8;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Catatan AI</div>
             <p style="font-size:12px;color:#1E3A8A;margin:0;line-height:1.6;">{{ $eval->ai_feedback }}</p>
         </div>
     </div>
@@ -77,7 +77,7 @@
     @php $ov = $eval->latestOverride; @endphp
     <div style="padding:0 16px 14px;">
         <div style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;">
-            <div style="font-size:10px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">✏️ Koreksi oleh Leader</div>
+            <div style="font-size:11px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Koreksi oleh Leader</div>
             <div style="font-size:11px;color:#78350F;line-height:1.6;">
                 <strong>{{ $ov->leader->name ?? '-' }}</strong> mengubah skor dari
                 <strong>{{ number_format($ov->original_score, 1) }}</strong> menjadi
@@ -111,7 +111,7 @@
 
         {{-- Modal Header --}}
         <div style="background:#1E3A8A;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-            <span style="color:#fff;font-size:14px;font-weight:700;">✏️ Koreksi Nilai AI</span>
+            <span style="color:#fff;font-size:14px;font-weight:700;">Koreksi Nilai AI</span>
             <button type="button" onclick="document.getElementById('modal-override').style.display='none'"
                     style="background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;">✕</button>
         </div>
@@ -120,7 +120,7 @@
         <form method="POST" action="{{ route('ai.evaluations.override.store', $eval) }}" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
             @csrf
             <div style="background:#FEF9EC;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;font-size:11px;color:#92400E;">
-                ⚠️ Koreksi ini akan dicatat dalam log audit manajemen. Pastikan alasannya jelas dan objektif.
+Koreksi ini akan dicatat dalam log audit manajemen. Pastikan alasannya jelas dan objektif.
             </div>
 
             <div>
@@ -171,7 +171,7 @@
 <div id="ai-pending-card" style="margin-top:16px;border:1px solid #E0E7FF;border-radius:12px;padding:14px 16px;background:#F8FAFF;display:flex;gap:10px;align-items:center;">
     <svg style="width:16px;height:16px;flex-shrink:0;color:#3B82F6;animation:ai-spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
     <div>
-        <div style="font-size:12px;font-weight:700;color:#1E3A8A;">🤖 AI sedang memproses penilaian…</div>
+        <div style="font-size:12px;font-weight:700;color:#1E3A8A;">AI sedang memproses penilaian…</div>
         <div style="font-size:11px;color:#3B82F6;margin-top:2px;">Hasil akan muncul otomatis dalam beberapa detik. Tidak perlu refresh manual.</div>
     </div>
 </div>
