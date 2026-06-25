@@ -67,6 +67,9 @@ class DailyTaskEntry extends Model
         'rejected' => 'Ditolak',
     ];
 
+    /** Batas waktu (jam) staff boleh merevisi setelah dikembalikan leader. */
+    public const REVISION_WINDOW_HOURS = 10;
+
     // Relasi ke User (Staff yang submit)
     public function user()
     {
@@ -168,7 +171,8 @@ class DailyTaskEntry extends Model
 
     /**
      * Apakah laporan ini bisa direvisi oleh staff?
-     * Hanya jika verification_status = 'revision' dan masih dalam window 48 jam.
+     * Hanya jika verification_status = 'revision' dan masih dalam window
+     * REVISION_WINDOW_HOURS (10 jam) sejak dikembalikan leader.
      */
     public function canBeRevised(): bool
     {
@@ -179,7 +183,7 @@ class DailyTaskEntry extends Model
             return false;
         }
 
-        return $this->reviewed_at->addHours(10)->isFuture();
+        return $this->reviewed_at->addHours(self::REVISION_WINDOW_HOURS)->isFuture();
     }
 
     /**
@@ -200,7 +204,7 @@ class DailyTaskEntry extends Model
         // 'revision' → 'rejected'. Mencegah double-notify saat dipanggil
         // bersamaan oleh show() dan scheduler (tasks:auto-reject-revisions).
         $newNote = ($this->rejection_note ?? '').
-            ' [Otomatis ditolak: staff tidak merevisi dalam 10 jam]';
+            ' [Otomatis ditolak: staff tidak merevisi dalam '.self::REVISION_WINDOW_HOURS.' jam]';
 
         $affected = static::query()
             ->whereKey($this->getKey())

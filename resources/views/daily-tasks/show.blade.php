@@ -180,7 +180,7 @@
 
                 @if($dailyTask->canBeRevised())
                     @php
-                        $deadline    = $dailyTask->reviewed_at->addHours(10);
+                        $deadline    = $dailyTask->reviewed_at->addHours(\App\Models\DailyTaskEntry::REVISION_WINDOW_HOURS);
                         $sisaMenit   = max(0, now()->diffInMinutes($deadline, false));
                         $sisaJam     = floor($sisaMenit / 60);
                         $sisaMinSisa = $sisaMenit % 60;

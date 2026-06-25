@@ -141,4 +141,13 @@ class EvaluateDailyTaskJob implements ShouldQueue
 
         Log::info("EvaluateDailyTaskJob: Selesai. Task ID {$task->id}, Skor: {$finalScore}");
     }
+
+    /**
+     * Dipanggil setelah seluruh retry (tries) habis. Dicatat untuk audit;
+     * tidak melempar ulang agar tidak mengganggu proses lain.
+     */
+    public function failed(\Throwable $e): void
+    {
+        Log::error("EvaluateDailyTaskJob: GAGAL permanen untuk task ID {$this->dailyTaskEntryId}: {$e->getMessage()}");
+    }
 }

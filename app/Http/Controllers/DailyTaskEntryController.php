@@ -515,55 +515,65 @@ class DailyTaskEntryController extends Controller
             $parentEntryId = $parentEntry?->id;
         }
 
-        $entry = DailyTaskEntry::create([
-            'user_id' => auth()->id(),
-            'parent_entry_id' => $parentEntryId,
-            'monthly_target_id' => $monthlyTargetId,
-            'weekly_target_id' => $weeklyTarget?->id,
-            'task_description' => $validated['task_description'],
-            'priority' => $validated['priority'],
-            'duration_minutes' => $durationMinutes,
-            'status' => $validated['status'],
-            'notes' => $validated['notes'],
-            'task_date' => $taskDate,
-        ]);
+        // Entry + evidence ditulis dalam satu transaksi agar tidak ada laporan
+        // yang tersimpan dengan bukti tidak lengkap saat ada kegagalan di tengah.
+        $entry = DB::transaction(function () use (
+            $parentEntryId, $monthlyTargetId, $weeklyTarget, $validated, $durationMinutes, $taskDate
+        ) {
+            $entry = DailyTaskEntry::create([
+                'user_id' => auth()->id(),
+                'parent_entry_id' => $parentEntryId,
+                'monthly_target_id' => $monthlyTargetId,
+                'weekly_target_id' => $weeklyTarget?->id,
+                'task_description' => $validated['task_description'],
+                'priority' => $validated['priority'],
+                'duration_minutes' => $durationMinutes,
+                'status' => $validated['status'],
+                'notes' => $validated['notes'],
+                'task_date' => $taskDate,
+            ]);
 
-        // Simpan Bukti (Multi-Evidence)
-        if (! empty($validated['evidences'])) {
-            foreach ($validated['evidences'] as $ev) {
-                // Jika ini adalah upload file
-                if ($ev['type'] === 'file' && ! empty($ev['file']) && is_array($ev['file'])) {
-                    foreach ($ev['file'] as $uploadedFile) {
-                        $path = $uploadedFile->store('proofs', 'public');
-                        $entry->evidences()->create([
-                            'type' => 'file',
-                            'label' => $ev['label'],
-                            'path_or_url' => $path,
-                        ]);
-                    }
-                } else {
-                    $urls = $ev['path_or_url'] ?? [];
-                    if (! is_array($urls)) {
-                        $urls = [$urls];
-                    }
-
-                    foreach ($urls as $url) {
-                        if ($url) {
+            // Simpan Bukti (Multi-Evidence)
+            if (! empty($validated['evidences'])) {
+                foreach ($validated['evidences'] as $ev) {
+                    // Jika ini adalah upload file
+                    if ($ev['type'] === 'file' && ! empty($ev['file']) && is_array($ev['file'])) {
+                        foreach ($ev['file'] as $uploadedFile) {
+                            $path = $uploadedFile->store('proofs', 'public');
                             $entry->evidences()->create([
-                                'type' => $ev['type'],
+                                'type' => 'file',
                                 'label' => $ev['label'],
-                                'path_or_url' => $url,
+                                'path_or_url' => $path,
                             ]);
+                        }
+                    } else {
+                        $urls = $ev['path_or_url'] ?? [];
+                        if (! is_array($urls)) {
+                            $urls = [$urls];
+                        }
+
+                        foreach ($urls as $url) {
+                            if ($url) {
+                                $entry->evidences()->create([
+                                    'type' => $ev['type'],
+                                    'label' => $ev['label'],
+                                    'path_or_url' => $url,
+                                ]);
+                            }
                         }
                     }
                 }
             }
-        }
+
+            return $entry;
+        });
 
         // ── Fase 2: Dispatch AI Evaluation Job (background) ──────────────────
         // Hanya dijalankan jika AI diaktifkan (GROQ_API_KEY tersedia di .env).
+        // afterResponse() memastikan kegagalan/keterlambatan AI tidak pernah
+        // memblok atau menggagalkan request submit laporan staff.
         if (ai_enabled()) {
-            EvaluateDailyTaskJob::dispatch($entry->id)->onQueue('default');
+            EvaluateDailyTaskJob::dispatch($entry->id)->onQueue('default')->afterResponse();
         }
 
         $successMsg = ai_enabled()
@@ -665,7 +675,8 @@ class DailyTaskEntryController extends Controller
 
     /**
      * Leader mengembalikan laporan untuk direvisi → revision.
-     * Staff masih bisa edit (dalam 48 jam), tapi field kunci tidak berubah.
+     * Staff masih bisa edit (dalam window REVISION_WINDOW_HOURS = 10 jam),
+     * tapi field kunci tidak berubah.
      */
     public function sendToRevision(DailyTaskEntry $dailyTask, Request $request)
     {
