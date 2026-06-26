@@ -221,9 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function generateReport(staffId, month, year) {
     if (EXISTING_REPORT) {
-        if (!confirm('Laporan ini sudah digenerate sebelumnya. Apakah Anda yakin ingin meng-generate ulang dan menimpa laporan lama?')) {
-            return;
-        }
+        const ok = await window.maxyConfirm({
+            title: 'Generate Ulang Laporan',
+            message: 'Laporan ini sudah digenerate sebelumnya. Generate ulang akan menimpa laporan lama. Lanjutkan?',
+            variant: 'danger',
+            okLabel: 'Ya, Generate Ulang',
+        });
+        if (!ok) return;
     }
     showSection('loading');
 

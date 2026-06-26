@@ -418,7 +418,7 @@ function addEvidenceRow() {
         realInput.addEventListener('change', (e) => {
             for (let file of e.target.files) {
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('Ukuran file "' + file.name + '" melebihi batas 2 MB. Silakan pilih file yang lebih kecil.');
+                    window.maxyToast('Ukuran file "' + file.name + '" melebihi batas 2 MB. Silakan pilih file yang lebih kecil.', 'danger');
                     continue;
                 }
                 dt.items.add(file);
@@ -544,7 +544,7 @@ function clearRowImage(btn) {
             if (!blob) continue;
 
             if (blob.size > 2 * 1024 * 1024) {
-                alert('Ukuran gambar melebihi batas 2 MB. Silakan perkecil resolusi gambar Anda.');
+                window.maxyToast('Ukuran gambar melebihi batas 2 MB. Silakan perkecil resolusi gambar Anda.', 'danger');
                 continue;
             }
 

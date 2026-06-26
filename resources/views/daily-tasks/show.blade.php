@@ -249,7 +249,7 @@
 
                 {{-- Tombol Setujui --}}
                 <form method="POST" action="{{ route('daily-tasks.approve', $actionParams) }}"
-                      onsubmit="return confirm('Setujui laporan ini? Laporan akan terkunci setelah disetujui.');">
+                      data-confirm="Setujui laporan ini? Laporan akan terkunci setelah disetujui." data-confirm-ok="Ya, Setujui">
                     @csrf @method('PATCH')
                     <button type="submit" class="btn btn-block" style="background:var(--success);color:#fff;">
                         <svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
@@ -280,7 +280,7 @@
                     </summary>
                     <p style="font-size:12px;color:var(--fg-3);margin:6px 0;">Staff tidak akan bisa merevisi laporan ini setelah ditolak.</p>
                     <form method="POST" action="{{ route('daily-tasks.reject', $actionParams) }}" style="margin-top:6px;"
-                          onsubmit="return confirm('Tolak permanen laporan ini? Tindakan ini tidak bisa dibatalkan.');">
+                          data-confirm="Tolak permanen laporan ini? Tindakan ini tidak bisa dibatalkan." data-confirm-variant="danger" data-confirm-ok="Ya, Tolak">
                         @csrf @method('PATCH')
                         <textarea name="rejection_note" rows="3" required minlength="10"
                             placeholder="Tuliskan alasan penolakan..."
@@ -745,7 +745,7 @@
     @if($dailyTask->status !== 'selesai' && $dailyTask->user_id === auth()->id())
         <div style="margin-top:20px;">
             <form method="POST" action="{{ route('daily-tasks.complete', $dailyTask->id) }}"
-                  onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
+                  data-confirm="Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi." data-confirm-ok="Ya, Selesai">
                 @csrf
                 @method('PATCH')
                 <button type="submit" class="btn btn-primary btn-block" style="padding:14px;font-size:15px;box-shadow:0 4px 12px rgba(245,158,11,0.2);">

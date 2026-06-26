@@ -219,7 +219,7 @@
                         <td style="text-align:right;">
                             @if(auth()->user()->isLeadership())
                                 <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
-                                    <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" onsubmit="return confirm('Setujui permintaan ini?');">
+                                    <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" data-confirm="Setujui permintaan ini?" data-confirm-ok="Ya, Setujui">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="btn btn-sm" style="background:#16A571;color:#fff;"><svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Setujui</button>
                                     </form>
@@ -321,7 +321,7 @@
                         @if(auth()->user()->isLeadership())
                             {{-- Setujui --}}
                             <form method="POST" action="{{ route('backdate-requests.approve', $req) }}"
-                                  onsubmit="return confirm('Setujui permintaan backdating {{ $req->user->name }} untuk tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat("D MMMM") }}?');">
+                                  data-confirm="Setujui permintaan backdating {{ $req->user->name }} untuk tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat("D MMMM") }}?" data-confirm-ok="Ya, Setujui">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="btn btn-block" style="background:var(--success);color:#fff;">
                                     <svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>

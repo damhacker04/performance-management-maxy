@@ -425,7 +425,7 @@
                         @else
                             <form method="POST" action="{{ route('daily-tasks.complete', $entry->id) }}"
                                   style="display:inline;margin:0;padding:0;flex-shrink:0;"
-                                  onsubmit="return confirm('Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi.');">
+                                  data-confirm="Apakah tugas ini sudah benar-benar selesai? Status tidak bisa diubah lagi setelah dikonfirmasi." data-confirm-ok="Ya, Selesai">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="m-checkbox"

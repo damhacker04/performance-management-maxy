@@ -29,8 +29,11 @@
 
     {{-- Section A: Target dari CEO untuk leader --}}
     <div class="m-card" style="padding:0;">
-        <div class="section-head">
+        <div class="section-head" style="flex-direction:column;align-items:flex-start;gap:2px;">
             <span class="overline-label">Target dari Anda untuk {{ explode(' ', $leader->name)[0] }}</span>
+            <span style="font-size:12px;color:var(--fg-3);font-weight:400;text-transform:none;letter-spacing:0;">
+                Klik target untuk melihat rincian mingguan & laporan harian {{ explode(' ', $leader->name)[0] }}
+            </span>
         </div>
         <div style="padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px;">
             @forelse($leaderTargets as $t)
@@ -39,10 +42,19 @@
                     $pct   = $c['total'] > 0 ? (int) round($c['done'] / $c['total'] * 100) : 0;
                     $pcol  = $pct >= 70 ? 'var(--success)' : ($pct >= 40 ? 'var(--maxy-navy)' : 'var(--danger)');
                 @endphp
-                <div class="m-row as-card" style="border-left:3px solid {{ $pcol }};flex-direction:column;align-items:stretch;gap:8px;">
-                    <div>
-                        <span class="eyebrow">Target Bulanan</span>
-                        <div style="font-size:15px;font-weight:700;color:var(--fg-1);line-height:1.3;">{{ $t->title }}</div>
+                <a href="{{ route('period.staff-weekly', [
+                        'year'          => $filterYear,
+                        'month'         => $filterMonth,
+                        'staff'         => $leader->id,
+                        'monthlyTarget' => $t->id,
+                   ]) }}"
+                   class="m-row as-card" style="border-left:3px solid {{ $pcol }};flex-direction:column;align-items:stretch;gap:8px;text-decoration:none;color:inherit;">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                        <div style="min-width:0;">
+                            <span class="eyebrow">Target Bulanan</span>
+                            <div style="font-size:15px;font-weight:700;color:var(--fg-1);line-height:1.3;">{{ $t->title }}</div>
+                        </div>
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--fg-3);flex-shrink:0;margin-top:2px;"><path d="M9 6l6 6-6 6"/></svg>
                     </div>
                     @if($t->description)
                         <div>
@@ -57,7 +69,7 @@
                         </div>
                         <div class="progress-bar"><i style="width:{{ $pct }}%;background:{{ $pcol }};"></i></div>
                     </div>
-                </div>
+                </a>
             @empty
                 <div class="empty-state" style="padding:20px 0;">Anda belum menetapkan target untuk leader ini pada {{ $monthLabel }}.</div>
             @endforelse

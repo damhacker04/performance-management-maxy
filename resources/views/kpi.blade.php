@@ -131,7 +131,7 @@
                                 </svg>
                             </a>
                             <form method="POST" action="{{ route('kpi.destroy', $kpi) }}"
-                                  onsubmit="return confirm('Nonaktifkan KPI ini?')" style="display:inline;">
+                                  data-confirm="Nonaktifkan KPI ini?" data-confirm-variant="danger" data-confirm-ok="Ya, Nonaktifkan" style="display:inline;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-outline btn-sm" title="Nonaktifkan"
                                         style="color:var(--danger);border-color:var(--danger);">

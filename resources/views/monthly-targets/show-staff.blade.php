@@ -123,7 +123,7 @@
                                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </a>
                             <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
-                                  onsubmit="return confirm('Hapus target mingguan ini?\n\nPerhatian: {{ $wtTotal }} laporan terkait akan tetap tersimpan.');"
+                                  data-confirm="Hapus target mingguan ini? Perhatian: {{ $wtTotal }} laporan terkait akan tetap tersimpan." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus"
                                   style="margin:0;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="icon-btn" title="Hapus" style="color:var(--danger);width:32px;height:32px;">
