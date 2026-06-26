@@ -35,14 +35,10 @@ class WorkloadReportController extends Controller
             ->orderBy('department')
             ->orderBy('name');
 
-        if ($user->isExecutive() || $user->is_management) {
-            // C-Level/HR: bisa filter dept atau lihat semua
-            if ($dept) {
-                $query->where('department', $dept);
-            }
-        } else {
-            // Leader: hanya dept sendiri
-            $query->where('department', $user->department);
+        // Semua leadership (C-Level/HR/Leader) boleh memfilter departemen atau
+        // melihat semua departemen. Leader tidak lagi dikunci ke dept sendiri.
+        if ($dept) {
+            $query->where('department', $dept);
         }
 
         $staffList = $query->get();
@@ -76,11 +72,6 @@ class WorkloadReportController extends Controller
         // Batasi parameter periode dari URL agar tidak liar.
         if ($month < 1 || $month > 12 || $year < 2024 || $year > 2030) {
             abort(404);
-        }
-
-        // Leader hanya bisa lihat dept sendiri
-        if ($user->role === 'leader' && $staff->department !== $user->department) {
-            abort(403, 'Tidak dapat mengakses laporan staf dari departemen lain.');
         }
 
         $data = $this->dataService->buildFullStaffData($staff, $month, $year);
@@ -117,11 +108,6 @@ class WorkloadReportController extends Controller
         $staff = User::findOrFail($request->staff_id);
         $month = (int) $request->month;
         $year = (int) $request->year;
-
-        // Leader hanya bisa generate untuk dept sendiri
-        if ($user->role === 'leader' && $staff->department !== $user->department) {
-            return response()->json(['error' => 'Akses ditolak.'], 403);
-        }
 
         $data = $this->dataService->buildFullStaffData($staff, $month, $year);
 
@@ -162,12 +148,8 @@ class WorkloadReportController extends Controller
         $query = User::where('is_active', true)
             ->whereNotIn('role', ['c_level', 'super_admin']);
 
-        // Leader SELALU dikunci ke departemennya sendiri, apa pun input yang
-        // dikirim (mencegah generate lintas departemen). Executive/management
-        // boleh memilih departemen mana pun.
-        if ($user->role === 'leader') {
-            $query->where('department', $user->department);
-        } elseif ($request->department) {
+        // Semua leadership/management boleh men-generate departemen mana pun.
+        if ($request->department) {
             $query->where('department', $request->department);
         }
 
