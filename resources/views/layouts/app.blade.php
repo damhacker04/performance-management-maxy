@@ -384,5 +384,7 @@
     </div>{{-- end dt-main --}}
 
 </div>{{-- end app-shell --}}
+
+@include('partials.confirm-modal')
 </body>
 </html>
