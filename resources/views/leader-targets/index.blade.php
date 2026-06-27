@@ -55,14 +55,14 @@
             Target dari C-Level
         </span>
         @if($targets->isNotEmpty())
-            <span class="chip chip-neutral" style="font-size:10px;">{{ $targets->count() }} target</span>
+            <span class="chip chip-neutral" style="font-size:11px;">{{ $targets->count() }} target</span>
         @endif
     </div>
 
     @if($targets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
                 <p style="font-size:14px;font-weight:600;color:var(--fg-1);margin-bottom:4px;">Belum ada target dari C-Level</p>
@@ -80,7 +80,7 @@
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
                 <span class="overline-label">{{ $monthNames[$first->month] }} {{ $first->year }}</span>
                 @if($isCurrentMonth)
-                    <span class="chip chip-info" style="font-size:10px;">Bulan ini</span>
+                    <span class="chip chip-info" style="font-size:11px;">Bulan ini</span>
                 @endif
             </div>
 
@@ -98,7 +98,7 @@
                         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
                             <!-- Kiri: info target -->
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                                <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
                                             color:var(--maxy-navy);opacity:.65;margin-bottom:4px;">
                                     Target Bulanan
                                 </div>
@@ -112,7 +112,7 @@
                                     @if($myTotal > 0)
                                         <span class="chip chip-neutral">{{ $myTotal }} laporan masuk</span>
                                     @else
-                                        <span class="chip chip-neutral" style="color:var(--fg-4);">Belum ada laporan</span>
+                                        <span class="chip chip-neutral" style="color:var(--fg-3);">Belum ada laporan</span>
                                     @endif
                                 </div>
 
@@ -135,7 +135,7 @@
                             <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--bd-1);
                                         display:flex;flex-wrap:wrap;gap:4px;">
                                 @foreach($target->weeklyTargets as $wt)
-                                    <span class="chip chip-info" style="font-size:10px;padding:2px 8px;">
+                                    <span class="chip chip-info" style="font-size:11px;padding:2px 8px;">
                                         M{{ $wt->week_number }} · {{ Str::limit($wt->title, 22) }}
                                     </span>
                                 @endforeach

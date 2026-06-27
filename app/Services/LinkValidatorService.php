@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\UrlGuard;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -22,18 +23,28 @@ class LinkValidatorService
     public function check(string $url): array
     {
         // Validasi format URL dasar
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
             return [
-                'status'  => 'invalid',
+                'status' => 'invalid',
                 'message' => 'Format URL tidak valid.',
             ];
         }
 
-        // Hanya proses link Google atau Notion (link lain dianggap publik)
-        if (!$this->isGoogleWorkspaceUrl($url) && !$this->isNotionUrl($url)) {
+        // Hanya proses link Google atau Notion (link lain dianggap publik).
+        // Deteksi via host (parse_url), bukan substring — mencegah SSRF lewat
+        // URL seperti http://127.0.0.1/docs.google.com.
+        if (! $this->isGoogleWorkspaceUrl($url) && ! $this->isNotionUrl($url)) {
             return [
-                'status'  => 'public',
+                'status' => 'public',
                 'message' => 'Link dapat diakses.',
+            ];
+        }
+
+        // Defense-in-depth: host Google/Notion harus lolos guard SSRF sebelum di-fetch.
+        if (! UrlGuard::isSafeToFetch($url)) {
+            return [
+                'status' => 'invalid',
+                'message' => 'URL tidak diizinkan untuk divalidasi.',
             ];
         }
 
@@ -47,32 +58,32 @@ class LinkValidatorService
 
             if ($this->isRedirectedToLogin((string) $finalUrl)) {
                 return [
-                    'status'  => 'restricted',
+                    'status' => 'restricted',
                     'message' => 'Link masih terkunci (Restricted). Ubah akses file menjadi "Anyone with the link" agar AI bisa membaca isinya.',
                 ];
             }
 
             if ($response->successful()) {
                 return [
-                    'status'  => 'public',
+                    'status' => 'public',
                     'message' => 'Link dapat diakses publik.',
                 ];
             }
 
             return [
-                'status'  => 'restricted',
+                'status' => 'restricted',
                 'message' => 'Link tidak bisa diakses (kemungkinan terkunci atau tidak ditemukan).',
             ];
 
         } catch (\Exception $e) {
             Log::warning('LinkValidatorService: gagal cek link', [
-                'url'   => $url,
+                'url' => $url,
                 'error' => $e->getMessage(),
             ]);
 
             // Jika timeout/error network, anggap restricted agar sistem tidak buta
             return [
-                'status'  => 'restricted',
+                'status' => 'restricted',
                 'message' => 'Tidak dapat memverifikasi link. Pastikan link dapat diakses publik.',
             ];
         }
@@ -80,15 +91,12 @@ class LinkValidatorService
 
     private function isGoogleWorkspaceUrl(string $url): bool
     {
-        return str_contains($url, 'docs.google.com')
-            || str_contains($url, 'drive.google.com')
-            || str_contains($url, 'sheets.google.com')
-            || str_contains($url, 'forms.google.com');
+        return UrlGuard::isGoogleHost($url);
     }
 
     private function isNotionUrl(string $url): bool
     {
-        return str_contains($url, 'notion.so') || str_contains($url, 'notion.site');
+        return UrlGuard::isNotionHost($url);
     }
 
     private function isRedirectedToLogin(string $url): bool

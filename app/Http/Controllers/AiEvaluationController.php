@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AiEvaluation;
-use App\Models\DailyTaskEntry;
 use App\Models\LeaderOverride;
+use App\Services\LinkValidatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,8 +26,8 @@ class AiEvaluationController extends Controller
     {
         $request->validate(['url' => 'required|url|max:2048']);
 
-        $validator = app(\App\Services\LinkValidatorService::class);
-        $result    = $validator->check($request->url);
+        $validator = app(LinkValidatorService::class);
+        $result = $validator->check($request->url);
 
         return response()->json($result);
     }
@@ -40,7 +40,7 @@ class AiEvaluationController extends Controller
      */
     public function showOverrideForm(AiEvaluation $evaluation)
     {
-        $this->authorizeOverride();
+        $this->authorizeOverride($evaluation);
 
         $evaluation->load(['dailyTaskEntry.user', 'latestOverride']);
 
@@ -55,27 +55,27 @@ class AiEvaluationController extends Controller
      */
     public function storeOverride(Request $request, AiEvaluation $evaluation)
     {
-        $this->authorizeOverride();
+        $this->authorizeOverride($evaluation);
 
         $request->validate([
             'new_score' => 'required|numeric|min:0|max:10',
-            'reason'    => 'required|string|min:10|max:500',
+            'reason' => 'required|string|min:10|max:500',
         ], [
             'new_score.required' => 'Skor baru wajib diisi.',
-            'new_score.min'      => 'Skor minimal adalah 0.',
-            'new_score.max'      => 'Skor maksimal adalah 10.',
-            'reason.required'    => 'Alasan koreksi wajib diisi.',
-            'reason.min'         => 'Alasan minimal 10 karakter agar tercatat dengan jelas.',
+            'new_score.min' => 'Skor minimal adalah 0.',
+            'new_score.max' => 'Skor maksimal adalah 10.',
+            'reason.required' => 'Alasan koreksi wajib diisi.',
+            'reason.min' => 'Alasan minimal 10 karakter agar tercatat dengan jelas.',
         ]);
 
         // Simpan log override (audit trail)
         LeaderOverride::create([
             'ai_evaluation_id' => $evaluation->id,
-            'overridden_by'    => Auth::id(),
-            'original_score'   => $evaluation->final_score,
-            'new_score'        => $request->new_score,
-            'reason'           => $request->reason,
-            'overridden_at'    => now(),
+            'overridden_by' => Auth::id(),
+            'original_score' => $evaluation->final_score,
+            'new_score' => $request->new_score,
+            'reason' => $request->reason,
+            'overridden_at' => now(),
         ]);
 
         // Tandai evaluasi sebagai sudah di-override
@@ -93,10 +93,10 @@ class AiEvaluationController extends Controller
     public function overrideLogs(Request $request)
     {
         $logs = LeaderOverride::with([
-                'leader',
-                'aiEvaluation.dailyTaskEntry.user',
-                'aiEvaluation.dailyTaskEntry.weeklyTarget',
-            ])
+            'leader',
+            'aiEvaluation.dailyTaskEntry.user',
+            'aiEvaluation.dailyTaskEntry.weeklyTarget',
+        ])
             ->latest('overridden_at')
             ->paginate(25);
 
@@ -105,11 +105,22 @@ class AiEvaluationController extends Controller
 
     // ── Private Helpers ──────────────────────────────────────────────────────
 
-    private function authorizeOverride(): void
+    private function authorizeOverride(AiEvaluation $evaluation): void
     {
         $user = Auth::user();
-        if (!in_array($user->role, ['leader', 'c_level', 'super_admin'])) {
+        if (! $user->isLeadership()) {
             abort(403, 'Hanya Leader, C-Level, atau Admin yang dapat mengubah nilai AI.');
+        }
+
+        // Leader hanya boleh mengoreksi evaluasi staf di departemennya sendiri.
+        // C-Level & Super Admin lintas departemen.
+        if ($user->role === 'leader') {
+            $staffDept = $evaluation->dailyTaskEntry?->user?->department
+                ?? $evaluation->loadMissing('dailyTaskEntry.user')->dailyTaskEntry?->user?->department;
+
+            if ($staffDept !== $user->department) {
+                abort(403, 'Anda hanya dapat mengoreksi nilai staf dari departemen Anda.');
+            }
         }
     }
 }

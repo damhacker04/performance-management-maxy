@@ -12,6 +12,11 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
+        // C-Level memakai dashboard monitoring baru sebagai pengganti page target lama.
+        if ($user->role === 'c_level') {
+            return redirect()->route('ceo.overview');
+        }
+
         // Filter periode — wajib, default ke bulan & tahun berjalan
         $filterMonth = (int) $request->get('month', now()->month);
         $filterYear  = (int) $request->get('year',  now()->year);
@@ -61,7 +66,7 @@ class MonthlyTargetController extends Controller
         ])
         ->where('month', $month)
         ->where('year', $year)
-        ->when(!in_array($user->role, ['c_level', 'super_admin']),
+        ->when(!$user->isExecutive(),
             fn($q) => $q->where('department', $user->department)
         )
         ->whereNotNull('assigned_to')
@@ -96,9 +101,11 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        // Daftar staf yang bisa di-assign (sesuai dept leader/c-level)
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
-            $staffList = \App\Models\User::where('role', 'staff')
+        // Daftar penerima target yang bisa di-assign (grouped per departemen).
+        // - C-Level / Super Admin: hanya boleh menargetkan LEADER (bukan staff langsung).
+        // - Leader: menargetkan STAFF di departemennya.
+        if ($user->isExecutive()) {
+            $staffList = \App\Models\User::where('role', 'leader')
                 ->where('is_active', true)
                 ->orderBy('department')
                 ->orderBy('name')
@@ -116,7 +123,7 @@ class MonthlyTargetController extends Controller
         // KPI aktif untuk ditampilkan sebagai acuan
         $kpiRefs = \App\Models\KpiTarget::whereNotNull('department')
             ->where('is_active', true)
-            ->when(!in_array($user->role, ['c_level', 'super_admin']), fn($q) =>
+            ->when(!$user->isExecutive(), fn($q) =>
                 $q->where('department', $user->department)
             )
             ->orderBy('department')
@@ -139,14 +146,24 @@ class MonthlyTargetController extends Controller
         ];
 
         // C-Level dan Super Admin wajib pilih departemen dari dropdown
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             $deptKeys = implode(',', array_keys(\App\Models\User::DEPARTMENTS));
             $rules['department'] = 'required|string|in:' . $deptKeys;
         }
 
         $validated = $request->validate($rules);
 
-        $department = in_array($user->role, ['c_level', 'super_admin'])
+        // C-Level hanya boleh menargetkan Leader (tidak langsung ke staff).
+        if ($user->isExecutive() && ! empty($validated['assigned_to'])) {
+            $assignee = User::find($validated['assigned_to']);
+            if (! $assignee || $assignee->role !== 'leader') {
+                return back()->withInput()->withErrors([
+                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader.',
+                ]);
+            }
+        }
+
+        $department = $user->isExecutive()
             ? $validated['department']
             : ($user->department ?? 'ceo_office');
 
@@ -165,89 +182,7 @@ class MonthlyTargetController extends Controller
             ->with('success', 'Target bulanan berhasil disimpan.');
     }
 
-    public function show(MonthlyTarget $monthlyTarget)
-    {
-        $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
-            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
-        }
 
-        $monthlyTarget->load([
-            'user',
-            'weeklyTargets'                        => fn($q) => $q->orderBy('week_number')->orderBy('id'),
-            'weeklyTargets.assignee',
-            'weeklyTargets.dailyTaskEntries.user',
-        ]);
-
-        // ── Statistik laporan per weekly target ───────────────────────────────
-        $entriesByWeek = $monthlyTarget->weeklyTargets
-            ->mapWithKeys(fn($wt) => [
-                $wt->id => [
-                    'total'          => $wt->dailyTaskEntries->count(),
-                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
-                    'pending_review' => $wt->dailyTaskEntries
-                                          ->where('status', 'selesai')
-                                          ->where('verification_status', 'pending')
-                                          ->count(),
-                ],
-            ]);
-
-        // ── Group weekly targets PER ORANG (untuk accordion) ─────────────────
-        // Key = user_id (int) atau 'umum' (null assigned_to)
-        $byPerson = $monthlyTarget->weeklyTargets
-            ->groupBy(fn($wt) => $wt->assigned_to ?? 'umum');
-
-        // Ambil data user untuk semua assignee, diurutkan abjad
-        $assigneeIds = $monthlyTarget->weeklyTargets
-            ->pluck('assigned_to')
-            ->filter()
-            ->unique()
-            ->values();
-
-        $assignees = \App\Models\User::whereIn('id', $assigneeIds)
-            ->orderBy('name')
-            ->get()
-            ->keyBy('id');
-
-        // Urutkan byPerson: abjad berdasarkan nama, 'umum' selalu di paling bawah
-        $byPersonSorted = collect();
-        foreach ($assignees as $uid => $person) {
-            if ($byPerson->has($uid)) {
-                $byPersonSorted->put($uid, $byPerson->get($uid));
-            }
-        }
-        if ($byPerson->has('umum')) {
-            $byPersonSorted->put('umum', $byPerson->get('umum'));
-        }
-
-        // ── Sibling monthly targets (bulan & tahun sama) untuk dropdown dept ─
-        // Hanya diisi untuk C-Level & Super Admin
-        $siblingMonthlyTargets = collect();
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
-            $siblingMonthlyTargets = MonthlyTarget::where('month', $monthlyTarget->month)
-                ->where('year', $monthlyTarget->year)
-                ->where('id', '!=', $monthlyTarget->id)
-                ->orderBy('department')
-                ->get();
-        }
-
-        // ── Laporan per weekly target digroup per user (untuk C-Level view) ──
-        $leaderEntriesByWeek = [];
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
-            foreach ($monthlyTarget->weeklyTargets as $wt) {
-                $leaderEntriesByWeek[$wt->id] = $wt->dailyTaskEntries->groupBy('user_id');
-            }
-        }
-
-        return view('monthly-targets.show', compact(
-            'monthlyTarget',
-            'entriesByWeek',
-            'byPersonSorted',
-            'assignees',
-            'siblingMonthlyTargets',
-            'leaderEntriesByWeek'
-        ));
-    }
 
     /**
      * [DEPRECATED — redirects ke period.staff-targets]
@@ -271,7 +206,7 @@ class MonthlyTargetController extends Controller
     {
         $user = auth()->user();
 
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if($staff->department !== $user->department, 403, 'Akses ditolak.');
         }
 
@@ -314,7 +249,7 @@ class MonthlyTargetController extends Controller
     {
         try {
             $user = auth()->user();
-            if (!in_array($user->role, ['c_level', 'super_admin'])) {
+            if (!$user->isExecutive()) {
                 abort_if($monthlyTarget->department !== $user->department, 403);
             }
 
@@ -364,64 +299,16 @@ class MonthlyTargetController extends Controller
                 'initials', 'bgColor', 'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges',
                 'year', 'month', 'backUrl'
             ));
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            return response("<pre style='background:#111;color:#f00;padding:20px;white-space:pre-wrap;'>" . htmlspecialchars("ERROR:\n" . $e->getMessage() . "\nFILE: " . $e->getFile() . "\nLINE: " . $e->getLine()) . "\n\n" . htmlspecialchars($e->getTraceAsString()) . "</pre>", 500);
+            report($e);
+            return redirect()->route('monthly-targets.index')
+                ->with('error', 'Terjadi kesalahan saat memuat halaman. Silakan coba lagi.');
         }
     }
 
-    public function showStaff(MonthlyTarget $monthlyTarget, $assignee)
-    {
-        $user = auth()->user();
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
-            abort_if($monthlyTarget->department !== $user->department, 403, 'Anda tidak memiliki akses ke target departemen ini.');
-        }
 
-        $monthlyTarget->load([
-            'user',
-            'weeklyTargets' => fn($q) => $q->where('assigned_to', $assignee === 'umum' ? null : $assignee)->orderBy('week_number')->orderBy('id'),
-            'weeklyTargets.assignee',
-            'weeklyTargets.dailyTaskEntries.user',
-        ]);
-
-        $entriesByWeek = $monthlyTarget->weeklyTargets
-            ->mapWithKeys(fn($wt) => [
-                $wt->id => [
-                    'total'          => $wt->dailyTaskEntries->count(),
-                    'done'           => $wt->dailyTaskEntries->where('status', 'selesai')->count(),
-                    'pending_review' => $wt->dailyTaskEntries
-                                          ->where('status', 'selesai')
-                                          ->where('verification_status', 'pending')
-                                          ->count(),
-                ],
-            ]);
-
-        $personTargets = $monthlyTarget->weeklyTargets;
-
-        if ($assignee !== 'umum') {
-            $person = \App\Models\User::findOrFail($assignee);
-            $pName = $person->name;
-            $pDiv = $person->division ?? $person->department;
-            $initials = collect(explode(' ', $pName))->take(2)->map(fn($w) => strtoupper($w[0]))->implode('');
-        } else {
-            $person = null;
-            $pName = 'Target Umum (Seluruh Tim)';
-            $pDiv = '';
-            $initials = '🏢';
-        }
-        $personKey = $assignee;
-
-        // Hitung persentase progress untuk banner atas
-        $pTotalEntry  = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['total'] ?? 0));
-        $pDoneEntry   = $personTargets->sum(fn($wt) => ($entriesByWeek[$wt->id]['done']  ?? 0));
-        $pProgress    = $pTotalEntry > 0 ? round($pDoneEntry / $pTotalEntry * 100) : 0;
-        
-        $weekRanges = []; // Biar ga undefined di view if needed
-
-        return view('monthly-targets.show-staff', compact(
-            'monthlyTarget', 'personTargets', 'entriesByWeek', 'person', 'pName', 'pDiv', 'personKey', 'initials',
-            'pTotalEntry', 'pDoneEntry', 'pProgress', 'weekRanges'
-        ));
-    }
 
 
     public function edit(MonthlyTarget $monthlyTarget)
@@ -460,7 +347,7 @@ class MonthlyTargetController extends Controller
     private function authorizeEdit(MonthlyTarget $monthlyTarget)
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) {
+        if ($user->isExecutive()) {
             return;
         }
 

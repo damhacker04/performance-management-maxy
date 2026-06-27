@@ -25,7 +25,7 @@
         'customer_support'=> 'Customer Support',
         'ceo_office'      => 'CEO Office',
     ];
-    $isCLevel = in_array(auth()->user()->role, ['c_level', 'super_admin']);
+    $isCLevel = auth()->user()->isExecutive();
     $groupedByDept = $isCLevel ? $targets->groupBy('department') : null;
 @endphp
 
@@ -100,9 +100,9 @@
     @if($targets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                 <p style="font-size:14px;margin-bottom:4px;">Belum ada target untuk <strong>{{ $monthNames[$filterMonth] }} {{ $filterYear }}</strong>.</p>
-                <p style="font-size:12px;color:var(--fg-4);margin-bottom:8px;">Coba pilih bulan lain di filter di atas.</p>
+                <p style="font-size:12px;color:var(--fg-3);margin-bottom:8px;">Coba pilih bulan lain di filter di atas.</p>
                 <a href="{{ route('monthly-targets.create') }}" style="font-size:13px;font-weight:600;color:var(--maxy-navy);">Buat target baru →</a>
             </div>
         </div>
@@ -139,7 +139,7 @@
                         <div style="flex:1;min-width:0;">
                             <span style="font-size:14px;font-weight:700;color:var(--fg-1);">{{ $label }}</span>
                             @if($hasCurrentMonth)
-                                <span class="chip chip-info" style="font-size:10px;margin-left:6px;">Bulan ini</span>
+                                <span class="chip chip-info" style="font-size:11px;margin-left:6px;">Bulan ini</span>
                             @endif
                         </div>
 
@@ -171,7 +171,9 @@
                                 $doneEntries    = $target->weeklyTargets->sum(fn($wt) => $wt->dailyTaskEntries->where('status','selesai')->count());
                                 $pct            = $totalEntries > 0 ? round($doneEntries / $totalEntries * 100) : 0;
                             @endphp
-                            <a href="{{ route('monthly-targets.show', $target) }}"
+                            <a href="{{ $target->assigned_to 
+                                ? route('period.staff-weekly', ['year' => $target->year, 'month' => $target->month, 'staff' => $target->assigned_to, 'monthlyTarget' => $target]) 
+                                : route('period.staff-list', ['year' => $target->year, 'month' => $target->month]) }}"
                                style="display:block;text-decoration:none;color:inherit;">
                                 <div class="m-card" style="padding:12px 14px;
                                             {{ $isCurrentMonth ? 'border:1.5px solid '.$color.';' : '' }}">
@@ -182,7 +184,7 @@
                                                     {{ $months[$target->month] }} {{ $target->year }}
                                                 </span>
                                                 @if($isCurrentMonth)
-                                                    <span class="chip chip-success" style="font-size:10px;">Aktif</span>
+                                                    <span class="chip chip-success" style="font-size:11px;">Aktif</span>
                                                 @endif
                                             </div>
                                             <div style="font-size:14px;font-weight:600;color:var(--fg-1);
@@ -202,21 +204,21 @@
                                                     <div style="height:4px;background:var(--bg-3);border-radius:4px;overflow:hidden;">
                                                         <div style="height:100%;width:{{ $pct }}%;background:{{ $color }};border-radius:4px;transition:width .4s;"></div>
                                                     </div>
-                                                    <div style="font-size:10px;color:var(--fg-4);margin-top:3px;">
+                                                    <div style="font-size:11px;color:var(--fg-3);margin-top:3px;">
                                                         {{ $totalEntries }} laporan masuk
                                                     </div>
                                                 </div>
                                             @endif
 
-                                            <div style="font-size:11px;color:var(--fg-4);margin-top:4px;">
+                                            <div style="font-size:11px;color:var(--fg-3);margin-top:4px;">
                                                 oleh {{ $target->user->name }}
                                             </div>
                                         </div>
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">
                                             @if($weeklyCount > 0)
-                                                <span class="chip chip-info" style="font-size:10px;">{{ $weeklyCount }} target mingguan</span>
+                                                <span class="chip chip-info" style="font-size:11px;">{{ $weeklyCount }} target mingguan</span>
                                             @else
-                                                <span class="chip chip-neutral" style="font-size:10px;color:var(--fg-4);">Belum ada</span>
+                                                <span class="chip chip-neutral" style="font-size:11px;color:var(--fg-3);">Belum ada</span>
                                             @endif
                                             <svg class="lucide sm" style="color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                                         </div>
@@ -278,12 +280,12 @@
                             {{ $monthLabel }}
                         </span>
                         @if($isActive)
-                            <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
+                            <span class="chip chip-success" style="font-size:11px;">Bulan ini</span>
                         @endif
                     </div>
-                    <div style="font-size:11px;color:var(--fg-4);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:{{ $totalEntries > 0 ? '6px' : '0' }};">
-                        <span>👤 {{ $staffCount }} staf</span>
-                        <span>📋 {{ $monthTargets->count() }} target</span>
+                    <div style="font-size:11px;color:var(--fg-3);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:{{ $totalEntries > 0 ? '6px' : '0' }};">
+                        <span style="display:inline-flex;align-items:center;gap:4px;"><svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>{{ $staffCount }} staf</span>
+                        <span style="display:inline-flex;align-items:center;gap:4px;"><svg class="lucide" style="width:13px;height:13px;" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>{{ $monthTargets->count() }} target</span>
                         @if($totalEntries > 0)
                             <span>{{ $doneEntries }}/{{ $totalEntries }} laporan selesai</span>
                         @else
@@ -296,14 +298,14 @@
                             <div style="height:100%;width:{{ $pct }}%;border-radius:4px;transition:width .4s;
                                         background:{{ $pct >= 80 ? '#16A571' : 'var(--warning)' }};"></div>
                         </div>
-                        <div style="font-size:10px;color:{{ $pct >= 80 ? '#16A571' : 'var(--fg-3)' }};margin-top:3px;font-weight:600;">
+                        <div style="font-size:11px;color:{{ $pct >= 80 ? '#16A571' : 'var(--fg-3)' }};margin-top:3px;font-weight:600;">
                             {{ $pct }}% selesai
                         </div>
                     @endif
                 </div>
 
                 {{-- Chevron --}}
-                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24">
                     <path d="M9 6l6 6-6 6"/>
                 </svg>
             </a>
@@ -322,7 +324,7 @@
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
             @if($targets->onFirstPage())
-                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">← Sebelumnya</span>
+                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-3);font-size:13px;font-weight:600;cursor:default;">← Sebelumnya</span>
             @else
                 <a href="{{ $targets->previousPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">← Sebelumnya</a>
             @endif
@@ -338,7 +340,7 @@
             @if($targets->hasMorePages())
                 <a href="{{ $targets->nextPageUrl() }}" style="padding:6px 14px;border-radius:8px;background:var(--neutral-50);border:1px solid var(--neutral-200);color:var(--maxy-navy);font-size:13px;font-weight:600;text-decoration:none;">Berikutnya →</a>
             @else
-                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-4);font-size:13px;font-weight:600;cursor:default;">Berikutnya →</span>
+                <span style="padding:6px 14px;border-radius:8px;background:var(--neutral-100);color:var(--fg-3);font-size:13px;font-weight:600;cursor:default;">Berikutnya →</span>
             @endif
         </div>
     </div>

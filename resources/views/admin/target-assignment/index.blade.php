@@ -85,7 +85,7 @@
                         </div>
                         {{-- Tombol hapus Monthly Target --}}
                         <form method="POST" action="{{ route('admin.monthly-targets.destroy', $monthly) }}"
-                              onsubmit="return confirm('Hapus Monthly Target \"{{ $monthly->title }}\" beserta semua data di dalamnya? Tindakan ini tidak dapat dibatalkan.')">
+                              data-confirm="Hapus Monthly Target '{{ $monthly->title }}' beserta semua data di dalamnya? Tindakan ini tidak dapat dibatalkan." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium">
                                 Hapus Target Ini
@@ -152,7 +152,7 @@
                                                 {{-- Lepas Assignment --}}
                                                 @if ($weekly->assigned_to)
                                                     <form method="POST" action="{{ route('admin.target-assignment.unassign-weekly') }}"
-                                                          onsubmit="return confirm('Lepas assignment weekly target ini?')">
+                                                          data-confirm="Lepas assignment weekly target ini?" data-confirm-variant="danger" data-confirm-ok="Ya, Lepas">
                                                         @csrf
                                                         <input type="hidden" name="weekly_target_id" value="{{ $weekly->id }}">
                                                         <button type="submit" class="text-xs text-orange-500 hover:text-orange-700">Lepas</button>
@@ -160,7 +160,7 @@
                                                 @endif
                                                 {{-- Hapus Weekly Target --}}
                                                 <form method="POST" action="{{ route('admin.weekly-targets.destroy', $weekly) }}"
-                                                      onsubmit="return confirm('Hapus Weekly Target \"{{ $weekly->title }}\"? Semua laporan harian di dalamnya juga akan terhapus.')">
+                                                      data-confirm="Hapus Weekly Target '{{ $weekly->title }}'? Semua laporan harian di dalamnya juga akan terhapus." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
                                                 </form>

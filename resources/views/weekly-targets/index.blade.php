@@ -33,7 +33,7 @@
     @if($weeklyTargets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <p style="font-size:14px;margin-bottom:8px;">Belum ada target mingguan.</p>
                 <a href="{{ route('weekly-targets.create') }}" style="font-size:13px;font-weight:600;color:var(--maxy-navy);">Buat target pertama →</a>
             </div>
@@ -63,13 +63,13 @@
                                    style="flex:1;min-width:0;text-decoration:none;color:inherit;display:block;">
                                     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
                                         <span class="chip chip-neutral">Minggu {{ $wt->week_number }}</span>
-                                        <span style="font-size:11px;color:var(--fg-4);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }}</span>
+                                        <span style="font-size:11px;color:var(--fg-3);">{{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }}</span>
                                         @if($isOther)
-                                            <span class="chip" style="background:#FEF3C7;color:#B45309;font-size:10px;">🗂️ Other</span>
+                                            <span class="chip" style="background:#FEF3C7;color:#B45309;font-size:11px;">🗂️ Other</span>
                                         @else
-                                            <span class="chip" style="background:#E8F5E9;color:#2E7D32;font-size:10px;">📌 Planned</span>
+                                            <span class="chip" style="background:#E8F5E9;color:#2E7D32;font-size:11px;">Planned</span>
                                             @if($wt->monthlyTarget)
-                                                <span class="chip chip-info" style="font-size:10px;">{{ Str::limit($wt->monthlyTarget->title, 22) }}</span>
+                                                <span class="chip chip-info" style="font-size:11px;">{{ Str::limit($wt->monthlyTarget->title, 22) }}</span>
                                             @endif
                                         @endif
                                         @if($wt->target_type === 'quantitative')
@@ -89,7 +89,7 @@
                                     <div style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--maxy-navy);font-weight:600;">
                                         <svg class="lucide" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         {{ $entryCount }} laporan staff
-                                        <span style="color:var(--fg-4);font-weight:400;">· tap untuk detail →</span>
+                                        <span style="color:var(--fg-3);font-weight:400;">· tap untuk detail →</span>
                                     </div>
                                 </a>
                                 <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
@@ -97,7 +97,7 @@
                                         <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </a>
                                     <form method="POST" action="{{ route('weekly-targets.destroy', $wt) }}"
-                                          onsubmit="return confirm('Hapus target mingguan ini?\n\nPerhatian: {{ $entryCount }} laporan staff yang terkait akan tetap tersimpan (weekly_target menjadi tidak terhubung), namun tidak akan terhapus.');"
+                                          data-confirm="Hapus target mingguan ini? Perhatian: {{ $entryCount }} laporan staff yang terkait akan tetap tersimpan (weekly_target menjadi tidak terhubung), namun tidak akan terhapus." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus"
                                           style="margin:0;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="icon-btn" title="Hapus" style="color:var(--danger);">
