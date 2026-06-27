@@ -17,15 +17,17 @@
         
         {{-- Navigation Tabs --}}
         <div style="display:flex;align-items:center;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;gap:8px;">
-            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}"
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:var(--bg-2);color:var(--fg-2);">
-                📝 Tugas Saya
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Tugas Saya
             </a>
-            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}"
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:var(--bg-2);color:var(--fg-2);">
-                👀 Menunggu Review
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                Menunggu Review
                 @php
                     $pendingReviewCount = \App\Models\DailyTaskEntry::whereIn('verification_status', ['pending', 'revision'])
                         ->when(auth()->user()->role === 'leader', fn($q) => 
@@ -33,15 +35,16 @@
                         )->count();
                 @endphp
                 @if($pendingReviewCount > 0)
-                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                <span style="background:var(--danger);color:#fff;font-size:11px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
                 @endif
             </a>
             <a href="{{ route('backdate-requests.index') }}"
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:var(--maxy-navy);color:#fff;">
-                📅 Izin Backdating
+                <svg class="lucide sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Izin Backdating
                 @if($pendingCount > 0)
-                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingCount }}</span>
+                <span style="background:var(--danger);color:#fff;font-size:11px;padding:2px 6px;border-radius:99px;">{{ $pendingCount }}</span>
                 @endif
             </a>
         </div>
@@ -83,8 +86,8 @@
             </div>
 
             {{-- Search Input --}}
-            <div style="position:relative;width:250px;flex-shrink:0;">
-                <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
+            <div style="position:relative;flex:1 1 220px;min-width:200px;">
+                <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-3);">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari alasan / staf..." 
@@ -133,7 +136,7 @@
     @if($requests->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <p style="font-size:14px;color:var(--fg-3);">Tidak ada permintaan {{ ($statusFilter ?? '') === 'pending' ? 'yang menunggu' : (($statusFilter ?? '') === 'approved' ? 'yang disetujui' : (($statusFilter ?? '') === 'rejected' ? 'yang ditolak' : '')) }}.</p>
             </div>
         </div>
@@ -148,7 +151,7 @@
                 .br-mobile-cards { display: flex !important; }
             }
             .br-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-            .br-table th { padding: 12px 16px; background: var(--bg-2); color: var(--fg-4); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; text-align: left; border-bottom: 1px solid var(--bg-3); }
+            .br-table th { padding: 12px 16px; background: var(--bg-2); color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; text-align: left; border-bottom: 1px solid var(--bg-3); }
             .br-table td { padding: 12px 16px; border-bottom: 1px solid var(--bg-3); color: var(--fg-2); vertical-align: top; }
         </style>
 
@@ -171,10 +174,10 @@
                     @foreach($requests as $req)
                     @php
                         $statusCfg = match($req->status) {
-                            'pending'  => ['chip' => 'warning',  'icon' => '⏳', 'label' => 'Menunggu Review'],
-                            'approved' => ['chip' => 'success',  'icon' => '✅', 'label' => 'Disetujui'],
-                            'rejected' => ['chip' => 'danger',   'icon' => '❌', 'label' => 'Ditolak'],
-                            default    => ['chip' => 'neutral',  'icon' => '🔔', 'label' => '-'],
+                            'pending'  => ['chip' => 'warning',  'label' => 'Menunggu Review'],
+                            'approved' => ['chip' => 'success',  'label' => 'Disetujui'],
+                            'rejected' => ['chip' => 'danger',   'label' => 'Ditolak'],
+                            default    => ['chip' => 'neutral',  'label' => '-'],
                         };
                         $isExpired = $req->status === 'approved' && $req->token_expires_at?->isPast();
                     @endphp
@@ -206,22 +209,22 @@
                         </td>
                         <td>
                             <span class="chip chip-{{ $statusCfg['chip'] }}" style="font-size:11px;">
-                                {{ $statusCfg['icon'] }} {{ $statusCfg['label'] }}
+                                {{ $statusCfg['label'] }}
                             </span>
                             @if($isExpired)
-                                <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">Kedaluwarsa</div>
+                                <div style="font-size:11px;color:var(--fg-3);margin-top:4px;">Kedaluwarsa</div>
                             @endif
                         </td>
                         @if($statusFilter === 'pending')
                         <td style="text-align:right;">
-                            @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                            @if(auth()->user()->isLeadership())
                                 <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
-                                    <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" onsubmit="return confirm('Setujui permintaan ini?');">
+                                    <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" data-confirm="Setujui permintaan ini?" data-confirm-ok="Ya, Setujui">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="btn btn-sm" style="background:#16A571;color:#fff;">✅ Setujui</button>
+                                        <button type="submit" class="btn btn-sm" style="background:#16A571;color:#fff;"><svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Setujui</button>
                                     </form>
                                     <details style="position:relative;">
-                                        <summary class="btn btn-sm" style="background:#EF4444;color:#fff;cursor:pointer;list-style:none;">❌ Tolak</summary>
+                                        <summary class="btn btn-sm" style="background:#EF4444;color:#fff;cursor:pointer;list-style:none;"><svg class="lucide sm" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>Tolak</summary>
                                         <div style="position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--bg-3);border-radius:8px;padding:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:99;min-width:250px;text-align:left;">
                                             <form method="POST" action="{{ route('backdate-requests.reject', $req) }}">
                                                 @csrf @method('PATCH')
@@ -233,7 +236,7 @@
                                     </details>
                                 </div>
                             @else
-                                <span style="font-size:11px;color:var(--fg-4);">Tidak ada akses</span>
+                                <span style="font-size:11px;color:var(--fg-3);">Tidak ada akses</span>
                             @endif
                         </td>
                         @endif
@@ -248,10 +251,10 @@
             @foreach($requests as $req)
             @php
                 $statusCfg = match($req->status) {
-                    'pending'  => ['chip' => 'warning',  'icon' => '⏳', 'label' => 'Menunggu Review'],
-                    'approved' => ['chip' => 'success',  'icon' => '✅', 'label' => 'Disetujui'],
-                    'rejected' => ['chip' => 'danger',   'icon' => '❌', 'label' => 'Ditolak'],
-                    default    => ['chip' => 'neutral',  'icon' => '🔔', 'label' => '-'],
+                    'pending'  => ['chip' => 'warning',  'label' => 'Menunggu Review'],
+                    'approved' => ['chip' => 'success',  'label' => 'Disetujui'],
+                    'rejected' => ['chip' => 'danger',   'label' => 'Ditolak'],
+                    default    => ['chip' => 'neutral',  'label' => '-'],
                 };
                 $isExpired = $req->status === 'approved' && $req->token_expires_at?->isPast();
             @endphp
@@ -259,16 +262,16 @@
                 {{-- Header --}}
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:10px;color:var(--fg-4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Pengaju</div>
+                        <div style="font-size:11px;color:var(--fg-3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Pengaju</div>
                         <div style="font-size:15px;font-weight:700;color:var(--fg-1);">{{ $req->user->name }}</div>
                         <div style="font-size:12px;color:var(--fg-3);margin-top:2px;">{{ $req->user->division ?? $req->user->department ?? '-' }}</div>
                     </div>
                     <div style="text-align:right;flex-shrink:0;">
                         <span class="chip chip-{{ $statusCfg['chip'] }}" style="font-size:12px;">
-                            {{ $statusCfg['icon'] }} {{ $statusCfg['label'] }}
+                            {{ $statusCfg['label'] }}
                         </span>
                         @if($isExpired)
-                            <div style="font-size:10px;color:var(--fg-4);margin-top:4px;">Kedaluwarsa</div>
+                            <div style="font-size:11px;color:var(--fg-3);margin-top:4px;">Kedaluwarsa</div>
                         @endif
                     </div>
                 </div>
@@ -276,55 +279,62 @@
                 {{-- Detail --}}
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
-                        <div style="font-size:10px;color:var(--fg-4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Tanggal Diminta</div>
+                        <div style="font-size:11px;color:var(--fg-3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Tanggal Diminta</div>
                         <div style="font-size:13px;font-weight:600;color:var(--fg-1);">
                             {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMMM YYYY') }}
                         </div>
                     </div>
                     <div>
-                        <div style="font-size:10px;color:var(--fg-4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Diajukan</div>
+                        <div style="font-size:11px;color:var(--fg-3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Diajukan</div>
                         <div style="font-size:13px;color:var(--fg-2);">{{ $req->created_at->isoFormat('D MMM YYYY, HH:mm') }}</div>
                     </div>
                 </div>
 
                 {{-- Alasan --}}
                 <div style="background:var(--bg-2);border-radius:8px;padding:10px 12px;">
-                    <div style="font-size:10px;color:var(--fg-4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Alasan</div>
+                    <div style="font-size:11px;color:var(--fg-3);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Alasan</div>
                     <div style="font-size:13px;color:var(--fg-2);line-height:1.5;">{{ $req->reason }}</div>
                 </div>
 
                 {{-- Info approved --}}
                 @if($req->status === 'approved' && !$isExpired)
-                    <div style="background:#E8F7EE;border:1px solid #16A571;border-radius:8px;padding:10px 12px;font-size:12px;color:#0F7A50;">
-                        ✅ Disetujui oleh <strong>{{ $req->reviewer?->name ?? '-' }}</strong>
+                    <div style="display:flex;gap:8px;align-items:flex-start;background:#E8F7EE;border:1px solid #16A571;border-radius:8px;padding:10px 12px;font-size:12px;color:#0F7A50;">
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M20 6 9 17l-5-5"/></svg>
+                        <span>Disetujui oleh <strong>{{ $req->reviewer?->name ?? '-' }}</strong>
                         · {{ $req->reviewed_at?->isoFormat('D MMM, HH:mm') }}
-                        · Token berlaku hingga <strong>{{ $req->token_expires_at?->isoFormat('D MMM HH:mm') }}</strong>
+                        · Token berlaku hingga <strong>{{ $req->token_expires_at?->isoFormat('D MMM HH:mm') }}</strong></span>
                     </div>
                 @elseif($req->status === 'rejected')
-                    <div style="background:#FFF1F2;border:1px solid #F87171;border-radius:8px;padding:10px 12px;font-size:12px;color:#B91C1C;">
-                        ❌ Ditolak oleh <strong>{{ $req->reviewer?->name ?? '-' }}</strong>
+                    <div style="display:flex;gap:8px;align-items:flex-start;background:#FFF1F2;border:1px solid #F87171;border-radius:8px;padding:10px 12px;font-size:12px;color:#B91C1C;">
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        <span>Ditolak oleh <strong>{{ $req->reviewer?->name ?? '-' }}</strong>
                         @if($req->rejection_note)
                             · Alasan: {{ $req->rejection_note }}
                         @endif
+                        </span>
                     </div>
                 @endif
 
                 {{-- Action buttons (hanya untuk pending) --}}
                 @if($req->status === 'pending')
                     <div style="display:flex;flex-direction:column;gap:8px;">
-                        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+                        @if(auth()->user()->isLeadership())
                             {{-- Setujui --}}
                             <form method="POST" action="{{ route('backdate-requests.approve', $req) }}"
-                                  onsubmit="return confirm('Setujui permintaan backdating {{ $req->user->name }} untuk tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat("D MMMM") }}?');">
+                                  data-confirm="Setujui permintaan backdating {{ $req->user->name }} untuk tanggal {{ \Carbon\Carbon::parse($req->requested_date)->isoFormat("D MMMM") }}?" data-confirm-ok="Ya, Setujui">
                                 @csrf @method('PATCH')
-                                <button type="submit" class="btn btn-primary btn-block" style="background:#16A571;">
-                                    ✅ Setujui — Izinkan Isi Laporan
+                                <button type="submit" class="btn btn-block" style="background:var(--success);color:#fff;">
+                                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                                    Setujui — Izinkan Isi Laporan
                                 </button>
                             </form>
 
                             {{-- Tolak --}}
                             <details style="border:1px solid #F87171;border-radius:8px;padding:10px 12px;">
-                                <summary style="font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">❌ Tolak Permintaan</summary>
+                                <summary style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B91C1C;cursor:pointer;">
+                                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                    Tolak Permintaan
+                                </summary>
                                 <form method="POST" action="{{ route('backdate-requests.reject', $req) }}" style="margin-top:10px;">
                                     @csrf @method('PATCH')
                                     <textarea name="rejection_note" rows="2" required minlength="5"

@@ -44,7 +44,7 @@ class LeaderTargetController extends Controller
         $user = auth()->user();
 
         // Hanya boleh lihat target dept-nya sendiri yang dibuat C-Level
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if(
                 $monthlyTarget->department !== $user->department,
                 403,

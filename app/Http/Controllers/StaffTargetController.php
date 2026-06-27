@@ -54,7 +54,7 @@ class StaffTargetController extends Controller
         $user = auth()->user();
 
         // Staff hanya boleh lihat target dept-nya sendiri (kecuali c_level / super_admin)
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             // Cek apakah staff ini di-assign ke salah satu weekly target di dalam monthly target ini
             $hasAssigned = $monthlyTarget->weeklyTargets()->where('assigned_to', $user->id)->exists();
 

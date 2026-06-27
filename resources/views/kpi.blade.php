@@ -1,6 +1,6 @@
 <x-app-layout>
 @php
-    $canManage = in_array(auth()->user()->role, ['c_level','super_admin']) || auth()->user()->is_management;
+    $canManage = auth()->user()->isExecutive() || auth()->user()->is_management;
     $deptColors = [
         'sales'=>'#1B4FD8','marketing'=>'#7C3AED','operational'=>'#0E7490',
         'hr'=>'#065F46','finance'=>'#9A3412','product_it'=>'#1D4ED8',
@@ -51,9 +51,9 @@
 
 /* Badge inactive */
 .badge-inactive {
-    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    font-size:11px; font-weight: 600; padding: 2px 7px;
     border-radius: 20px; background: var(--neutral-100);
-    color: var(--fg-4); margin-left: 6px;
+    color: var(--fg-3); margin-left: 6px;
 }
 </style>
 
@@ -94,7 +94,7 @@
                 <div class="dept-badge">
                     <span class="dept-dot" style="background:{{ $color }};"></span>
                     {{ $deptLabel }}
-                    <span style="color:var(--fg-4);font-weight:500;">· {{ $activeKpis->count() }} KPI aktif</span>
+                    <span style="color:var(--fg-3);font-weight:500;">· {{ $activeKpis->count() }} KPI aktif</span>
                 </div>
             </div>
 
@@ -118,7 +118,7 @@
                             @endif
                         </div>
                         @if($kpi->notes)
-                            <div style="font-size:11px;color:var(--fg-4);margin-top:3px;font-style:italic;">{{ $kpi->notes }}</div>
+                            <div style="font-size:11px;color:var(--fg-3);margin-top:3px;font-style:italic;">{{ $kpi->notes }}</div>
                         @endif
                     </div>
 
@@ -131,7 +131,7 @@
                                 </svg>
                             </a>
                             <form method="POST" action="{{ route('kpi.destroy', $kpi) }}"
-                                  onsubmit="return confirm('Nonaktifkan KPI ini?')" style="display:inline;">
+                                  data-confirm="Nonaktifkan KPI ini?" data-confirm-variant="danger" data-confirm-ok="Ya, Nonaktifkan" style="display:inline;">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-outline btn-sm" title="Nonaktifkan"
                                         style="color:var(--danger);border-color:var(--danger);">
@@ -148,7 +148,7 @@
             {{-- KPI Tidak Aktif (collapsed) --}}
             @if($inactiveKpis->count() > 0)
                 <details style="margin-top:8px;">
-                    <summary style="font-size:12px;color:var(--fg-4);cursor:pointer;padding:4px 0;list-style:none;display:flex;align-items:center;gap:6px;">
+                    <summary style="font-size:12px;color:var(--fg-3);cursor:pointer;padding:4px 0;list-style:none;display:flex;align-items:center;gap:6px;">
                         <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
                         {{ $inactiveKpis->count() }} KPI tidak aktif
                     </summary>
@@ -156,7 +156,7 @@
                         @foreach($inactiveKpis as $kpi)
                             <div class="kpi-card" style="border-style:dashed;">
                                 <div class="kpi-icon" style="background:var(--neutral-100);">
-                                    <svg class="lucide sm" style="color:var(--fg-4);" viewBox="0 0 24 24">
+                                    <svg class="lucide sm" style="color:var(--fg-3);" viewBox="0 0 24 24">
                                         <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
                                     </svg>
                                 </div>
@@ -179,7 +179,7 @@
     @empty
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
                 </svg>
                 <p style="font-size:14px;font-weight:600;color:var(--fg-1);margin:0 0 4px;">Belum Ada KPI</p>

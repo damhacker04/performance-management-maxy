@@ -1,27 +1,34 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\MonthlyTargetController;
-use App\Http\Controllers\WeeklyTargetController;
-use App\Http\Controllers\DailyTaskEntryController;
-use App\Http\Controllers\StaffTargetController;
-use App\Http\Controllers\LeaderTargetController;
-use App\Http\Controllers\ExportController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\BackdateRequestController;
+use App\Http\Controllers\Admin\KpiSettingsController;
+use App\Http\Controllers\Admin\TargetAssignmentController;
+use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AiEvaluationController;
+use App\Http\Controllers\CeoOverviewController;
+use App\Http\Controllers\CeoTargetController;
+use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\BackdateRequestController;
+use App\Http\Controllers\DailyTaskEntryController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\KpiController;
+use App\Http\Controllers\LeaderTargetController;
+use App\Http\Controllers\MonthlyTargetController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StaffTargetController;
+use App\Http\Controllers\WeeklyTargetController;
 use App\Http\Controllers\WorkloadReportController;
+use App\Models\WeeklyTarget;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
 // Google Auth Routes
-Route::get('/auth/google', [App\Http\Controllers\Auth\GoogleAuthController::class, 'redirect'])->name('google.login');
-Route::get('/auth/google/callback', [App\Http\Controllers\Auth\GoogleAuthController::class, 'callback'])->name('google.callback');
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('google.callback');
 
 // Routes untuk Leader
 Route::middleware(['auth'])->group(function () {
@@ -31,39 +38,49 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
+    // Dashboard monitoring C-Level (pengganti page target lama untuk C-Level)
+    Route::middleware('role:c_level')->group(function () {
+        Route::get('/ceo/overview', [CeoOverviewController::class, 'index'])->name('ceo.overview');
+
+        // Halaman Target khusus C-Level: target yang ditetapkan untuk leader + drill-down read-only.
+        Route::get('/ceo/targets', [CeoTargetController::class, 'index'])->name('ceo.targets.index');
+        Route::get('/ceo/targets/leader/{leader}', [CeoTargetController::class, 'showLeader'])->name('ceo.targets.leader');
+    });
+
     // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
     Route::get('/debug/unassigned-targets', function () {
-        if (!app()->environment('production') && !app()->environment('local')) {
+        if (! app()->environment('production') && ! app()->environment('local')) {
             // Just a precaution, but we want it available to debug
         }
-        
-        $targets = \App\Models\WeeklyTarget::with('monthlyTarget')
+
+        $targets = WeeklyTarget::with('monthlyTarget')
             ->whereDoesntHave('dailyTaskEntries')
             ->get(['id', 'title', 'monthly_target_id', 'assigned_to', 'user_id']);
-            
-        $html = "<h1>Debug: Target Mingguan Kosong</h1>";
+
+        $html = '<h1>Debug: Target Mingguan Kosong</h1>';
         $html .= "<table border='1' cellpadding='8' style='border-collapse:collapse; width:100%;'>";
-        $html .= "<tr><th>ID Mingguan</th><th>Judul Target Mingguan</th><th>Assigned To</th><th>ID Bulanan</th><th>Judul Target Bulanan Lama</th></tr>";
-        
-        foreach($targets as $t) {
+        $html .= '<tr><th>ID Mingguan</th><th>Judul Target Mingguan</th><th>Assigned To</th><th>ID Bulanan</th><th>Judul Target Bulanan Lama</th></tr>';
+
+        foreach ($targets as $t) {
             $monthlyTitle = $t->monthlyTarget ? $t->monthlyTarget->title : 'N/A';
             $assigned = $t->assigned_to ?: 'NULL (Umum)';
-            $html .= "<tr>";
+            $html .= '<tr>';
             $html .= "<td>{$t->id}</td>";
             $html .= "<td>{$t->title}</td>";
             $html .= "<td>{$assigned}</td>";
             $html .= "<td>{$t->monthly_target_id}</td>";
             $html .= "<td>{$monthlyTitle}</td>";
-            $html .= "</tr>";
+            $html .= '</tr>';
         }
-        
-        $html .= "</table>";
+
+        $html .= '</table>';
+
         return $html;
     });
 
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
-        Route::resource('monthly-targets', MonthlyTargetController::class);
+        Route::resource('monthly-targets', MonthlyTargetController::class)->except(['show']);
 
         // ── PERIOD HIERARCHY (URL bersih & konsisten) ────────────────────────────
         // Level 2: /monthly-targets/period/{year}/{month}/staff
@@ -81,13 +98,10 @@ Route::middleware(['auth'])->group(function () {
                 ->name('period.weekly-show');
         });
 
-        // ── LEGACY ROUTES (deprecated \u2014 redirect ke period hierarchy) ────────────
-        Route::get('monthly-targets/{monthlyTarget}/staff/{assignee}', [MonthlyTargetController::class, 'showStaff'])
-            ->name('monthly-targets.staff'); // lama, masih dipakai show.blade.php
+
         Route::get('staff/{staff}/monthly-targets', [MonthlyTargetController::class, 'staffMonthlyTargets'])
             ->name('staff.monthly-targets'); // deprecated \u2014 redirect ke period.staff-targets
         // (period.staff-list sudah mencakup ini, lihat prefix group di atas)
-
 
         // Weekly Target — standalone resource (BUKAN nested).
         // Bisa linked ke monthly target tertentu via query ?monthly_target_id=X.
@@ -98,22 +112,27 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/leader-targets', [LeaderTargetController::class, 'index'])->name('leader-targets.index');
         Route::get('/leader-targets/{monthlyTarget}', [LeaderTargetController::class, 'show'])->name('leader-targets.show');
 
-        // KPI — C-Level & Admin HR bisa CRUD, Leader/Staff view-only
+        // KPI — Leader/Staff view-only (daftar benchmark departemen)
         Route::get('/kpi', [KpiController::class, 'index'])->name('kpi');
-        Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
-        Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
-        Route::get('/kpi/{kpiTarget}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
-        Route::put('/kpi/{kpiTarget}', [KpiController::class, 'update'])->name('kpi.update');
-        Route::delete('/kpi/{kpiTarget}', [KpiController::class, 'destroy'])->name('kpi.destroy');
 
-        // KPI L3 (Staff Individual) & KPI Actual — hanya C-Level & Admin HR
-        Route::get('/kpi/staff/create', [KpiController::class, 'createStaffKpi'])->name('kpi.staff.create');
-        Route::post('/kpi/staff', [KpiController::class, 'storeStaffKpi'])->name('kpi.staff.store');
-        Route::get('/kpi/actuals', [KpiController::class, 'indexActuals'])->name('kpi.actuals.index');
-        Route::get('/kpi/actuals/create', [KpiController::class, 'createActual'])->name('kpi.actuals.create');
-        Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
-        Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
-        Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+        // Kelola KPI (CRUD target & actual) — hanya C-Level, Super Admin, Admin HR.
+        // Otorisasi terpusat lewat Gate `manage-kpi` (lihat AppServiceProvider).
+        Route::middleware('can:manage-kpi')->group(function () {
+            Route::get('/kpi/create', [KpiController::class, 'create'])->name('kpi.create');
+            Route::post('/kpi', [KpiController::class, 'store'])->name('kpi.store');
+            Route::get('/kpi/{kpiTarget}/edit', [KpiController::class, 'edit'])->name('kpi.edit');
+            Route::put('/kpi/{kpiTarget}', [KpiController::class, 'update'])->name('kpi.update');
+            Route::delete('/kpi/{kpiTarget}', [KpiController::class, 'destroy'])->name('kpi.destroy');
+
+            // KPI L3 (Staff Individual) & KPI Actual
+            Route::get('/kpi/staff/create', [KpiController::class, 'createStaffKpi'])->name('kpi.staff.create');
+            Route::post('/kpi/staff', [KpiController::class, 'storeStaffKpi'])->name('kpi.staff.store');
+            Route::get('/kpi/actuals', [KpiController::class, 'indexActuals'])->name('kpi.actuals.index');
+            Route::get('/kpi/actuals/create', [KpiController::class, 'createActual'])->name('kpi.actuals.create');
+            Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
+            Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
+            Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+        });
 
         // AI Workload & Performance Report — C-Level, Admin HR, Leader
         Route::get('/workload-report', [WorkloadReportController::class, 'index'])->name('workload-report.index');
@@ -126,15 +145,16 @@ Route::middleware(['auth'])->group(function () {
     // (Leader & C-Level juga punya aktivitas harian yang perlu dilaporkan)
     Route::resource('daily-tasks', DailyTaskEntryController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update']);
-    Route::patch('/daily-tasks/{dailyTask}/complete',  [DailyTaskEntryController::class, 'complete'])
+    Route::patch('/daily-tasks/{dailyTask}/complete', [DailyTaskEntryController::class, 'complete'])
         ->name('daily-tasks.complete');
-    Route::patch('/daily-tasks/{dailyTask}/approve',   [DailyTaskEntryController::class, 'approve'])
+    Route::patch('/daily-tasks/{dailyTask}/approve', [DailyTaskEntryController::class, 'approve'])
         ->name('daily-tasks.approve');
-    Route::patch('/daily-tasks/{dailyTask}/revision',  [DailyTaskEntryController::class, 'sendToRevision'])
+    Route::patch('/daily-tasks/{dailyTask}/revision', [DailyTaskEntryController::class, 'sendToRevision'])
         ->name('daily-tasks.revision');
-    Route::patch('/daily-tasks/{dailyTask}/reject',    [DailyTaskEntryController::class, 'reject'])
+    Route::patch('/daily-tasks/{dailyTask}/reject', [DailyTaskEntryController::class, 'reject'])
         ->name('daily-tasks.reject');
     Route::post('/daily-tasks/upload-clipboard', [DailyTaskEntryController::class, 'uploadClipboard'])
+        ->middleware('throttle:30,1')
         ->name('daily-tasks.upload-clipboard');
 
     // Target view khusus Staff (read-only: lihat target bulanan & mingguan dept-nya)
@@ -144,9 +164,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Notifikasi
-    Route::get('/notifications',                    [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{notification}/read',[NotificationController::class, 'read'])->name('notifications.read');
-    Route::post('/notifications/read-all',          [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -154,9 +174,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Export Laporan — hanya c_level dan user dengan is_management = true
     // Guard dilakukan di controller via canExport() agar lebih fleksibel.
-    Route::get('/export',               [ExportController::class, 'index'])->name('export.index');
-    Route::get('/export/download-excel',[ExportController::class, 'downloadExcel'])->name('export.download-excel');
-    Route::get('/export/print',         [ExportController::class, 'printView'])->name('export.print');
+    Route::get('/export', [ExportController::class, 'index'])->name('export.index');
+    Route::get('/export/download-excel', [ExportController::class, 'downloadExcel'])->name('export.download-excel');
+    Route::get('/export/print', [ExportController::class, 'printView'])->name('export.print');
 
     // ── Backdating Request ────────────────────────────────────────────────────
     // Staf: ajukan permintaan izin backdating
@@ -176,14 +196,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Fase 2: AI Evaluation (hanya aktif jika GROQ_API_KEY di-set di .env) ────────
-    if (!empty(config('services.groq.api_key'))) {
+    if (! empty(config('services.groq.api_key'))) {
         // [AJAX] Validasi link publik/restricted secara real-time (dipanggil frontend)
         Route::post('/ai/validate-link', [AiEvaluationController::class, 'validateLink'])
+            ->middleware('throttle:30,1')
             ->name('ai.validate-link');
 
         // Override nilai AI oleh Leader (Modal)
         Route::middleware('role:leader,c_level,super_admin')->group(function () {
-            Route::get('/ai/evaluations/{evaluation}/override',  [AiEvaluationController::class, 'showOverrideForm'])
+            Route::get('/ai/evaluations/{evaluation}/override', [AiEvaluationController::class, 'showOverrideForm'])
                 ->name('ai.evaluations.override.form');
             Route::post('/ai/evaluations/{evaluation}/override', [AiEvaluationController::class, 'storeOverride'])
                 ->name('ai.evaluations.override.store');
@@ -191,13 +212,9 @@ Route::middleware(['auth'])->group(function () {
     }
 });
 
-
 // ============================================================
 // Panel Admin — hanya bisa diakses oleh Super Admin (HR)
 // ============================================================
-use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\TargetAssignmentController;
-
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Manajemen User (Karyawan)
@@ -223,10 +240,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         ->name('daily-tasks.destroy');
 
     // ── Fase 2: Panel KPI Settings & Override Log (hanya jika AI aktif) ──────────
-    if (!empty(config('services.groq.api_key'))) {
-        Route::get('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'index'])
+    if (! empty(config('services.groq.api_key'))) {
+        Route::get('kpi-settings', [KpiSettingsController::class, 'index'])
             ->name('kpi-settings.index');
-        Route::post('kpi-settings', [\App\Http\Controllers\Admin\KpiSettingsController::class, 'store'])
+        Route::post('kpi-settings', [KpiSettingsController::class, 'store'])
             ->name('kpi-settings.store');
 
         // Log histori Override oleh Leader (untuk monitoring manajemen)
@@ -235,41 +252,43 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     }
 });
 
-
 // Route rahasia untuk menjalankan migration & seeder dengan aman di production
-Route::get('/deploy-update', function() {
+Route::get('/deploy-update', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', [
-            '--force' => true
+        Artisan::call('migrate', [
+            '--force' => true,
         ]);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+        Artisan::call('db:seed', [
             '--class' => 'UserSeeder',
-            '--force' => true
+            '--force' => true,
         ]);
+
         return 'Berhasil! Database Production (Railway) sudah di-migrate dan seluruh akun (termasuk dummy) sudah di-seed dengan aman.';
-    } catch (\Exception $e) {
-        return 'Terjadi Kesalahan (500): ' . $e->getMessage() . ' <br>File: ' . $e->getFile() . ' <br>Baris: ' . $e->getLine();
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
     }
 });
 
-
-
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 Route::get('/debug/run-migration', function () {
-    \Illuminate\Support\Facades\Artisan::call('app:migrate-legacy-targets');
-    return "<pre style='background:#111; color:#0f0; padding:20px; font-size:14px; border-radius:8px; line-height:1.5; font-family:monospace;'>" . 
-           "EXECUTING MIGRATION...\n\n" . 
-           \Illuminate\Support\Facades\Artisan::output() . 
-           "</pre>";
+    Artisan::call('app:migrate-legacy-targets');
+
+    return "<pre style='background:#111; color:#0f0; padding:20px; font-size:14px; border-radius:8px; line-height:1.5; font-family:monospace;'>".
+           "EXECUTING MIGRATION...\n\n".
+           Artisan::output().
+           '</pre>';
 });
 
 Route::get('/debug/logs', function () {
     $logFile = storage_path('logs/laravel.log');
-    if (!file_exists($logFile)) return "No log file found.";
-    
+    if (! file_exists($logFile)) {
+        return 'No log file found.';
+    }
+
     // Read last 100 lines
     $lines = file($logFile);
     $lastLines = array_slice($lines, -100);
-    return "<pre style='background:#111; color:#fff; padding:10px; font-size:12px; white-space:pre-wrap;'>" . htmlspecialchars(implode("", $lastLines)) . "</pre>";
+
+    return "<pre style='background:#111; color:#fff; padding:10px; font-size:12px; white-space:pre-wrap;'>".htmlspecialchars(implode('', $lastLines)).'</pre>';
 });

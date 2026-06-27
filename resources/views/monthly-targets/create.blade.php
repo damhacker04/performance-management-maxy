@@ -14,11 +14,11 @@
         <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
                     border-radius:var(--r-md);padding:14px 16px;">
             <div style="font-size:12px;font-weight:700;color:var(--info,#2563eb);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;">
-                📊 KPI Departemen Aktif (Acuan)
+                KPI Departemen Aktif (Acuan)
             </div>
             @foreach($kpiRefs as $deptKey => $kpis)
                 @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
-                <div style="font-size:11px;font-weight:700;color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px;">
+                <div style="font-size:11px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px;">
                     {{ $deptLabel }}
                 </div>
                 @foreach($kpis as $kpi)
@@ -31,7 +31,7 @@
                     </div>
                 @endforeach
             @endforeach
-            <div style="font-size:11px;color:var(--fg-4);margin-top:8px;">
+            <div style="font-size:11px;color:var(--fg-3);margin-top:8px;">
                 Target yang dibuat harus mendukung pencapaian KPI di atas.
             </div>
         </div>
@@ -43,7 +43,7 @@
             @csrf
 
             <!-- Departemen -->
-            @if(in_array(auth()->user()->role, ['c_level', 'super_admin']))
+            @if(auth()->user()->isExecutive())
                 {{-- C-Level / Super Admin: pilih departemen tujuan --}}
                 <div class="field">
                     <label for="department">Departemen <span style="color:var(--danger);">*</span></label>
@@ -72,11 +72,12 @@
                 </div>
             @endif
 
-            <!-- Assign ke Staf -->
+            <!-- Assign ke penerima target -->
+            @php $assignLabel = auth()->user()->isExecutive() ? 'Leader' : 'Staf'; @endphp
             <div class="field">
                 <label for="assigned_to">
-                    Target untuk Staf
-                    <span style="color:var(--fg-4);font-weight:400;">(opsional — kosongkan jika target tim)</span>
+                    Target untuk {{ $assignLabel }}
+                    <span style="color:var(--fg-3);font-weight:400;">(opsional — kosongkan jika target tim)</span>
                 </label>
                 <div class="select-wrap">
                     <select id="assigned_to" name="assigned_to" class="m-select">
@@ -96,8 +97,8 @@
                     </select>
                 </div>
                 @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
-                <small style="color:var(--fg-4);font-size:11px;">
-                    Jika diisi, target ini akan muncul secara personal untuk staf tersebut dan digunakan sebagai acuan AI.
+                <small style="color:var(--fg-3);font-size:11px;">
+                    Jika diisi, target ini akan muncul secara personal untuk {{ strtolower($assignLabel) }} tersebut dan digunakan sebagai acuan AI.
                 </small>
             </div>
 
@@ -106,7 +107,7 @@
                 <div class="field">
                     <label for="kpi_target_id">
                         Acuan KPI
-                        <span style="color:var(--fg-4);font-weight:400;">(opsional)</span>
+                        <span style="color:var(--fg-3);font-weight:400;">(opsional)</span>
                     </label>
                     <div class="select-wrap">
                         <select id="kpi_target_id" name="kpi_target_id" class="m-select">
@@ -139,7 +140,7 @@
 
             <!-- Deskripsi -->
             <div class="field">
-                <label for="description">Deskripsi <span style="color:var(--fg-4);font-weight:400;">(opsional)</span></label>
+                <label for="description">Deskripsi <span style="color:var(--fg-3);font-weight:400;">(opsional)</span></label>
                 <textarea id="description" name="description"
                           class="m-textarea"
                           placeholder="Jelaskan detail target dan cara pencapaiannya...">{{ old('description') }}</textarea>

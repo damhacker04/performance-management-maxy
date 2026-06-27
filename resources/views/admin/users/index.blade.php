@@ -81,7 +81,7 @@
                                class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</a>
 
                             <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}"
-                                  onsubmit="return confirm('{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} akun {{ $user->name }}?')">
+                                  data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} akun {{ $user->name }}?" data-confirm-variant="{{ $user->is_active ? 'danger' : 'primary' }}" data-confirm-ok="{{ $user->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}">
                                 @csrf @method('PATCH')
                                 <button type="submit"
                                     class="{{ $user->is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700' }} font-medium">

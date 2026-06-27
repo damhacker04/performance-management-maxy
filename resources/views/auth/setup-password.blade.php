@@ -21,29 +21,27 @@
         @csrf
 
         <!-- Password -->
-        <div>
-            <label for="password" style="display:block;font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">Password Baru</label>
+        <div class="field">
+            <label for="password">Password Baru</label>
             <input id="password" type="password" name="password" required autofocus autocomplete="new-password"
-                   style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;"
-                   placeholder="••••••••">
+                   class="m-input" placeholder="••••••••">
         </div>
 
         <!-- Confirm Password -->
-        <div>
-            <label for="password_confirmation" style="display:block;font-size:13px;font-weight:600;color:var(--fg-1);margin-bottom:6px;">Konfirmasi Password</label>
+        <div class="field">
+            <label for="password_confirmation">Konfirmasi Password</label>
             <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                   style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;"
-                   placeholder="••••••••">
+                   class="m-input" placeholder="••••••••">
         </div>
 
-        <button type="submit" class="btn" style="background:#1D4ED8;color:#fff;width:100%;padding:12px;font-size:14px;border-radius:8px;margin-top:8px;">
-            SIMPAN PASSWORD
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;">
+            Simpan Password
         </button>
     </form>
 
     <form method="POST" action="{{ route('logout') }}" style="margin-top:16px;text-align:center;">
         @csrf
-        <button type="submit" style="background:none;border:none;color:var(--fg-3);font-size:12px;cursor:pointer;text-decoration:underline;">
+        <button type="submit" style="background:none;border:none;color:var(--fg-3);font-size:13px;cursor:pointer;text-decoration:underline;">
             Keluar
         </button>
     </form>

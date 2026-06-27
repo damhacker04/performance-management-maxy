@@ -22,7 +22,7 @@
         </a>
         <div style="flex:1;min-width:0;">
             {{-- Breadcrumb konteks --}}
-            <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+            <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
                         color:var(--maxy-navy);opacity:.6;margin-bottom:5px;">
                 Target Bulanan
             </div>
@@ -77,14 +77,14 @@
             Target Mingguan
         </span>
         @if($monthlyTarget->weeklyTargets->isNotEmpty())
-            <span class="chip chip-neutral" style="font-size:10px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
+            <span class="chip chip-neutral" style="font-size:11px;">{{ $monthlyTarget->weeklyTargets->count() }} target mingguan</span>
         @endif
     </div>
 
     @if($monthlyTarget->weeklyTargets->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <p style="font-size:14px;color:var(--fg-2);margin-bottom:4px;">Belum ada target mingguan</p>
@@ -123,24 +123,24 @@
                                 <span class="chip chip-neutral" style="font-weight:700;font-size:11px;">
                                     Minggu {{ $wt->week_number }}
                                 </span>
-                                <span style="font-size:11px;color:var(--fg-4);">
+                                <span style="font-size:11px;color:var(--fg-3);">
                                     {{ $rStart }}–{{ $rEnd }} {{ $monthShort[$wt->month] }} {{ $wt->year }}
                                 </span>
                                 @if($isActiveWeek)
-                                    <span class="chip chip-success" style="font-size:10px;">Minggu ini</span>
+                                    <span class="chip chip-success" style="font-size:11px;">Minggu ini</span>
                                 @endif
                                 @if($wt->target_type === 'quantitative')
-                                    <span class="chip chip-info" style="font-size:10px;">{{ $wt->target_label }}</span>
+                                    <span class="chip chip-info" style="font-size:11px;">{{ $wt->target_label }}</span>
                                 @else
-                                    <span class="chip chip-neutral" style="font-size:10px;">Kualitatif</span>
+                                    <span class="chip chip-neutral" style="font-size:11px;">Kualitatif</span>
                                 @endif
                                 @if($wt->assigned_to)
-                                    <span class="chip chip-warning" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;">
+                                    <span class="chip chip-warning" style="font-size:11px;display:inline-flex;align-items:center;gap:3px;">
                                         <svg class="lucide" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                         Tugas Pribadi
                                     </span>
                                 @else
-                                    <span class="chip chip-neutral" style="font-size:10px;display:inline-flex;align-items:center;gap:3px;">
+                                    <span class="chip chip-neutral" style="font-size:11px;display:inline-flex;align-items:center;gap:3px;">
                                         <svg class="lucide" style="width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                         Target Umum
                                     </span>
@@ -192,19 +192,19 @@
                                         </div>
                                     @endif
                                 </div>
-                                <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                                <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                             </a>
                         @endforeach
                     </div>
                 @else
-                    <div style="border-top:1px solid var(--bg-3);padding:10px 16px;text-align:center;font-size:12px;color:var(--fg-4);">
+                    <div style="border-top:1px solid var(--bg-3);padding:10px 16px;text-align:center;font-size:12px;color:var(--fg-3);">
                         Belum ada laporan untuk target ini
                     </div>
                 @endif
 
                 <!-- Info: gunakan menu Tugas untuk input laporan -->
                 <div style="padding:8px 12px 12px;">
-                    <div style="text-align:center;font-size:11px;color:var(--fg-4);padding:6px 0;">
+                    <div style="text-align:center;font-size:11px;color:var(--fg-3);padding:6px 0;">
                         <svg class="lucide" style="width:12px;height:12px;vertical-align:middle;margin-right:3px;opacity:.6;" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                         Gunakan menu <strong>Tugas</strong> untuk menambah laporan
                     </div>

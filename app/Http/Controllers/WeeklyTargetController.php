@@ -80,11 +80,7 @@ class WeeklyTargetController extends Controller
         }
 
         $staffList = \App\Models\User::when($targetDepartment, fn($q) => $q->where('department', $targetDepartment))
-            ->when($user->role === 'leader', function($q) {
-                $q->where('role', 'staff');
-            }, function($q) {
-                $q->whereIn('role', ['staff', 'leader']);
-            })
+            ->where(fn($q) => $this->applyAssigneeRoleFilter($q, $user))
             ->orderBy('name')
             ->get();
 
@@ -121,6 +117,10 @@ class WeeklyTargetController extends Controller
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
         $this->authorizeMonthly($monthlyTarget);
 
+        if ($resp = $this->rejectIfClevelAssignsNonLeader($request)) {
+            return $resp;
+        }
+
         WeeklyTarget::create([
             'monthly_target_id' => $monthlyTarget->id,
             'category'          => 'planned',
@@ -136,9 +136,26 @@ class WeeklyTargetController extends Controller
             'year'              => $monthlyTarget->year,
         ]);
 
-        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
-        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
-        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+        // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
+        $backUrl = $request->input('back') ?: null;
+        if ($backUrl) {
+            $redirectTo = $backUrl;
+        } else {
+            $staffId = $validated['assigned_to'] ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                $redirectTo = route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ]);
+            } else {
+                $redirectTo = route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ]);
+            }
+        }
 
         return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil disimpan.');
@@ -263,11 +280,7 @@ class WeeklyTargetController extends Controller
         $targetDepartment = $currentMonthly ? $currentMonthly->department : $user->department;
 
         $staffList = \App\Models\User::where('department', $targetDepartment)
-            ->when($user->role === 'leader', function($q) {
-                $q->where('role', 'staff');
-            }, function($q) {
-                $q->whereIn('role', ['staff', 'leader']);
-            })
+            ->where(fn($q) => $this->applyAssigneeRoleFilter($q, $user))
             ->orderBy('name')
             ->get();
 
@@ -304,6 +317,10 @@ class WeeklyTargetController extends Controller
         $monthlyTarget = MonthlyTarget::findOrFail($validated['monthly_target_id']);
         $this->authorizeMonthly($monthlyTarget);
 
+        if ($resp = $this->rejectIfClevelAssignsNonLeader($request)) {
+            return $resp;
+        }
+
         $weeklyTarget->update([
             'monthly_target_id' => $monthlyTarget->id,
             'category'          => 'planned',
@@ -316,9 +333,26 @@ class WeeklyTargetController extends Controller
             'assigned_to'       => $validated['assigned_to'] ?? null,
         ]);
 
-        // Redirect: kembali ke ?back= jika ada (period context), else monthly-targets.show
-        $backUrl = $request->query('back') ? urldecode($request->query('back')) : null;
-        $redirectTo = $backUrl ?? route('monthly-targets.show', $monthlyTarget);
+        // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
+        $backUrl = $request->input('back') ?: null;
+        if ($backUrl) {
+            $redirectTo = $backUrl;
+        } else {
+            $staffId = $validated['assigned_to'] ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                $redirectTo = route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ]);
+            } else {
+                $redirectTo = route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ]);
+            }
+        }
 
         return redirect($redirectTo)
             ->with('success', 'Target mingguan berhasil diperbarui.');
@@ -328,16 +362,66 @@ class WeeklyTargetController extends Controller
     {
         $this->authorizeWeekly($weeklyTarget);
 
-        $monthlyTargetId = $weeklyTarget->monthly_target_id;
+        $monthlyTarget = $weeklyTarget->monthlyTarget;
         $weeklyTarget->delete();
 
-        if ($monthlyTargetId) {
-            return redirect()->route('monthly-targets.show', $monthlyTargetId)
-                ->with('success', 'Target mingguan berhasil dihapus.');
+        if ($monthlyTarget) {
+            $staffId = $weeklyTarget->assigned_to ?? $monthlyTarget->assigned_to;
+            if ($staffId) {
+                return redirect()->route('period.staff-weekly', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                    'staff'         => $staffId,
+                    'monthlyTarget' => $monthlyTarget->id,
+                ])->with('success', 'Target mingguan berhasil dihapus.');
+            } else {
+                return redirect()->route('period.staff-list', [
+                    'year'          => $monthlyTarget->year,
+                    'month'         => $monthlyTarget->month,
+                ])->with('success', 'Target mingguan berhasil dihapus.');
+            }
         }
 
         return redirect()->route('monthly-targets.index')
             ->with('success', 'Target mingguan berhasil dihapus.');
+    }
+
+    /**
+     * Batasi daftar penerima target sesuai role pembuat:
+     * - leader     → hanya staff (di departemennya)
+     * - c_level    → hanya leader (sesuai aturan: CEO menargetkan leader, bukan staff)
+     * - super_admin→ staff & leader (HR boleh assign ke siapa saja)
+     */
+    private function applyAssigneeRoleFilter($query, \App\Models\User $user): void
+    {
+        if ($user->role === 'leader') {
+            $query->where('role', 'staff');
+        } elseif ($user->role === 'c_level') {
+            $query->where('role', 'leader');
+        } else {
+            $query->whereIn('role', ['staff', 'leader']);
+        }
+    }
+
+    /**
+     * Pastikan C-Level hanya menugaskan ke Leader (bukan staff).
+     * Mengembalikan response redirect bila tidak valid, atau null bila lolos.
+     */
+    private function rejectIfClevelAssignsNonLeader(Request $request)
+    {
+        $user = auth()->user();
+        $assignedTo = $request->input('assigned_to');
+
+        if ($user->role === 'c_level' && ! empty($assignedTo)) {
+            $assignee = \App\Models\User::find($assignedTo);
+            if (! $assignee || $assignee->role !== 'leader') {
+                return back()->withInput()->withErrors([
+                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader.',
+                ]);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -347,7 +431,7 @@ class WeeklyTargetController extends Controller
     private function authorizeMonthly(MonthlyTarget $monthlyTarget): void
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->isExecutive()) return;
         if ($user->role === 'leader' && $monthlyTarget->department === $user->department) return;
 
         abort(403, 'Anda tidak memiliki akses ke target ini.');
@@ -361,7 +445,7 @@ class WeeklyTargetController extends Controller
     private function authorizeWeekly(WeeklyTarget $weeklyTarget): void
     {
         $user = auth()->user();
-        if (in_array($user->role, ['c_level', 'super_admin'])) return;
+        if ($user->isExecutive()) return;
 
         if ($weeklyTarget->monthly_target_id) {
             $this->authorizeMonthly($weeklyTarget->monthlyTarget);

@@ -5,7 +5,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
         <div>
             <h1 style="font-size:20px;font-weight:800;color:var(--maxy-navy);margin:0;">
-                📊 AI Workload & Performance Report
+                AI Workload & Performance Report
             </h1>
             <p style="font-size:13px;color:var(--fg-3);margin:4px 0 0;">
                 Laporan kinerja berbasis AI — analisis pola kerja, pencapaian target, dan rekomendasi.
@@ -38,7 +38,7 @@
                 </select>
             </div>
 
-            @if(in_array(auth()->user()->role, ['c_level','super_admin']) || auth()->user()->is_management)
+            @if(auth()->user()->isLeadership() || auth()->user()->is_management)
             <div class="form-group" style="margin:0;min-width:160px;">
                 <label class="form-label" style="margin-bottom:4px;">Departemen</label>
                 <select name="department" class="form-control form-control-sm">
@@ -57,7 +57,7 @@
             
             <button type="button" class="btn btn-success btn-sm ml-auto" id="btn-generate-batch" style="margin-left: auto;">
                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
-                ✨ Generate Semua Laporan
+                Generate Semua Laporan
             </button>
         </form>
     </div>
@@ -125,7 +125,7 @@
                                     {{ $pct }}%
                                 </span>
                             @else
-                                <span style="color:var(--fg-4);font-size:12px;">—</span>
+                                <span style="color:var(--fg-3);font-size:12px;">—</span>
                             @endif
                         </td>
                         <td style="padding:12px;text-align:center;font-size:18px;">
@@ -149,14 +149,14 @@
 
     {{-- Legend --}}
     <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3);">
-            <span>✅</span> Skor ≥ 80
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--success);display:inline-block;"></span> Skor ≥ 80
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3);">
-            <span>🟡</span> Skor 60–79
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--warning);display:inline-block;"></span> Skor 60–79
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-3);">
-            <span>🔴</span> Skor &lt; 60
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2);">
+            <span style="width:10px;height:10px;border-radius:50%;background:var(--danger);display:inline-block;"></span> Skor &lt; 60
         </div>
         <div style="font-size:12px;color:var(--fg-3);">
             · Flag dihitung dari KPI capaian & task completion. Klik "Lihat" untuk laporan AI lengkap.

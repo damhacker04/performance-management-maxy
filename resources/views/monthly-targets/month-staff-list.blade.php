@@ -37,9 +37,9 @@
         </a>
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
-                <span class="chip chip-neutral" style="font-size:10px;">{{ $monthLabel }}</span>
+                <span class="chip chip-neutral" style="font-size:11px;">{{ $monthLabel }}</span>
                 @if($isCurrentMonth)
-                    <span class="chip chip-success" style="font-size:10px;">Bulan ini</span>
+                    <span class="chip chip-success" style="font-size:11px;">Bulan ini</span>
                 @endif
             </div>
             <h1 style="font-size:18px;font-weight:800;color:var(--fg-1);margin:0;">
@@ -52,7 +52,7 @@
     @if($byStaff->isEmpty())
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -67,7 +67,7 @@
 
     @else
         {{-- Info summary --}}
-        <div style="font-size:12px;color:var(--fg-4);padding:0 2px;">
+        <div style="font-size:12px;color:var(--fg-3);padding:0 2px;">
             {{ $byStaff->count() }} staf dengan target di {{ $monthLabel }}
         </div>
 
@@ -100,14 +100,14 @@
                         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                             <span style="font-size:15px;font-weight:700;color:var(--fg-1);">{{ $name }}</span>
                             @if($dept)
-                                <span class="chip chip-dept-{{ str_replace('_','-', $dept) }}" style="font-size:10px;">
+                                <span class="chip chip-dept-{{ str_replace('_','-', $dept) }}" style="font-size:11px;">
                                     {{ $deptLabels[$dept] ?? ucfirst(str_replace('_',' ',$dept)) }}
                                 </span>
                             @endif
                         </div>
 
-                        <div style="font-size:11px;color:var(--fg-4);display:flex;gap:8px;flex-wrap:wrap;">
-                            <span>📋 {{ $data['targetCount'] }} target bulanan</span>
+                        <div style="font-size:11px;color:var(--fg-3);display:flex;gap:8px;flex-wrap:wrap;">
+                            <span>{{ $data['targetCount'] }} target bulanan</span>
                             @if($total > 0)
                                 <span>{{ $done }}/{{ $total }} laporan selesai</span>
                             @else
@@ -120,14 +120,14 @@
                             <div class="progress-wrap">
                                 <div class="progress-fill" style="width:{{ $progress }}%;background:{{ $barColor }};"></div>
                             </div>
-                            <div style="font-size:10px;font-weight:600;color:{{ $progress >= 80 ? 'var(--success)' : 'var(--fg-4)' }};margin-top:3px;text-align:right;">
+                            <div style="font-size:11px;font-weight:600;color:{{ $progress >= 80 ? 'var(--success)' : 'var(--fg-3)' }};margin-top:3px;text-align:right;">
                                 {{ $progress }}%
                             </div>
                         @endif
                     </div>
 
                     {{-- Chevron --}}
-                    <svg class="lucide sm" style="color:var(--fg-4);flex-shrink:0;" viewBox="0 0 24 24">
+                    <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24">
                         <path d="M9 6l6 6-6 6"/>
                     </svg>
                 </a>

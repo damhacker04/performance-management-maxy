@@ -58,7 +58,7 @@
     flex-shrink: 0;
   }
   .dt-sidebar-appname {
-    font-size: 13px; font-weight: 700; color: #fff;
+    font-size: 14px; font-weight: 700; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
@@ -76,12 +76,12 @@
     font-size: 15px; font-weight: 700;
   }
   .dt-sidebar-name {
-    font-size: 13px; font-weight: 600; color: #fff;
+    font-size: 14px; font-weight: 600; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 160px;
   }
   .dt-sidebar-role {
-    font-size: 11px; color: rgba(255,255,255,0.55);
+    font-size: 12px; color: rgba(255,255,255,0.7);
     background: rgba(255,255,255,0.08);
     padding: 2px 8px; border-radius: 999px;
   }
@@ -94,8 +94,8 @@
   .dt-nav-item {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px; border-radius: 10px;
-    font-size: 13px; font-weight: 500;
-    color: rgba(255,255,255,0.65);
+    font-size: 14px; font-weight: 500;
+    color: rgba(255,255,255,0.72);
     text-decoration: none;
     transition: background 150ms ease, color 150ms ease;
   }
@@ -125,8 +125,8 @@
   .dt-logout-btn {
     display: flex; align-items: center; gap: 10px;
     width: 100%; padding: 10px 12px; border-radius: 10px;
-    font-size: 13px; font-weight: 500;
-    color: rgba(255,255,255,0.55);
+    font-size: 14px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
     background: transparent; border: none; cursor: pointer;
     transition: background 150ms ease, color 150ms ease;
     font-family: var(--font-sans);

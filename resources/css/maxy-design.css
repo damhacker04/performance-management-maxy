@@ -84,8 +84,8 @@
 
 html, body {
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.55;
   color: var(--fg-1);
   background: var(--bg-page);
   -webkit-font-smoothing: antialiased;
@@ -96,6 +96,26 @@ html, body {
 a { color: var(--maxy-navy); text-decoration: none; }
 a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
 ::selection { background: var(--maxy-amber-100); color: var(--maxy-navy-900); }
+
+/* Keyboard focus visibility — quality floor untuk semua elemen interaktif */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--maxy-navy);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Hormati preferensi reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ===================== Shell ===================== */
 .app-shell {
@@ -143,8 +163,8 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   font-size: 13px; font-weight: 700; flex-shrink: 0;
   letter-spacing: 0.01em;
 }
-.appbar .greet { font-size: 12px; color: var(--fg-3); line-height: 1.1; }
-.appbar .uname { font-size: 14px; font-weight: 600; color: var(--fg-1); line-height: 1.1; margin-top: 2px; }
+.appbar .greet { font-size: 13px; color: var(--fg-3); line-height: 1.1; }
+.appbar .uname { font-size: 15px; font-weight: 600; color: var(--fg-1); line-height: 1.15; margin-top: 2px; }
 .appbar .right { display: flex; align-items: center; gap: 2px; }
 
 .icon-btn {
@@ -177,7 +197,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   flex: 1;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   padding: 6px 0;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.01em;
   color: var(--fg-3);
   background: transparent; border: none; cursor: pointer;
   transition: color var(--dur-base) var(--ease-standard);
@@ -212,9 +232,9 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   overflow: hidden;
   border-radius: 0 0 var(--r-xl) var(--r-xl);
 }
-.hero-greeting .hl-label { font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 500; }
-.hero-greeting .hl-display { color: #fff; font-size: 24px; font-weight: 800; line-height: 1.15; margin-top: 4px; }
-.hero-greeting .hl-sub { color: rgba(255,255,255,0.78); font-size: 13px; margin-top: 6px; }
+.hero-greeting .hl-label { font-size: 13px; color: rgba(255,255,255,0.78); font-weight: 500; }
+.hero-greeting .hl-display { color: #fff; font-size: 25px; font-weight: 800; line-height: 1.15; margin-top: 4px; }
+.hero-greeting .hl-sub { color: rgba(255,255,255,0.85); font-size: 14px; margin-top: 6px; }
 .hero-greeting .watermark {
   position: absolute; right: -20px; bottom: -30px;
   width: 160px; height: 160px;
@@ -229,6 +249,57 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   padding: 16px;
   box-shadow: var(--shadow-sm);
 }
+
+/* Kartu & row yang bisa diklik — beri afordansi jelas (hover lift + cursor).
+   Tanpa ini, banyak elemen bisa ditekan tapi tidak terlihat seperti tombol. */
+a.m-card, button.m-card {
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+a.m-card:hover, button.m-card:hover {
+  border-color: var(--maxy-navy-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+a.m-card:active, button.m-card:active { transform: translateY(0); }
+
+a.m-row { cursor: pointer; transition: background var(--dur-base) var(--ease-standard); border-radius: 8px; }
+a.m-row:hover { background: var(--neutral-50); text-decoration: none; }
+
+/* Row sebagai kartu mandiri — tiap item jelas terpisah (bukan menyatu) */
+.m-row.as-card {
+  border-bottom: none;
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+  align-items: stretch;
+  transition: box-shadow var(--dur-base) var(--ease-standard),
+              border-color var(--dur-base) var(--ease-standard);
+}
+.m-row.as-card:hover { box-shadow: var(--shadow-sm); border-color: var(--neutral-300); }
+.m-row.as-card:last-child { border-bottom: none; }
+
+/* Eyebrow / label kategori — berwarna agar mudah dibaca (bukan abu pucat) */
+.eyebrow {
+  display: block; margin-bottom: 3px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--maxy-navy);
+}
+.eyebrow-amber { color: var(--maxy-amber-600); }
+.eyebrow-muted { color: var(--fg-3); }
+
+/* Avatar kecil pengirim laporan */
+.sender-av {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: var(--maxy-amber-100); color: var(--maxy-navy);
+  display: flex; align-items: center; justify-content: center;
+}
+.sender-av .lucide { width: 13px; height: 13px; }
 
 /* ===================== KPI Grid ===================== */
 .kpi-grid {
@@ -249,7 +320,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   gap: 10px;
 }
 .kpi-card .kc-header { display: flex; justify-content: space-between; align-items: center; }
-.kpi-card .kc-title { font-size: 13px; font-weight: 600; color: var(--fg-2); }
+.kpi-card .kc-title { font-size: 13.5px; font-weight: 600; color: var(--fg-2); }
 .kpi-card .kc-value { font-size: 28px; font-weight: 800; line-height: 1.1; letter-spacing: -0.01em; color: var(--fg-1); }
 .kpi-card .kc-sub { font-size: 16px; color: var(--fg-3); font-weight: 600; }
 
@@ -273,7 +344,7 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
 .chip {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 600; white-space: nowrap;
+  font-size: 12.5px; font-weight: 600; white-space: nowrap;
 }
 .chip-success { background: var(--success-100); color: #0E7A52; }
 .chip-warning { background: var(--warning-100); color: #8A5910; }
@@ -296,8 +367,8 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
 }
 .m-row:last-child { border-bottom: none; }
 .m-row .row-body { flex: 1; min-width: 0; }
-.m-row .row-title { font-size: 14px; font-weight: 600; color: var(--fg-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.m-row .row-meta  { font-size: 12px; color: var(--fg-3); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.m-row .row-title { font-size: 15px; font-weight: 600; color: var(--fg-1); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-row .row-meta  { font-size: 13px; color: var(--fg-2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 /* ===================== Section header ===================== */
 .section-head {
@@ -305,10 +376,10 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   padding: 14px 16px 4px;
 }
 .overline-label {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--fg-3);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--fg-2);
 }
-.more-link { font-size: 12px; color: var(--maxy-navy); font-weight: 600; text-decoration: none; }
+.more-link { font-size: 13px; color: var(--maxy-navy); font-weight: 600; text-decoration: none; }
 
 /* ===================== Buttons ===================== */
 .btn {
@@ -340,14 +411,14 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
 
 /* ===================== Form fields ===================== */
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field > label { font-size: 13px; font-weight: 500; color: var(--fg-1); }
-.field > .help { font-size: 12px; color: var(--fg-3); }
-.field > .err  { font-size: 12px; color: var(--danger); }
+.field > label { font-size: 14px; font-weight: 600; color: var(--fg-1); }
+.field > .help { font-size: 13px; color: var(--fg-2); }
+.field > .err  { font-size: 13px; color: var(--danger); }
 
 .m-input, .m-textarea, .m-select {
   width: 100%;
   padding: 0 14px; height: 48px;
-  font-family: var(--font-sans); font-size: 15px; color: var(--fg-1);
+  font-family: var(--font-sans); font-size: 16px; color: var(--fg-1);
   background: #fff;
   border: 1px solid var(--neutral-200); border-radius: var(--r-md);
   outline: none;
@@ -413,7 +484,10 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   transition: background var(--dur-base) var(--ease-standard),
               border-color var(--dur-base) var(--ease-standard);
 }
-.m-checkbox.done { background: var(--maxy-navy); border-color: var(--maxy-navy); }
+.m-checkbox.done { background: var(--success); border-color: var(--success); }
+button.m-checkbox { cursor: pointer; }
+button.m-checkbox:hover { border-color: var(--success); background: var(--success-100); }
+button.m-checkbox:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 
 /* ===================== Empty state ===================== */
 .empty-state {
@@ -478,6 +552,51 @@ a:hover { color: var(--maxy-navy-700); text-decoration: underline; }
   padding-bottom: max(36px, env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 16px;
 }
+
+/* ===================== Callout / Banner ===================== */
+/* Banner status reusable berbasis token — menggantikan inline-style
+   berulang di dashboard. Warna diatur via custom property per-varian. */
+.callout {
+  background: var(--c-bg, var(--bg-surface));
+  border: 1.5px solid var(--c-border, var(--neutral-200));
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+}
+.callout-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; width: 100%;
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-sans); text-align: left;
+}
+.callout-head .ttl {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--c-fg, var(--fg-1));
+}
+.callout-head .ttl .lucide { color: var(--c-fg, var(--fg-1)); }
+.callout-head .meta { display: flex; align-items: center; gap: 8px; }
+.callout-head .chev { color: var(--c-fg, var(--fg-2)); transition: transform var(--dur-base) var(--ease-standard); }
+.callout-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.callout-count {
+  font-size: 11px; font-weight: 700; color: #fff;
+  background: var(--c-border, var(--neutral-400));
+  border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+}
+.callout-body { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.callout-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: #fff; border: 1px solid var(--c-border, var(--neutral-200));
+  border-radius: 8px; padding: 10px 12px;
+  text-decoration: none; color: inherit;
+}
+.callout-item:hover { text-decoration: none; }
+.callout-item .ci-title { font-size: 14px; font-weight: 600; color: var(--fg-1); margin-bottom: 2px; }
+.callout-item .ci-sub   { font-size: 12.5px; color: var(--c-fg, var(--fg-2)); line-height: 1.4; }
+
+.callout-warning { --c-bg: #FFF7ED; --c-border: #FB923C; --c-fg: #9A3412; }
+.callout-danger  { --c-bg: #FEF2F2; --c-border: #F05252; --c-fg: #9B1C1C; }
+.callout-pending { --c-bg: #FEFCE8; --c-border: #E3B008; --c-fg: #854D0E; }
+.callout-success { --c-bg: #F0FDF4; --c-border: #16A571; --c-fg: #166534; }
+.callout-info    { --c-bg: #EFF6FF; --c-border: #3B82F6; --c-fg: #1E40AF; }
 
 /* Alpine.js: sembunyikan elemen sebelum Alpine selesai inisialisasi */
 [x-cloak] { display: none !important; }
