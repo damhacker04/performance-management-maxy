@@ -64,6 +64,18 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Laporan harian yang DITOLAK PERMANEN oleh leader.
+            // Tampil sebagai callout selama notifikasi penolakan belum dibaca dari lonceng,
+            // agar staff tidak melewatkan info penolakan yang hanya ada di lonceng.
+            $rejectedReportIds = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_REPORT_REJECTED)
+                ->whereNull('read_at')
+                ->pluck('related_id');
+            $rejectedEntries = \App\Models\DailyTaskEntry::whereIn('id', $rejectedReportIds)
+                ->where('verification_status', 'rejected')
+                ->orderByDesc('reviewed_at')
+                ->get();
+
             // Permintaan backdating yang masih menunggu (pending)
             $pendingBackdates = \App\Models\BackdateRequest::where('user_id', $user->id)
                 ->where('status', 'pending')
@@ -265,6 +277,33 @@
                                     </div>
                                 </div>
                                 <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--c-border);flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Card: laporan yang DITOLAK PERMANEN oleh leader --}}
+            @if($rejectedEntries->isNotEmpty())
+                <div class="callout callout-danger">
+                    <div class="callout-head" style="cursor:default;">
+                        <span class="ttl">
+                            <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                            Laporan Ditolak
+                        </span>
+                        <span class="callout-count">{{ $rejectedEntries->count() }} laporan</span>
+                    </div>
+                    <div class="callout-body">
+                        @foreach($rejectedEntries as $rej)
+                            <a href="{{ route('daily-tasks.show', $rej->id) }}" class="callout-item">
+                                <div style="flex:1;">
+                                    <div class="ci-title">{{ Str::limit($rej->task_description, 38) }}</div>
+                                    <div class="ci-sub">
+                                        {{ \Carbon\Carbon::parse($rej->task_date)->isoFormat('D MMM') }}
+                                        @if($rej->rejection_note) · Alasan: "{{ Str::limit($rej->rejection_note, 40) }}" @endif
+                                    </div>
+                                </div>
+                                <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--c-border);flex-shrink:0;"><path d="M9 6l6 6-6 6"/></svg>
                             </a>
                         @endforeach
                     </div>
