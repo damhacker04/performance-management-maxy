@@ -2,6 +2,10 @@
 @php
     $months = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     [$rStart, $rEnd] = \App\Models\WeeklyTarget::WEEK_RANGES[$weeklyTarget->week_number] ?? [1, 7];
+    // Jika ada ?back= di URL (misal dari CEO targets), gunakan itu sebagai back URL
+    if (request()->query('back')) {
+        $backUrl = urldecode(request()->query('back'));
+    }
 
     $statusMap = [
         'belum_mulai'  => 'neutral',

@@ -43,11 +43,13 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back ke daftar staf untuk bulan ini (period.staff-list) --}}
+        {{-- Back: gunakan ?back= jika ada (misal dari CEO targets), fallback ke period.staff-list --}}
         @php
-            $backRoute = isset($year, $month)
-                ? route('period.staff-list', ['year' => $year, 'month' => $month])
-                : route('monthly-targets.index');
+            $backRoute = request()->query('back')
+                ? urldecode(request()->query('back'))
+                : (isset($year, $month)
+                    ? route('period.staff-list', ['year' => $year, 'month' => $month])
+                    : route('monthly-targets.index'));
         @endphp
         <a href="{{ $backRoute }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
@@ -149,7 +151,7 @@
                     {{-- Link ke showStaffInPeriod (period.staff-weekly) jika ada context year/month,
                          fallback ke legacy monthly-targets.staff --}}
                     <a href="{{ isset($year, $month)
-                        ? route('period.staff-weekly', ['year' => $year, 'month' => $month, 'staff' => $staff->id, 'monthlyTarget' => $mt->id])
+                        ? route('period.staff-weekly', ['year' => $year, 'month' => $month, 'staff' => $staff->id, 'monthlyTarget' => $mt->id]) . '?back=' . urlencode(url()->full())
                         : route('monthly-targets.staff', ['monthlyTarget' => $mt->id, 'assignee' => $staff->id]) }}"
                        class="mt-card" style="border-color: {{ $isActive ? 'var(--warning)' : 'var(--neutral-200)' }};">
 

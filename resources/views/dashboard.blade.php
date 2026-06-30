@@ -286,14 +286,18 @@
             {{-- Card: laporan yang DITOLAK PERMANEN oleh leader --}}
             @if($rejectedEntries->isNotEmpty())
                 <div class="callout callout-danger">
-                    <div class="callout-head" style="cursor:default;">
+                    <button type="button" class="callout-head" aria-expanded="false"
+                            onclick="const b=this.nextElementSibling;const h=b.classList.toggle('hidden');this.setAttribute('aria-expanded',String(!h));">
                         <span class="ttl">
                             <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
                             Laporan Ditolak
                         </span>
-                        <span class="callout-count">{{ $rejectedEntries->count() }} laporan</span>
-                    </div>
-                    <div class="callout-body">
+                        <span class="meta">
+                            <span class="callout-count">{{ $rejectedEntries->count() }} laporan</span>
+                            <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                        </span>
+                    </button>
+                    <div class="callout-body hidden">
                         @foreach($rejectedEntries as $rej)
                             <a href="{{ route('daily-tasks.show', $rej->id) }}" class="callout-item">
                                 <div style="flex:1;">
@@ -313,14 +317,18 @@
             {{-- Card: laporan yang HARUS direvisi --}}
             @if($revisionEntries->isNotEmpty())
                 <div class="callout callout-warning">
-                    <div class="callout-head" style="cursor:default;">
+                    <button type="button" class="callout-head" aria-expanded="false"
+                            onclick="const b=this.nextElementSibling;const h=b.classList.toggle('hidden');this.setAttribute('aria-expanded',String(!h));">
                         <span class="ttl">
                             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
                             Laporan Perlu Direvisi
                         </span>
-                        <span class="callout-count">{{ $revisionEntries->count() }} laporan</span>
-                    </div>
-                    <div class="callout-body">
+                        <span class="meta">
+                            <span class="callout-count">{{ $revisionEntries->count() }} laporan</span>
+                            <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                        </span>
+                    </button>
+                    <div class="callout-body hidden">
                         @foreach($revisionEntries as $rev)
                             <a href="{{ route('daily-tasks.show', $rev->id) }}" class="callout-item">
                                 <div>
@@ -575,8 +583,39 @@
                 ->orderByDesc('created_at')
                 ->get();
 
+            // Laporan MILIK LEADER yang diminta direvisi oleh c-level / super_admin
+            $leaderRevisionEntries = \App\Models\DailyTaskEntry::where('user_id', $user->id)
+                ->where('verification_status', 'revision')
+                ->orderByDesc('reviewed_at')
+                ->get();
+
+            // Laporan MILIK LEADER yang ditolak permanen oleh c-level / super_admin
+            $leaderRejectedIds = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_REPORT_REJECTED)
+                ->whereNull('read_at')
+                ->pluck('related_id');
+            $leaderRejectedEntries = \App\Models\DailyTaskEntry::whereIn('id', $leaderRejectedIds)
+                ->where('verification_status', 'rejected')
+                ->orderByDesc('reviewed_at')
+                ->get();
+
+            // Laporan MILIK LEADER yang baru disetujui oleh c-level / super_admin
+            $leaderApprovedNotifs = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', \App\Models\AppNotification::TYPE_REPORT_APPROVED)
+                ->where(function($q) {
+                    $q->whereNull('read_at')
+                      ->orWhere('created_at', '>=', now()->subDays(2));
+                })
+                ->orderByDesc('created_at')
+                ->get();
+
             // Notifikasi hari ini yang belum dibaca (untuk card dashboard)
+            // report_rejected & report_approved ditampilkan di accordion tersendiri
             $todayNotifications = \App\Models\AppNotification::where('user_id', $user->id)
+                ->whereNotIn('type', [
+                    \App\Models\AppNotification::TYPE_REPORT_REJECTED,
+                    \App\Models\AppNotification::TYPE_REPORT_APPROVED,
+                ])
                 ->todayUnread()
                 ->orderByDesc('created_at')
                 ->get();
@@ -706,28 +745,32 @@
                 @foreach($todayNotifications as $notif)
                 @php
                     $notifIcon = match($notif->type) {
-                        'revision_submitted' => '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
-                        'auto_rejected'      => '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
-                        'not_submitted'      => '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
-                        default              => '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+                        'revision_submitted'  => '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+                        'auto_rejected'       => '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+                        'not_submitted'       => '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+                        'backdate_requested'  => '<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>',
+                        default               => '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
                     };
                     $notifBg = match($notif->type) {
-                        'revision_submitted' => '#F0FDF9',
-                        'auto_rejected'      => '#FFF5F5',
-                        'not_submitted'      => '#FFFBEB',
-                        default              => '#F8FAFC',
+                        'revision_submitted'  => '#F0FDF9',
+                        'auto_rejected'       => '#FFF5F5',
+                        'not_submitted'       => '#FFFBEB',
+                        'backdate_requested'  => '#EFF6FF',
+                        default               => '#F8FAFC',
                     };
                     $notifBorder = match($notif->type) {
-                        'revision_submitted' => '#BBF7D0',
-                        'auto_rejected'      => '#FECACA',
-                        'not_submitted'      => '#FDE68A',
-                        default              => '#E2E8F0',
+                        'revision_submitted'  => '#BBF7D0',
+                        'auto_rejected'       => '#FECACA',
+                        'not_submitted'       => '#FDE68A',
+                        'backdate_requested'  => '#BFDBFE',
+                        default               => '#E2E8F0',
                     };
                     $notifAccent = match($notif->type) {
-                        'revision_submitted' => '#0F7A50',
-                        'auto_rejected'      => '#DC2626',
-                        'not_submitted'      => '#B45309',
-                        default              => '#475569',
+                        'revision_submitted'  => '#0F7A50',
+                        'auto_rejected'       => '#DC2626',
+                        'not_submitted'       => '#B45309',
+                        'backdate_requested'  => '#1D4ED8',
+                        default               => '#475569',
                     };
                     $hasDiff = $notif->type === 'revision_submitted'
                                && ($notif->getMeta('leader_note') || $notif->getMeta('staff_new_notes'));
@@ -797,6 +840,104 @@
         </div>
         @endif
         {{-- ═══════════════════════════════════════════════════════════════ --}}
+
+        {{-- Laporan milik LEADER yang ditolak permanen oleh C-Level --}}
+        @if($leaderRejectedEntries->isNotEmpty())
+        <div class="callout callout-danger">
+            <button type="button" class="callout-head" aria-expanded="false"
+                    onclick="const b=this.nextElementSibling;const h=b.classList.toggle('hidden');this.setAttribute('aria-expanded',String(!h));">
+                <span class="ttl">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                    Laporan Ditolak
+                </span>
+                <span class="meta">
+                    <span class="callout-count">{{ $leaderRejectedEntries->count() }} laporan</span>
+                    <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+            </button>
+            <div class="callout-body hidden">
+                @foreach($leaderRejectedEntries as $rej)
+                    <a href="{{ route('daily-tasks.show', $rej->id) }}" class="callout-item">
+                        <div style="flex:1;">
+                            <div class="ci-title">{{ Str::limit($rej->task_description, 38) }}</div>
+                            <div class="ci-sub">
+                                {{ \Carbon\Carbon::parse($rej->task_date)->isoFormat('D MMM') }}
+                                @if($rej->rejection_note) · Alasan: "{{ Str::limit($rej->rejection_note, 40) }}" @endif
+                            </div>
+                        </div>
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--c-border);flex-shrink:0;"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Laporan milik LEADER yang baru disetujui oleh C-Level --}}
+        @if($leaderApprovedNotifs->isNotEmpty())
+        @php
+            $leaderApprovedUnread = $leaderApprovedNotifs->filter(fn($n) => !$n->isRead())->count();
+            $leaderApprovedHasUnread = $leaderApprovedUnread > 0;
+        @endphp
+        <div class="callout {{ $leaderApprovedHasUnread ? 'callout-success' : '' }}" @unless($leaderApprovedHasUnread) style="--c-fg:var(--fg-2);" @endunless>
+            <button type="button" class="callout-head" aria-expanded="false"
+                    onclick="const b=this.nextElementSibling;const h=b.classList.toggle('hidden');this.setAttribute('aria-expanded',String(!h));">
+                <span class="ttl">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.3"/><path d="m9 11 3 3L22 4"/></svg>
+                    Laporan Baru Disetujui
+                </span>
+                <span class="meta">
+                    <span class="callout-count">{{ $leaderApprovedUnread > 0 ? $leaderApprovedUnread.' baru' : $leaderApprovedNotifs->count().' laporan' }}</span>
+                    <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+            </button>
+            <div class="callout-body hidden">
+                @foreach($leaderApprovedNotifs as $appr)
+                    @php $isRead = $appr->isRead(); @endphp
+                    <a href="{{ route('notifications.read', $appr->id) }}" class="callout-item" @if($isRead) style="opacity:.65;" @endif>
+                        <div>
+                            <div class="ci-title" style="font-weight:{{ $isRead ? '500' : '600' }};">{{ $appr->getMeta('task_desc') }}</div>
+                            <div class="ci-sub">
+                                {{ \Carbon\Carbon::parse($appr->created_at)->isoFormat('D MMM') }}
+                                · Disetujui oleh {{ explode(' ', $appr->getMeta('c_level_name') ?? $appr->getMeta('leader_name'))[0] ?? 'C-Level' }}
+                            </div>
+                        </div>
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--c-border);flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Laporan milik LEADER yang diminta direvisi oleh C-Level --}}
+        @if($leaderRevisionEntries->isNotEmpty())
+        <div class="callout callout-warning">
+            <button type="button" class="callout-head" aria-expanded="false"
+                    onclick="const b=this.nextElementSibling;const h=b.classList.toggle('hidden');this.setAttribute('aria-expanded',String(!h));">
+                <span class="ttl">
+                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
+                    Laporan Perlu Direvisi
+                </span>
+                <span class="meta">
+                    <span class="callout-count">{{ $leaderRevisionEntries->count() }} laporan</span>
+                    <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+            </button>
+            <div class="callout-body hidden">
+                @foreach($leaderRevisionEntries as $rev)
+                    <a href="{{ route('daily-tasks.show', $rev->id) }}" class="callout-item">
+                        <div style="flex:1;">
+                            <div class="ci-title">{{ Str::limit($rev->task_description, 38) }}</div>
+                            <div class="ci-sub">
+                                {{ \Carbon\Carbon::parse($rev->task_date)->isoFormat('D MMM') }}
+                                @if($rev->rejection_note) · "{{ Str::limit($rev->rejection_note, 30) }}" @endif
+                            </div>
+                        </div>
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--c-border);flex-shrink:0;"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         {{-- Section: Menunggu Review — dibagi 2: dengan target & tugas tambahan --}}
 
@@ -1073,11 +1214,186 @@
                 'sales' => '#2F6BD6', 'marketing' => '#B43BB7', 'product_it' => '#16A571',
                 'operational' => '#E89B2A', 'hr' => '#DC2626', 'finance' => '#059669',
                 'ga' => '#D97706', 'creative' => '#7C3AED', 'customer_support' => '#2563EB',
-                'ceo_office' => '#1D4ED8' // Fallback
+                'ceo_office' => '#1D4ED8'
             ];
             $totalTargets = \App\Models\MonthlyTarget::where('month', now()->month)->where('year', now()->year)->count();
             $totalEntries = \App\Models\DailyTaskEntry::whereDate('task_date', today())->count();
+
+            $todayNotificationsCLevel = \App\Models\AppNotification::where('user_id', $user->id)
+                ->where('type', '!=', 'backdate_requested')
+                ->todayUnread()
+                ->orderByDesc('created_at')
+                ->get();
+
+            // Laporan dari seluruh staff yang menunggu review (belum di-approve/reject)
+            $pendingReviewCLevel = \App\Models\DailyTaskEntry::with(['user', 'weeklyTarget', 'monthlyTarget'])
+                ->whereIn('verification_status', ['pending', 'revision'])
+                ->orderByDesc('updated_at')
+                ->limit(10)
+                ->get();
+
+            // Permintaan backdating yang perlu disetujui c-level
+            $pendingBackdatesCLevel = \App\Models\BackdateRequest::with('user')
+                ->where('status', 'pending')
+                ->orderByDesc('created_at')
+                ->get();
         @endphp
+
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        {{-- NOTIFICATION CARD C-LEVEL                                       --}}
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+        @if($todayNotificationsCLevel->isNotEmpty())
+        <div id="notif-card-clevel"
+             style="background:var(--surface-1,#fff);
+                    border:1.5px solid #E2E8F0;
+                    border-radius:16px;overflow:hidden;
+                    box-shadow:0 1px 4px rgba(0,0,0,.06);">
+            <div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:12px 14px;border-bottom:1px solid #F1F5F9;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <svg class="lucide sm" viewBox="0 0 24 24" style="color:var(--maxy-navy);">
+                        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span style="font-size:14px;font-weight:700;color:var(--fg-1);">Notifikasi Hari Ini</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="background:var(--danger);color:#fff;font-size:11px;font-weight:700;
+                                 border-radius:99px;padding:2px 8px;">{{ $todayNotificationsCLevel->count() }} baru</span>
+                    <form method="POST" action="{{ route('notifications.read-all') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit"
+                                style="font-size:11px;color:var(--fg-3);background:none;border:none;cursor:pointer;padding:0;">
+                            Tandai dibaca
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+                @foreach($todayNotificationsCLevel as $notif)
+                @php
+                    $nIcon = match($notif->type) {
+                        'revision_submitted'  => '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+                        'auto_rejected'       => '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+                        'not_submitted'       => '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/>',
+                        'backdate_requested'  => '<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>',
+                        'report_approved'     => '<path d="M20 6 9 17l-5-5"/>',
+                        'report_rejected'     => '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>',
+                        default               => '<path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+                    };
+                    $nBg = match($notif->type) {
+                        'revision_submitted'  => '#F0FDF9',
+                        'auto_rejected'       => '#FFF5F5',
+                        'not_submitted'       => '#FFFBEB',
+                        'backdate_requested'  => '#EFF6FF',
+                        'report_approved'     => '#F0FDF4',
+                        'report_rejected'     => '#FFF5F5',
+                        default               => '#F8FAFC',
+                    };
+                    $nAccent = match($notif->type) {
+                        'revision_submitted'  => '#0F7A50',
+                        'auto_rejected'       => '#DC2626',
+                        'not_submitted'       => '#B45309',
+                        'backdate_requested'  => '#1D4ED8',
+                        'report_approved'     => '#16A34A',
+                        'report_rejected'     => '#DC2626',
+                        default               => '#475569',
+                    };
+                @endphp
+                <div style="border-bottom:1px solid #F1F5F9;padding:10px 14px;background:{{ $nBg }};"
+                     id="notif-item-cl-{{ $notif->id }}">
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <svg class="lucide sm" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;color:{{ $nAccent }};">{!! $nIcon !!}</svg>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13.5px;font-weight:700;color:var(--fg-1);margin-bottom:2px;">{{ $notif->title }}</div>
+                            <div style="font-size:12.5px;color:var(--fg-2);line-height:1.5;">{{ $notif->body }}</div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-top:7px;">
+                                <span style="font-size:11px;color:var(--fg-3);">{{ $notif->created_at->diffForHumans() }}</span>
+                                @if($notif->related_id)
+                                <a href="{{ route('notifications.read', $notif->id) }}"
+                                   style="font-size:11px;font-weight:700;color:{{ $nAccent }};
+                                          text-decoration:none;background:rgba(0,0,0,.04);
+                                          border-radius:6px;padding:3px 8px;">
+                                    Lihat laporan →
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+                        <a href="{{ route('notifications.read', $notif->id) }}"
+                           onclick="event.preventDefault();document.getElementById('notif-item-cl-{{ $notif->id }}').remove();"
+                           style="font-size:16px;color:var(--fg-4);text-decoration:none;line-height:1;
+                                  padding:2px 4px;border-radius:4px;
+                                  display:flex;align-items:center;justify-content:center;"
+                           title="Tutup">&times;</a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+        {{-- ═══════════════════════════════════════════════════════════════ --}}
+
+        {{-- Pending Backdate Requests --}}
+        @if($pendingBackdatesCLevel->isNotEmpty())
+        <div class="m-card" style="padding:0;overflow:hidden;">
+            <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="overline-label" style="display:inline-flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    Permintaan Backdating
+                </span>
+                <span class="chip chip-warning" style="font-size:11px;">{{ $pendingBackdatesCLevel->count() }} pending</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @foreach($pendingBackdatesCLevel as $req)
+                <a href="{{ route('backdate-requests.index') }}" class="m-row" style="text-decoration:none;color:inherit;">
+                    <div class="row-body">
+                        <div class="row-title">{{ $req->user->name ?? '-' }}</div>
+                        <div class="row-meta">
+                            <span>{{ \Carbon\Carbon::parse($req->requested_date)->isoFormat('D MMM YYYY') }}</span>
+                            @if($req->reason) <span>· {{ \Str::limit($req->reason, 40) }}</span> @endif
+                        </div>
+                    </div>
+                    <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Menunggu Review: Laporan dari seluruh departemen --}}
+        @if($pendingReviewCLevel->isNotEmpty())
+        <div class="m-card" style="padding:0;overflow:hidden;">
+            <div class="section-head" style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="overline-label" style="display:inline-flex;align-items:center;gap:6px;">
+                    <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3"/></svg>
+                    Laporan Menunggu Review
+                </span>
+                <span class="chip chip-warning" style="font-size:11px;">{{ $pendingReviewCLevel->count() }}</span>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @foreach($pendingReviewCLevel as $entry)
+                @php
+                    $isRevised = $entry->verification_status === 'revision'
+                        && $entry->reviewed_at
+                        && $entry->updated_at->gt($entry->reviewed_at);
+                @endphp
+                <a href="{{ route('daily-tasks.show', $entry->id) }}" class="m-row" style="text-decoration:none;color:inherit;">
+                    <div class="row-body">
+                        <div class="row-title">
+                            {{ \Str::limit($entry->task_description, 38) }}
+                            @if($isRevised)<span class="chip chip-warning" style="margin-left:4px;font-size:10px;">Direvisi</span>@endif
+                        </div>
+                        <div class="row-meta">
+                            <span style="color:var(--fg-2);font-weight:600;">{{ explode(' ', $entry->user->name ?? '')[0] }}</span>
+                            <span>· {{ ucfirst(str_replace('_', ' ', $entry->user->department ?? '')) }}</span>
+                            <span>· {{ \Carbon\Carbon::parse($entry->task_date)->isoFormat('D MMM') }}</span>
+                        </div>
+                    </div>
+                    <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         <div class="kpi-grid">
             <div class="kpi-card">

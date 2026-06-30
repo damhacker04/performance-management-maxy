@@ -21,9 +21,13 @@
 @endphp
 
     {{-- ── HEADER ──────────────────────────────────────────────────────────────── --}}
+    @php
+        // Jika ada ?back= di URL (misal diteruskan dari halaman sebelumnya), gunakan itu
+        if (request()->query('back')) {
+            $backUrl = urldecode(request()->query('back'));
+        }
+    @endphp
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back URL di-set oleh controller (period.staff-targets untuk flow baru,
-             monthly-targets.show untuk target umum via legacy showStaff) --}}
         <a href="{{ $backUrl ?? route('period.staff-targets', ['year' => $monthlyTarget->year, 'month' => $monthlyTarget->month, 'staff' => $personKey ?? auth()->id()]) }}"
            class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
@@ -43,9 +47,9 @@
             @endif
         </div>
 
-        @if(auth()->user()->isLeadership())
+        @if(auth()->user()->role === 'leader')
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <a href="{{ route('monthly-targets.edit', $monthlyTarget) }}" class="icon-btn" title="Edit Target Bulanan">
+            <a href="{{ route('monthly-targets.edit', $monthlyTarget) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit Target Bulanan">
                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </a>
             <a href="{{ route('weekly-targets.create', [
@@ -128,7 +132,7 @@
                     </div>
 
                     {{-- Tombol Edit & Hapus --}}
-                    @if(auth()->user()->isLeadership())
+                    @if(auth()->user()->role === 'leader')
                         <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
                             <a href="{{ route('weekly-targets.edit', $wt) }}?back={{ urlencode(url()->current()) }}" class="icon-btn" title="Edit" style="width:32px;height:32px;">
                                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
