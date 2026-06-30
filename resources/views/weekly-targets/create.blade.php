@@ -20,13 +20,9 @@
     </div>
 
     <div class="m-card">
-        <form method="POST" action="{{ route('weekly-targets.store') }}"
+        <form method="POST" action="{{ route('weekly-targets.store') . ($backParam ? '?back=' . urlencode($backParam) : '') }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
-            {{-- Teruskan ?back= agar setelah store bisa redirect ke period context --}}
-            @if($backParam ?? null)
-                <input type="hidden" name="back" value="{{ $backParam }}">
-            @endif
 
             <!-- Pilih Monthly Target (wajib) -->
             <div class="field">

@@ -258,6 +258,14 @@
                 </form>
 
                 {{-- Form Kembalikan untuk Revisi --}}
+                @php
+                    $submitterRoleLabel = match($dailyTask->user->role ?? 'staff') {
+                        'leader'      => 'Leader',
+                        'c_level'     => 'C-Level',
+                        'super_admin' => 'Admin',
+                        default       => 'Staff',
+                    };
+                @endphp
                 <details style="border:1px solid #FBB041;border-radius:8px;padding:12px;">
                     <summary style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#B45309;cursor:pointer;">
                         <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/></svg>
@@ -268,7 +276,7 @@
                         <textarea name="rejection_note" rows="3" required minlength="10"
                             placeholder="Tuliskan apa yang perlu diperbaiki staff..."
                             style="width:100%;font-size:13px;padding:8px 10px;border:1px solid var(--bg-3);border-radius:8px;resize:vertical;"></textarea>
-                        <button type="submit" class="btn btn-sm" style="margin-top:8px;background:#FBB041;color:#fff;width:100%;">Kirim & Kembalikan ke Staff</button>
+                        <button type="submit" class="btn btn-sm" style="margin-top:8px;background:#FBB041;color:#fff;width:100%;">Kirim & Kembalikan ke {{ $submitterRoleLabel }}</button>
                     </form>
                 </details>
 
