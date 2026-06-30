@@ -1,104 +1,114 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<x-app-layout>
+<div class="page">
 
     {{-- Header --}}
-    <div class="flex items-center justify-between mb-6">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Manajemen Pengguna</h1>
-            <p class="text-sm text-gray-500 mt-1">Kelola akun seluruh karyawan di sistem</p>
+            <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Manajemen Pengguna</h1>
+            <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">Kelola akun seluruh karyawan di sistem</p>
         </div>
-        <a href="{{ route('admin.users.create') }}"
-           class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
-            + Tambah Karyawan
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah Karyawan
         </a>
     </div>
 
-    {{-- Flash Messages --}}
-    @if (session('success'))
-        <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{{ session('success') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{{ session('error') }}</div>
-    @endif
-
     {{-- Filter --}}
-    <form method="GET" class="flex gap-3 mb-6">
-        <select name="department" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-            <option value="">Semua Departemen</option>
-            @foreach ($departments as $key => $label)
-                <option value="{{ $key }}" {{ request('department') === $key ? 'selected' : '' }}>{{ $label }}</option>
-            @endforeach
-        </select>
-        <select name="role" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-            <option value="">Semua Role</option>
-            @foreach ($roles as $key => $label)
-                <option value="{{ $key }}" {{ request('role') === $key ? 'selected' : '' }}>{{ $label }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition">Filter</button>
-        <a href="{{ route('admin.users.index') }}" class="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">Reset</a>
+    <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;">
+        <div class="select-wrap" style="min-width:170px;">
+            <select name="department" class="m-select m-input" style="font-size:13px;">
+                <option value="">Semua Departemen</option>
+                @foreach ($departments as $key => $label)
+                    <option value="{{ $key }}" {{ request('department') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="select-wrap" style="min-width:140px;">
+            <select name="role" class="m-select m-input" style="font-size:13px;">
+                <option value="">Semua Role</option>
+                @foreach ($roles as $key => $label)
+                    <option value="{{ $key }}" {{ request('role') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Filter
+        </button>
+        <a href="{{ route('admin.users.index') }}" style="font-size:13px;color:var(--fg-3);text-decoration:none;font-weight:600;">Reset</a>
     </form>
 
     {{-- Tabel --}}
-    <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50">
+    <style>
+        .au-table-wrap { background:#fff; border:1px solid var(--bg-3); border-radius:12px; overflow:hidden; margin-top:8px; }
+        .au-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .au-table th { padding:12px 16px; background:var(--bg-2); color:var(--fg-3); text-transform:uppercase; letter-spacing:.05em; font-size:11px; text-align:left; border-bottom:1px solid var(--bg-3); white-space:nowrap; }
+        .au-table td { padding:12px 16px; border-bottom:1px solid var(--bg-3); color:var(--fg-2); vertical-align:middle; }
+        .au-table tr:last-child td { border-bottom:none; }
+        @media (max-width: 767px) { .au-table-wrap { overflow-x:auto; } }
+    </style>
+
+    <div class="au-table-wrap">
+        <table class="au-table">
+            <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Nama</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Email</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Departemen</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Divisi</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Role</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Status</th>
-                    <th class="px-6 py-3 text-left font-semibold text-gray-600">Aksi</th>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Departemen</th>
+                    <th>Divisi</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody>
                 @forelse ($users as $user)
-                    <tr class="{{ $user->is_active ? '' : 'bg-gray-50 opacity-60' }}">
-                        <td class="px-6 py-3 font-medium text-gray-900">{{ $user->name }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $user->email }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $user->department_label ?? '-' }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $user->division ?? '-' }}</td>
-                        <td class="px-6 py-3">
-                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium
-                                {{ $user->role === 'c_level' ? 'bg-purple-100 text-purple-700' : '' }}
-                                {{ $user->role === 'leader'  ? 'bg-blue-100 text-blue-700' : '' }}
-                                {{ $user->role === 'staff'   ? 'bg-gray-100 text-gray-700' : '' }}">
+                    <tr style="{{ $user->is_active ? '' : 'opacity:.55;' }}">
+                        <td style="font-weight:700;color:var(--fg-1);">{{ $user->name }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td>{{ $user->department_label ?? '-' }}</td>
+                        <td>{{ $user->division ?? '-' }}</td>
+                        <td>
+                            @php
+                                $roleChip = match($user->role) {
+                                    'c_level'    => 'info',
+                                    'leader'     => 'info',
+                                    'super_admin'=> 'warning',
+                                    default      => 'neutral',
+                                };
+                            @endphp
+                            <span class="chip chip-{{ $roleChip }}" style="font-size:11px;">
                                 {{ \App\Models\User::ROLES[$user->role] ?? $user->role }}
                             </span>
                         </td>
-                        <td class="px-6 py-3">
-                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium
-                                {{ $user->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                        <td>
+                            <span class="chip chip-{{ $user->is_active ? 'success' : 'danger' }}" style="font-size:11px;">
                                 {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
                             </span>
                         </td>
-                        <td class="px-6 py-3 flex items-center gap-3">
-                            <a href="{{ route('admin.users.edit', $user) }}"
-                               class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</a>
-
-                            <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}"
-                                  data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} akun {{ $user->name }}?" data-confirm-variant="{{ $user->is_active ? 'danger' : 'primary' }}" data-confirm-ok="{{ $user->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}">
-                                @csrf @method('PATCH')
-                                <button type="submit"
-                                    class="{{ $user->is_active ? 'text-red-500 hover:text-red-700' : 'text-green-500 hover:text-green-700' }} font-medium">
-                                    {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
-                                </button>
-                            </form>
+                        <td>
+                            <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;">
+                                <a href="{{ route('admin.users.edit', $user) }}" style="font-size:12px;font-weight:600;color:var(--maxy-navy);text-decoration:none;">Edit</a>
+                                <form method="POST" action="{{ route('admin.users.toggle-active', $user) }}"
+                                      data-confirm="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }} akun {{ $user->name }}?" data-confirm-variant="{{ $user->is_active ? 'danger' : 'primary' }}" data-confirm-ok="{{ $user->is_active ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan' }}"
+                                      style="margin:0;">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" style="background:none;border:none;cursor:pointer;padding:0;font-size:12px;font-weight:600;color:{{ $user->is_active ? 'var(--danger)' : 'var(--success)' }};">
+                                        {{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-400">Tidak ada data pengguna.</td>
+                        <td colspan="7" style="padding:32px 16px;text-align:center;color:var(--fg-3);">Tidak ada data pengguna.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <p class="text-xs text-gray-400 mt-4">Total: {{ $users->count() }} pengguna</p>
+    <p style="font-size:12px;color:var(--fg-3);margin-top:4px;">Total: {{ $users->count() }} pengguna</p>
 </div>
-@endsection
+</x-app-layout>

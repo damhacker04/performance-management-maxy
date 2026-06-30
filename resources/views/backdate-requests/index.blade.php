@@ -165,9 +165,7 @@
                         <th>Waktu Pengajuan</th>
                         <th>Alasan</th>
                         <th>Status</th>
-                        @if($statusFilter === 'pending')
-                            <th style="text-align:right;">Aksi</th>
-                        @endif
+                        <th style="text-align:right;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -215,9 +213,10 @@
                                 <div style="font-size:11px;color:var(--fg-3);margin-top:4px;">Kedaluwarsa</div>
                             @endif
                         </td>
-                        @if($statusFilter === 'pending')
                         <td style="text-align:right;">
-                            @if(auth()->user()->isLeadership())
+                            @if($req->status !== 'pending')
+                                <span style="font-size:11px;color:var(--fg-3);">—</span>
+                            @elseif(auth()->user()->isLeadership())
                                 <div style="display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;">
                                     <form method="POST" action="{{ route('backdate-requests.approve', $req) }}" style="display:inline;" data-confirm="Setujui permintaan ini?" data-confirm-ok="Ya, Setujui">
                                         @csrf @method('PATCH')
@@ -239,7 +238,6 @@
                                 <span style="font-size:11px;color:var(--fg-3);">Tidak ada akses</span>
                             @endif
                         </td>
-                        @endif
                     </tr>
                     @endforeach
                 </tbody>
