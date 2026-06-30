@@ -40,7 +40,7 @@
                 {{ $leader->name }}
             </h1>
         </div>
-        <a href="{{ route('monthly-targets.create') }}"
+        <a href="{{ route('monthly-targets.create') }}?back={{ urlencode(url()->current()) }}"
            class="btn btn-primary btn-sm" style="flex-shrink:0;">
             <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Tetapkan Target
@@ -103,10 +103,22 @@
                                 </div>
                             @endif
                         </div>
-                        <a href="{{ route('monthly-targets.edit', $t) }}?back={{ urlencode(url()->current()) }}"
-                           class="icon-btn" title="Edit" style="flex-shrink:0;">
-                            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        </a>
+                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                            <a href="{{ route('monthly-targets.edit', $t) }}?back={{ urlencode(url()->current()) }}"
+                               class="icon-btn" title="Edit">
+                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            <a href="{{ route('weekly-targets.create', [
+                                    'monthly_target_id' => $t->id,
+                                    'context'           => 'leader',
+                                    'assigned_to'       => $leader->id,
+                                    'back'              => urlencode(url()->current()),
+                                ]) }}"
+                               class="btn btn-primary btn-sm">
+                                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Tambah
+                            </a>
+                        </div>
                     </div>
 
                     {{-- Progress bar bulanan --}}
@@ -188,7 +200,7 @@
                     <div style="font-size:13px;color:var(--fg-3);margin-bottom:12px;">
                         Anda belum menetapkan target untuk {{ explode(' ', $leader->name)[0] }} pada {{ $monthLabel }}.
                     </div>
-                    <a href="{{ route('monthly-targets.create') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('monthly-targets.create') }}?back={{ urlencode(url()->current()) }}" class="btn btn-primary btn-sm">
                         <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                         Tetapkan Target
                     </a>

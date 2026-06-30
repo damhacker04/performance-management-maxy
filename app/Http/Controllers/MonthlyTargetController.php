@@ -178,8 +178,10 @@ class MonthlyTargetController extends Controller
             'year'          => $validated['year'],
         ]);
 
-        return redirect()->route('monthly-targets.index')
-            ->with('success', 'Target bulanan berhasil disimpan.');
+        $back = $request->query('back');
+        return $back
+            ? redirect(urldecode($back))->with('success', 'Target bulanan berhasil disimpan.')
+            : redirect()->route('monthly-targets.index')->with('success', 'Target bulanan berhasil disimpan.');
     }
 
 
