@@ -1,9 +1,13 @@
 <x-app-layout>
+@php
+    $backParam = request()->query('back') ? urldecode(request()->query('back')) : null;
+    $backHref  = $backParam ?? route('monthly-targets.index');
+@endphp
 
 <div class="page">
     <!-- Back -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ $backHref }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Target Baru</h1>
@@ -38,7 +42,7 @@
     @endif
 
     <div class="m-card">
-        <form method="POST" action="{{ route('monthly-targets.store') }}"
+        <form method="POST" action="{{ route('monthly-targets.store') . ($backParam ? '?back=' . urlencode($backParam) : '') }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
 
