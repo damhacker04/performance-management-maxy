@@ -29,6 +29,7 @@
     // Tujuan menu "Target" beda per role: C-Level ke halaman target khusus, leader ke daftar target dept.
     $targetRoute    = $isCLevel ? route('ceo.targets.index') : route('monthly-targets.index');
     $onMyTargets    = request()->routeIs('staff-targets.*');
+    $onOverview     = request()->routeIs('ceo.overview');
     $onKpi          = request()->routeIs('kpi') || request()->routeIs('kpi.*');
     $onWorkload     = request()->routeIs('workload-report.*');
     $onProfile      = request()->routeIs('profile.*');
@@ -88,6 +89,15 @@
                     Tugas
                 </a>
             @else
+                {{-- Overview / Progress Staf (c_level saja) --}}
+                @if($isCLevel)
+                <a href="{{ route('ceo.overview') }}"
+                   class="dt-nav-item {{ $onOverview ? 'active' : '' }}">
+                    <svg class="dt-nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                    Overview
+                </a>
+                @endif
+
                 {{-- Target (leader/c_level) --}}
                 <a href="{{ $targetRoute }}"
                    class="dt-nav-item {{ $onTargets ? 'active' : '' }}">
@@ -325,6 +335,16 @@
                     Tugas
                 </a>
             @else
+                {{-- Overview (c_level saja) --}}
+                @if($isCLevel)
+                <a href="{{ route('ceo.overview') }}" class="tab {{ $onOverview ? 'active' : '' }}">
+                    <span class="glyph">
+                        <svg class="lucide" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                    </span>
+                    Overview
+                </a>
+                @endif
+
                 {{-- Target (leader/c_level) --}}
                 <a href="{{ $targetRoute }}" class="tab {{ $onTargets ? 'active' : '' }}">
                     <span class="glyph">

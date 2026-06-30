@@ -548,8 +548,9 @@ function clearRowImage(btn) {
                 }
             };
             reader.readAsDataURL(blob);
-            break; 
+            break;
         }
     });
 })();
 </script>
+</x-app-layout>

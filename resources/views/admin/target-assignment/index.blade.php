@@ -1,61 +1,58 @@
-@extends('layouts.app')
+<x-app-layout>
+<div class="page">
 
-@section('content')
-<div class="py-8 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Assign Target ke Staff</h1>
-        <p class="text-sm text-gray-500 mt-1">Pilih departemen untuk melihat daftar staff dan target yang tersedia.</p>
+    {{-- Header --}}
+    <div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Assign Target ke Staff</h1>
+        <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">Pilih departemen untuk melihat daftar staff dan target yang tersedia.</p>
     </div>
 
-    {{-- Flash Messages --}}
-    @if (session('success'))
-        <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">{{ session('success') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">{{ session('error') }}</div>
-    @endif
-
     {{-- Filter Departemen --}}
-    <form method="GET" class="flex gap-3 mb-8">
-        <select name="department" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-            <option value="">-- Pilih Departemen --</option>
-            @foreach ($departments as $key => $label)
-                <option value="{{ $key }}" {{ $selectedDept === $key ? 'selected' : '' }}>{{ $label }}</option>
-            @endforeach
-        </select>
-        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
+    <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;">
+        <div class="select-wrap" style="min-width:200px;">
+            <select name="department" class="m-select m-input" style="font-size:13px;">
+                <option value="">-- Pilih Departemen --</option>
+                @foreach ($departments as $key => $label)
+                    <option value="{{ $key }}" {{ $selectedDept === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+            <svg class="lucide sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             Tampilkan
         </button>
     </form>
 
+    <style>
+        .ta-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .ta-table th { padding:11px 16px; background:var(--bg-2); color:var(--fg-3); text-transform:uppercase; letter-spacing:.05em; font-size:11px; text-align:left; border-bottom:1px solid var(--bg-3); white-space:nowrap; }
+        .ta-table td { padding:11px 16px; border-bottom:1px solid var(--bg-3); color:var(--fg-2); vertical-align:middle; }
+        .ta-table tr:last-child td { border-bottom:none; }
+        .ta-wrap { background:#fff; border:1px solid var(--bg-3); border-radius:12px; overflow-x:auto; }
+    </style>
+
     @if ($selectedDept)
 
         {{-- Daftar Staff di Departemen --}}
-        <div class="mb-8">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">
-                Staff di Departemen: <span class="text-indigo-600">{{ \App\Models\User::DEPARTMENTS[$selectedDept] }}</span>
+        <div style="margin-top:8px;">
+            <h2 style="font-size:15px;font-weight:700;color:var(--fg-1);margin:0 0 10px;">
+                Staff di Departemen: <span style="color:var(--maxy-navy);">{{ \App\Models\User::DEPARTMENTS[$selectedDept] }}</span>
             </h2>
             @if ($staffList->isEmpty())
-                <p class="text-sm text-gray-500">Belum ada staff di departemen ini.</p>
+                <div class="m-card"><div class="empty-state"><p style="font-size:13px;color:var(--fg-3);">Belum ada staff di departemen ini.</p></div></div>
             @else
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                    <table class="min-w-full text-sm divide-y divide-gray-100">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-5 py-3 text-left font-semibold text-gray-600">Nama</th>
-                                <th class="px-5 py-3 text-left font-semibold text-gray-600">Divisi</th>
-                                <th class="px-5 py-3 text-left font-semibold text-gray-600">Role</th>
-                            </tr>
+                <div class="ta-wrap">
+                    <table class="ta-table">
+                        <thead>
+                            <tr><th>Nama</th><th>Divisi</th><th>Role</th></tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody>
                             @foreach ($staffList as $staff)
                                 <tr>
-                                    <td class="px-5 py-3 font-medium text-gray-900">{{ $staff->name }}</td>
-                                    <td class="px-5 py-3 text-gray-600">{{ $staff->division ?? '-' }}</td>
-                                    <td class="px-5 py-3">
-                                        <span class="px-2 py-1 rounded-full text-xs font-medium
-                                            {{ $staff->role === 'leader' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                                    <td style="font-weight:700;color:var(--fg-1);">{{ $staff->name }}</td>
+                                    <td>{{ $staff->division ?? '-' }}</td>
+                                    <td>
+                                        <span class="chip chip-{{ $staff->role === 'leader' ? 'info' : 'neutral' }}" style="font-size:11px;">
                                             {{ \App\Models\User::ROLES[$staff->role] }}
                                         </span>
                                     </td>
@@ -69,100 +66,86 @@
 
         {{-- Monthly Targets & Weekly Targets --}}
         @if ($monthlyTargets->isEmpty())
-            <div class="p-6 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl text-sm">
+            <div style="margin-top:16px;background:#FFF8E8;border:1px solid #FBB041;border-radius:12px;padding:14px 16px;font-size:13px;color:#8B5A00;">
                 Belum ada Monthly Target di departemen ini. Minta Leader untuk membuat target terlebih dahulu.
             </div>
         @else
             @foreach ($monthlyTargets as $monthly)
-                <div class="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div style="margin-top:16px;background:#fff;border:1px solid var(--bg-3);border-radius:12px;overflow:hidden;">
                     {{-- Monthly Target Header --}}
-                    <div class="flex items-center justify-between px-5 py-4 bg-indigo-50 border-b border-indigo-100">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--bg-2);border-bottom:1px solid var(--bg-3);">
                         <div>
-                            <p class="font-semibold text-indigo-800">{{ $monthly->title }}</p>
-                            <p class="text-xs text-indigo-500 mt-0.5">
+                            <p style="font-weight:700;color:var(--maxy-navy);margin:0;">{{ $monthly->title }}</p>
+                            <p style="font-size:11px;color:var(--fg-3);margin:2px 0 0;">
                                 Bulan {{ \Carbon\Carbon::create()->month($monthly->month)->translatedFormat('F') }} {{ $monthly->year }}
                             </p>
                         </div>
-                        {{-- Tombol hapus Monthly Target --}}
                         <form method="POST" action="{{ route('admin.monthly-targets.destroy', $monthly) }}"
-                              data-confirm="Hapus Monthly Target '{{ $monthly->title }}' beserta semua data di dalamnya? Tindakan ini tidak dapat dibatalkan." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus">
+                              data-confirm="Hapus Monthly Target '{{ $monthly->title }}' beserta semua data di dalamnya? Tindakan ini tidak dapat dibatalkan." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus"
+                              style="margin:0;">
                             @csrf @method('DELETE')
-                            <button type="submit" class="text-xs text-red-500 hover:text-red-700 font-medium">
-                                Hapus Target Ini
-                            </button>
+                            <button type="submit" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--danger);">Hapus Target Ini</button>
                         </form>
                     </div>
 
                     {{-- Weekly Targets --}}
                     @if ($monthly->weeklyTargets->isEmpty())
-                        <p class="px-5 py-4 text-sm text-gray-400">Belum ada weekly target di bawah monthly target ini.</p>
+                        <p style="padding:14px 16px;font-size:13px;color:var(--fg-3);margin:0;">Belum ada weekly target di bawah monthly target ini.</p>
                     @else
-                        <table class="min-w-full text-sm divide-y divide-gray-100">
-                            <thead class="bg-gray-50">
+                        <div style="overflow-x:auto;">
+                        <table class="ta-table">
+                            <thead>
                                 <tr>
-                                    <th class="px-5 py-3 text-left font-semibold text-gray-600">Weekly Target</th>
-                                    <th class="px-5 py-3 text-left font-semibold text-gray-600">Minggu ke</th>
-                                    <th class="px-5 py-3 text-left font-semibold text-gray-600">Saat Ini Diassign ke</th>
-                                    <th class="px-5 py-3 text-left font-semibold text-gray-600">Assign ke Staff</th>
-                                    <th class="px-5 py-3 text-left font-semibold text-gray-600">Aksi</th>
+                                    <th>Weekly Target</th>
+                                    <th>Minggu ke</th>
+                                    <th>Saat Ini Diassign ke</th>
+                                    <th>Assign ke Staff</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody>
                                 @foreach ($monthly->weeklyTargets as $weekly)
-                                    @php
-                                        $assignedUser = $staffList->firstWhere('id', $weekly->assigned_to);
-                                    @endphp
+                                    @php $assignedUser = $staffList->firstWhere('id', $weekly->assigned_to); @endphp
                                     <tr>
-                                        <td class="px-5 py-3 font-medium text-gray-800">{{ $weekly->title }}</td>
-                                        <td class="px-5 py-3 text-gray-600">Minggu {{ $weekly->week_number }}</td>
-                                        <td class="px-5 py-3">
+                                        <td style="font-weight:600;color:var(--fg-1);">{{ $weekly->title }}</td>
+                                        <td>Minggu {{ $weekly->week_number }}</td>
+                                        <td>
                                             @if ($assignedUser)
-                                                <span class="inline-block px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                                                    🎯 {{ $assignedUser->name }}
-                                                </span>
+                                                <span class="chip chip-warning" style="font-size:11px;">🎯 {{ $assignedUser->name }}</span>
                                             @else
-                                                <span class="inline-block px-2 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">
-                                                    🏢 Umum (Semua)
-                                                </span>
+                                                <span class="chip chip-neutral" style="font-size:11px;">🏢 Umum (Semua)</span>
                                             @endif
                                         </td>
-                                        <td class="px-5 py-3">
+                                        <td>
                                             <form method="POST" action="{{ route('admin.target-assignment.assign-weekly') }}"
-                                                  class="flex items-center gap-2">
+                                                  style="display:flex;align-items:center;gap:6px;margin:0;">
                                                 @csrf
                                                 <input type="hidden" name="weekly_target_id" value="{{ $weekly->id }}">
-                                                <select name="user_id" required
-                                                    class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-indigo-500 focus:border-indigo-500">
-                                                    <option value="">-- Pilih Staff --</option>
-                                                    @foreach ($staffList as $staff)
-                                                        <option value="{{ $staff->id }}"
-                                                            {{ $weekly->assigned_to == $staff->id ? 'selected' : '' }}>
-                                                            {{ $staff->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <button type="submit"
-                                                    class="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 transition">
-                                                    Assign
-                                                </button>
+                                                <div class="select-wrap" style="min-width:150px;">
+                                                    <select name="user_id" required class="m-select m-input" style="font-size:12px;padding:6px 28px 6px 10px;height:auto;">
+                                                        <option value="">-- Pilih Staff --</option>
+                                                        @foreach ($staffList as $staff)
+                                                            <option value="{{ $staff->id }}" {{ $weekly->assigned_to == $staff->id ? 'selected' : '' }}>{{ $staff->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary btn-sm" style="font-size:12px;padding:6px 12px;">Assign</button>
                                             </form>
                                         </td>
-                                        <td class="px-5 py-3">
-                                            <div class="flex items-center gap-2">
-                                                {{-- Lepas Assignment --}}
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:10px;">
                                                 @if ($weekly->assigned_to)
                                                     <form method="POST" action="{{ route('admin.target-assignment.unassign-weekly') }}"
-                                                          data-confirm="Lepas assignment weekly target ini?" data-confirm-variant="danger" data-confirm-ok="Ya, Lepas">
+                                                          data-confirm="Lepas assignment weekly target ini?" data-confirm-variant="danger" data-confirm-ok="Ya, Lepas" style="margin:0;">
                                                         @csrf
                                                         <input type="hidden" name="weekly_target_id" value="{{ $weekly->id }}">
-                                                        <button type="submit" class="text-xs text-orange-500 hover:text-orange-700">Lepas</button>
+                                                        <button type="submit" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#B45309;">Lepas</button>
                                                     </form>
                                                 @endif
-                                                {{-- Hapus Weekly Target --}}
                                                 <form method="POST" action="{{ route('admin.weekly-targets.destroy', $weekly) }}"
-                                                      data-confirm="Hapus Weekly Target '{{ $weekly->title }}'? Semua laporan harian di dalamnya juga akan terhapus." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus">
+                                                      data-confirm="Hapus Weekly Target '{{ $weekly->title }}'? Semua laporan harian di dalamnya juga akan terhapus." data-confirm-variant="danger" data-confirm-ok="Ya, Hapus" style="margin:0;">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+                                                    <button type="submit" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--danger);">Hapus</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -170,16 +153,20 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        </div>
                     @endif
                 </div>
             @endforeach
         @endif
 
     @else
-        <div class="p-8 bg-gray-50 border border-gray-200 rounded-xl text-center text-gray-400 text-sm">
-            Pilih departemen di atas untuk memulai.
+        <div class="m-card" style="margin-top:8px;">
+            <div class="empty-state">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <p style="font-size:13px;color:var(--fg-3);">Pilih departemen di atas untuk memulai.</p>
+            </div>
         </div>
     @endif
 
 </div>
-@endsection
+</x-app-layout>

@@ -43,7 +43,8 @@ class UserManagementController extends Controller
 
     /**
      * Simpan user baru ke database.
-     * Login menggunakan Google OAuth — password tidak diperlukan.
+     * Password OPSIONAL: kalau diisi, user bisa langsung login dengan email & password.
+     * Kalau dikosongkan, user login via Google lalu set password sendiri (EnsurePasswordIsSet).
      */
     public function store(Request $request)
     {
@@ -53,6 +54,7 @@ class UserManagementController extends Controller
             'role'       => 'required|in:staff,leader,c_level',
             'department' => 'nullable|string',
             'division'   => 'nullable|string|max:255',
+            'password'   => 'nullable|string|min:8',
             'is_management' => 'boolean',
         ]);
 
@@ -63,7 +65,8 @@ class UserManagementController extends Controller
             'department'    => $validated['department'] ?? null,
             'division'      => $validated['division'] ?? null,
             'is_management' => $request->boolean('is_management'),
-            'password'      => null,
+            // Cast 'hashed' di model akan otomatis hash nilai plain ini.
+            'password'      => ! empty($validated['password']) ? $validated['password'] : null,
         ]);
 
         return redirect()->route('admin.users.index')
@@ -92,17 +95,25 @@ class UserManagementController extends Controller
             'role'          => 'required|in:staff,leader,c_level',
             'department'    => 'nullable|string',
             'division'      => 'nullable|string|max:255',
+            'password'      => 'nullable|string|min:8',
             'is_management' => 'boolean',
         ]);
 
-        $user->update([
+        $data = [
             'name'          => $validated['name'],
             'email'         => $validated['email'],
             'role'          => $validated['role'],
             'department'    => $validated['department'] ?? null,
             'division'      => $validated['division'] ?? null,
             'is_management' => $request->boolean('is_management'),
-        ]);
+        ];
+
+        // Hanya ubah password jika admin mengisinya (cast 'hashed' meng-hash otomatis).
+        if (! empty($validated['password'])) {
+            $data['password'] = $validated['password'];
+        }
+
+        $user->update($data);
 
         return redirect()->route('admin.users.index')
             ->with('success', "Data {$user->name} berhasil diperbarui.");

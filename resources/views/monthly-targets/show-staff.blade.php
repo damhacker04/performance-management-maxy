@@ -35,19 +35,30 @@
                     <span class="chip chip-success" style="font-size:11px;">Bulan ini</span>
                 @endif
             </div>
+            <h1 style="font-size:18px;font-weight:800;color:var(--fg-1);margin:0;line-height:1.25;">
+                {{ $monthlyTarget->title }}
+            </h1>
+            @if($monthlyTarget->description)
+                <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;line-height:1.4;">{{ $monthlyTarget->description }}</p>
+            @endif
         </div>
 
         @if(auth()->user()->isLeadership())
-        <a href="{{ route('weekly-targets.create', [
-                'monthly_target_id' => $monthlyTarget->id,
-                'context'           => 'team',
-                'assigned_to'       => $personKey === 'umum' ? '' : $personKey,
-                'back'              => urlencode(url()->current()),
-            ]) }}"
-           class="btn btn-primary btn-sm" style="flex-shrink:0;">
-            <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            Tambah
-        </a>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <a href="{{ route('monthly-targets.edit', $monthlyTarget) }}" class="icon-btn" title="Edit Target Bulanan">
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </a>
+            <a href="{{ route('weekly-targets.create', [
+                    'monthly_target_id' => $monthlyTarget->id,
+                    'context'           => 'team',
+                    'assigned_to'       => $personKey === 'umum' ? '' : $personKey,
+                    'back'              => urlencode(url()->current()),
+                ]) }}"
+               class="btn btn-primary btn-sm">
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                Tambah
+            </a>
+        </div>
         @endif
     </div>
 

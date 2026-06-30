@@ -20,5 +20,9 @@ cmds = [
 #     sesungguhnya migrasikan ke nginx + php-fpm (atau FrankenPHP) dan jalankan
 #     worker sebagai proses/kontainer terpisah dengan auto-restart (supervisor).
 # ─────────────────────────────────────────────────────────────────────────────
+# 5. `view:cache` WAJIB di-warm saat start. Tanpa ini, Blade dikompilasi
+#    on-demand; kalau request terpotong di tengah kompilasi (php -S single-thread),
+#    file compiled jadi buntung dan memunculkan ParseError "expecting endif"
+#    yang persisten (lihat memory: blade-parseerror-truncated-compiled).
 [start]
-cmd = "php artisan migrate --force && (php artisan queue:work --tries=3 --max-time=3600 --sleep=3 &) && (php artisan schedule:work &) && php -S 0.0.0.0:$PORT -t public"
+cmd = "php artisan migrate --force && php artisan view:cache && (php artisan queue:work --tries=3 --max-time=3600 --sleep=3 &) && (php artisan schedule:work &) && php -S 0.0.0.0:$PORT -t public"
