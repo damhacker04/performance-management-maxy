@@ -572,7 +572,14 @@
 
     @elseif ($user->role === 'leader')
         @php
-            $targets     = \App\Models\MonthlyTarget::where('department', $user->department)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
+            // Hanya tampilkan target yang BUKAN dibuat oleh leader itu sendiri
+            // (target milik leader sendiri hanya muncul di "Target Saya")
+            $targets = \App\Models\MonthlyTarget::where('department', $user->department)
+                ->where('month', now()->month)
+                ->where('year', now()->year)
+                ->where('user_id', '!=', $user->id)
+                ->withCount('dailyTaskEntries')
+                ->get();
             $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
             $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
 
