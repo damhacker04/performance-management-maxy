@@ -98,6 +98,33 @@
 .l3-pct   { font-size:11px; font-weight:700; text-align:right; margin-top:3px; }
 .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
+/* ── AI Analyze Button ───────────────────────── */
+.btn-ai {
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:600; padding:4px 10px;
+    border-radius:20px; border:1.5px solid var(--maxy-navy);
+    color:var(--maxy-navy); background:#fff; cursor:pointer;
+    transition:all .2s; white-space:nowrap; flex-shrink:0;
+}
+.btn-ai:hover { background:var(--maxy-navy); color:#fff; }
+.btn-ai:disabled { opacity:.5; cursor:not-allowed; }
+.btn-ai.loading { opacity:.7; pointer-events:none; }
+.btn-ai .spin {
+    width:12px; height:12px; border:2px solid currentColor;
+    border-top-color:transparent; border-radius:50%;
+    animation:spin .7s linear infinite; display:none;
+}
+.btn-ai.loading .spin { display:block; }
+.btn-ai.loading .btn-ai-icon { display:none; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── AI Reasoning Tooltip ────────────────────── */
+.ai-note {
+    font-size:10px; color:var(--fg-4); font-style:italic;
+    margin-top:2px; max-width:200px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
 .l2-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; flex-wrap:wrap; }
 
 .badge-inactive {
@@ -282,30 +309,48 @@
                                 $dotCol   = $statusColor[$sc] ?? 'var(--fg-4)';
                                 $chPct    = $act?->gap_percent;
                             @endphp
-                            <div class="l3-row">
+                            <div class="l3-row" id="l3-row-{{ $ch->id }}">
                                 <span class="l3-av" style="background:{{ $color }};">{{ $chInit }}</span>
                                 <div class="l3-info">
                                     <div class="l3-name">
-                                        <span class="status-dot" style="background:{{ $dotCol }};"></span>
+                                        <span class="status-dot" id="dot-{{ $ch->id }}" style="background:{{ $dotCol }};"></span>
                                         {{ $chName }}
                                     </div>
-                                    <div class="l3-figs">
+                                    <div class="l3-figs" id="figs-{{ $ch->id }}">
                                         Target {{ number_format($chTarget, 0, ',', '.') }} {{ $ch->unit }}
                                         @if($act)
-                                            &nbsp;·&nbsp; Aktual {{ number_format($act->actual_value, 0, ',', '.') }}
+                                            &nbsp;·&nbsp; Aktual <span id="actual-val-{{ $ch->id }}">{{ number_format($act->actual_value, 0, ',', '.') }}</span>
+                                            @if($act->source === 'ai')
+                                                &nbsp;<span style="font-size:10px;background:#EEF2FF;color:#4F46E5;padding:1px 5px;border-radius:4px;">✨ AI</span>
+                                            @endif
                                         @else
-                                            &nbsp;·&nbsp; <span style="font-style:italic;">belum ada realisasi</span>
+                                            &nbsp;·&nbsp; <span id="actual-val-{{ $ch->id }}" style="font-style:italic;">belum ada realisasi</span>
                                         @endif
                                     </div>
+                                    @if($act?->source === 'ai' && $act->notes)
+                                        <div class="ai-note" title="{{ $act->notes }}">💬 {{ $act->notes }}</div>
+                                    @else
+                                        <div class="ai-note" id="ai-note-{{ $ch->id }}"></div>
+                                    @endif
                                 </div>
                                 <div class="l3-prog">
                                     <div class="l3-track">
-                                        <div style="height:100%;border-radius:99px;width:{{ $chPct !== null ? min(100, max(0, $chPct)) : 0 }}%;background:{{ $dotCol }};"></div>
+                                        <div id="bar-fill-{{ $ch->id }}" style="height:100%;border-radius:99px;width:{{ $chPct !== null ? min(100, max(0, $chPct)) : 0 }}%;background:{{ $dotCol }};transition:width .6s ease;"></div>
                                     </div>
-                                    <div class="l3-pct" style="color:{{ $dotCol }};">
+                                    <div class="l3-pct" id="bar-pct-{{ $ch->id }}" style="color:{{ $dotCol }};">
                                         {{ $chPct !== null ? $chPct.'%' : '—' }}
                                     </div>
                                 </div>
+                                @if($canManage)
+                                <button type="button" class="btn-ai"
+                                    id="ai-btn-{{ $ch->id }}"
+                                    onclick="analyzeKpi({{ $ch->id }}, {{ $ch->user_id }}, {{ $kpi->month }}, {{ $kpi->year }})"
+                                    title="Analisis laporan harian dengan AI">
+                                    <span class="btn-ai-icon">✨</span>
+                                    <span class="spin"></span>
+                                    AI
+                                </button>
+                                @endif
                             </div>
                         @empty
                             <div class="l3-empty">Belum ada KPI staff untuk target dept ini.</div>
@@ -393,4 +438,78 @@
     @endforelse
 
 </div>
+
+<script>
+const _analyzeUrl  = "{{ route('kpi.actuals.analyze-ai') }}";
+const _csrfToken   = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+async function analyzeKpi(kpiTargetId, staffId, month, year) {
+    const btn      = document.getElementById('ai-btn-' + kpiTargetId);
+    const barFill  = document.getElementById('bar-fill-' + kpiTargetId);
+    const barPct   = document.getElementById('bar-pct-' + kpiTargetId);
+    const aiNote   = document.getElementById('ai-note-' + kpiTargetId);
+    const actualEl = document.getElementById('actual-val-' + kpiTargetId);
+    const dot      = document.getElementById('dot-' + kpiTargetId);
+
+    if (!btn) return;
+
+    // Loading state
+    btn.classList.add('loading');
+    btn.disabled = true;
+    if (aiNote) aiNote.textContent = '⏳ Menganalisis laporan...';
+
+    try {
+        const res = await fetch(_analyzeUrl, {
+            method : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': _csrfToken,
+                'Accept'      : 'application/json',
+            },
+            body: JSON.stringify({ kpi_target_id: kpiTargetId, month, year }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            alert('Gagal: ' + (data.message || 'Terjadi kesalahan.'));
+            return;
+        }
+
+        // Hitung warna berdasarkan persentase
+        const pct   = data.percentage;
+        const color = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--warning)' : 'var(--danger)';
+
+        // Update bar
+        if (barFill) { barFill.style.width = Math.min(100, pct) + '%'; barFill.style.background = color; }
+        if (barPct)  { barPct.textContent = pct + '%'; barPct.style.color = color; }
+        if (dot)     { dot.style.background = color; }
+
+        // Update angka aktual
+        if (actualEl) {
+            const val = parseFloat(data.actual_value).toLocaleString('id-ID');
+            actualEl.style.fontStyle = 'normal';
+            actualEl.textContent = val;
+        }
+
+        // Tampilkan reasoning
+        if (aiNote) {
+            aiNote.textContent = '💬 ' + (data.reasoning || '');
+            aiNote.title       = data.reasoning || '';
+        }
+
+        // Ubah label tombol
+        btn.innerHTML = '<span>✨</span> Analisis Ulang';
+        btn.title = 'Dianalisis dari ' + data.reports_analyzed + ' laporan';
+
+    } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan jaringan.');
+        if (aiNote) aiNote.textContent = '';
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+</script>
 </x-app-layout>

@@ -135,6 +135,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
             Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
             Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+            // AI Auto-Detect KPI Realisasi
+            Route::post('/kpi/actuals/analyze-ai', [KpiController::class, 'analyzeWithAi'])->name('kpi.actuals.analyze-ai');
         });
 
         // AI Workload & Performance Report — C-Level, Admin HR, Leader
