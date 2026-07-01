@@ -307,7 +307,7 @@ class KpiController extends Controller
             [
                 'department'    => $kpiL3->department,
                 'actual_value'  => $result['actual_value'],
-                'source'        => 'ai',
+                'source'        => 'auto_detected',
                 'notes'         => $result['reasoning'],
                 'created_by'    => auth()->id(),
             ]

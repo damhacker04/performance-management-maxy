@@ -320,14 +320,14 @@
                                         Target {{ number_format($chTarget, 0, ',', '.') }} {{ $ch->unit }}
                                         @if($act)
                                             &nbsp;·&nbsp; Aktual <span id="actual-val-{{ $ch->id }}">{{ number_format($act->actual_value, 0, ',', '.') }}</span>
-                                            @if($act->source === 'ai')
+                                            @if($act->source === 'auto_detected')
                                                 &nbsp;<span style="font-size:10px;background:#EEF2FF;color:#4F46E5;padding:1px 5px;border-radius:4px;">✨ AI</span>
                                             @endif
                                         @else
                                             &nbsp;·&nbsp; <span id="actual-val-{{ $ch->id }}" style="font-style:italic;">belum ada realisasi</span>
                                         @endif
                                     </div>
-                                    @if($act?->source === 'ai' && $act->notes)
+                                    @if($act?->source === 'auto_detected' && $act->notes)
                                         <div class="ai-note" title="{{ $act->notes }}">💬 {{ $act->notes }}</div>
                                     @else
                                         <div class="ai-note" id="ai-note-{{ $ch->id }}"></div>
