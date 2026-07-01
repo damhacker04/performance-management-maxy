@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminKpiController;
+use App\Http\Controllers\Admin\AdminOverviewController;
+use App\Http\Controllers\Admin\AdminTargetController;
 use App\Http\Controllers\Admin\KpiSettingsController;
 use App\Http\Controllers\Admin\TargetAssignmentController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -222,6 +225,13 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         ->only(['index', 'create', 'store', 'edit', 'update']);
     Route::patch('users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
         ->name('users.toggle-active');
+
+    // Halaman monitoring khusus Admin HR (versi sendiri, lepas dari halaman CEO).
+    // Logika query dibagi via inheritance dari controller CEO/KPI.
+    Route::get('overview', [AdminOverviewController::class, 'index'])->name('overview');
+    Route::get('targets', [AdminTargetController::class, 'index'])->name('targets.index');
+    Route::get('targets/leader/{leader}', [AdminTargetController::class, 'showLeader'])->name('targets.leader');
+    Route::get('kpi', [AdminKpiController::class, 'index'])->name('kpi');
 
     // Assign Target ke Staff
     Route::get('target-assignment', [TargetAssignmentController::class, 'index'])

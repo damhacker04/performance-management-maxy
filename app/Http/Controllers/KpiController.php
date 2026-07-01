@@ -17,6 +17,14 @@ class KpiController extends Controller
 
     public function index()
     {
+        return view('kpi', $this->buildIndexData());
+    }
+
+    /**
+     * Bangun data index KPI (dipakai ulang oleh Admin\AdminKpiController).
+     */
+    protected function buildIndexData(): array
+    {
         $user = auth()->user();
 
         // Query KPI L2 (dept benchmark) — group by dept
@@ -48,7 +56,7 @@ class KpiController extends Controller
             ->get()
             ->groupBy('department');
 
-        return view('kpi', compact('kpiByDept', 'groupedStaffs'));
+        return compact('kpiByDept', 'groupedStaffs');
     }
 
     public function create()

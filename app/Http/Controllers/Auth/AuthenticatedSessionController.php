@@ -31,6 +31,7 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
 
         $target = match ($user->role) {
+            'super_admin'       => route('dashboard',            absolute: false),
             'leader', 'c_level' => route('monthly-targets.index', absolute: false),
             default              => route('daily-tasks.create',    absolute: false),
         };

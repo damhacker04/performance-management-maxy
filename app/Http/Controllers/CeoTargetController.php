@@ -22,6 +22,14 @@ class CeoTargetController extends Controller
      */
     public function index(Request $request)
     {
+        return view('ceo.targets.index', $this->buildIndexData($request));
+    }
+
+    /**
+     * Bangun data daftar target per leader (dipakai ulang oleh Admin\AdminTargetController).
+     */
+    protected function buildIndexData(Request $request): array
+    {
         $filterMonth = (int) $request->get('month', now()->month);
         $filterYear  = (int) $request->get('year', now()->year);
         $filterMonth = max(1, min(12, $filterMonth));
@@ -65,9 +73,9 @@ class CeoTargetController extends Controller
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $monthLabel = $monthNames[$filterMonth] . ' ' . $filterYear;
 
-        return view('ceo.targets.index', compact(
+        return compact(
             'byLeader', 'filterMonth', 'filterYear', 'monthLabel'
-        ));
+        );
     }
 
     /**
@@ -75,6 +83,14 @@ class CeoTargetController extends Controller
      * berikan ke staff-nya (read-only — CEO tidak bisa menugaskan staff).
      */
     public function showLeader(Request $request, User $leader)
+    {
+        return view('ceo.targets.leader', $this->buildLeaderData($request, $leader));
+    }
+
+    /**
+     * Bangun data detail satu leader (dipakai ulang oleh Admin\AdminTargetController).
+     */
+    protected function buildLeaderData(Request $request, User $leader): array
     {
         abort_unless($leader->role === 'leader', 404);
 
@@ -134,9 +150,9 @@ class CeoTargetController extends Controller
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $monthLabel = $monthNames[$filterMonth] . ' ' . $filterYear;
 
-        return view('ceo.targets.leader', compact(
+        return compact(
             'leader', 'leaderTargets', 'leaderEntryCounts', 'byStaff',
             'filterMonth', 'filterYear', 'monthLabel'
-        ));
+        );
     }
 }
