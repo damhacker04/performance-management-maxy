@@ -8,6 +8,7 @@ use App\Models\KpiTarget;
 use App\Models\MonthlyTarget;
 use App\Models\User;
 use App\Models\WeeklyTarget;
+use App\Models\WorkloadReport;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -107,7 +108,33 @@ class DemoSeeder extends Seeder
         $this->daily($lead, $mtCeo, $wtL2, 'Draft SOP baru', 'dalam_proses', 'pending', null,
             'Draft SOP baru sudah 50% rampung.', now());
 
-        $this->command?->info('DemoSeeder selesai: 5 aktor, KPI L2+L3+realisasi, 3 monthly target, 5 weekly target, 7 laporan harian (approved/pending/revisi).');
+        // ── 7. Workload Report (AI) siap-pakai — biar demo tak perlu panggil AI live ──
+        WorkloadReport::updateOrCreate(
+            ['staff_id' => $staffA->id, 'month' => $month, 'year' => $year],
+            ['score' => 85, 'summary_flag' => '✅', 'report_data' => [
+                'achievement' => ['Administrasi & Penempatan Talent' => 'Budi menuntaskan 13 penempatan talent dari target 20, dengan dokumentasi rapi dan pelaporan harian yang konsisten.'],
+                'optimization_areas' => [['title' => 'Dokumentasi administrasi', 'detail' => 'Rekap dokumen baru 60%; sebaiknya diselesaikan lebih awal agar tidak menumpuk.']],
+                'score' => 85,
+                'score_reasoning' => 'Pencapaian penempatan tinggi dan konsisten melapor tiap hari; sedikit tertinggal di sisi administrasi.',
+                'ceo_recommendations' => ['Pertahankan ritme penempatan talent.', 'Alokasikan waktu khusus untuk merapikan dokumen.'],
+                'summary_flag' => '✅',
+                'flag_reason' => 'Performa kuat, sedikit PR di administrasi.',
+            ]],
+        );
+        WorkloadReport::updateOrCreate(
+            ['staff_id' => $staffB->id, 'month' => $month, 'year' => $year],
+            ['score' => 72, 'summary_flag' => '🟡', 'report_data' => [
+                'achievement' => ['Rekap Keuangan & Legal' => 'Sari menyelesaikan 4 rekap keuangan dan 2 dokumen legal, sesuai ekspektasi mingguan.'],
+                'optimization_areas' => [['title' => 'Konsistensi pelaporan', 'detail' => 'Ada beberapa hari tanpa laporan; keteraturan input harian perlu ditingkatkan.']],
+                'score' => 72,
+                'score_reasoning' => 'Output sesuai target, namun frekuensi pelaporan harian belum konsisten.',
+                'ceo_recommendations' => ['Lapor harian secara rutin.', 'Isi realisasi KPI lebih awal dalam periode.'],
+                'summary_flag' => '🟡',
+                'flag_reason' => 'Output oke, konsistensi pelaporan perlu naik.',
+            ]],
+        );
+
+        $this->command?->info('DemoSeeder selesai: 5 aktor, KPI L2+L3+realisasi, 3 monthly target, 5 weekly target, 7 laporan harian, 2 workload report AI.');
     }
 
     /** Buat/segarkan aktor demo dengan password supaya mudah login. */
