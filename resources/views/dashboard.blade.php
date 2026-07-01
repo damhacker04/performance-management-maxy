@@ -572,7 +572,24 @@
 
     @elseif ($user->role === 'leader')
         @php
-            $targets     = \App\Models\MonthlyTarget::where('department', $user->department)->where('month', now()->month)->where('year', now()->year)->withCount('dailyTaskEntries')->get();
+            // Target TIM: dibuat oleh leader sendiri untuk staff
+            $teamTargets = \App\Models\MonthlyTarget::where('department', $user->department)
+                ->where('month', now()->month)
+                ->where('year', now()->year)
+                ->where('user_id', $user->id)
+                ->withCount('dailyTaskEntries')
+                ->get();
+
+            // Target SAYA: dibuat oleh C-Level / orang lain, ditujukan untuk dept leader ini
+            $myOwnTargets = \App\Models\MonthlyTarget::where('department', $user->department)
+                ->where('month', now()->month)
+                ->where('year', now()->year)
+                ->where('user_id', '!=', $user->id)
+                ->withCount('dailyTaskEntries')
+                ->get();
+
+            // Gabungkan untuk backward-compat (dipakai di stat card "Target bulan ini")
+            $targets = $teamTargets;
             $totalStaff  = \App\Models\User::where('department', $user->department)->where('role', 'staff')->count();
             $reported    = \App\Models\DailyTaskEntry::whereHas('user', fn($q) => $q->where('department', $user->department))->whereDate('task_date', today())->distinct('user_id')->count('user_id');
 
@@ -1128,15 +1145,42 @@
 
         </div>{{-- end dt-col2 --}}
 
+        {{-- ── TARGET SAYA (dari C-Level, untuk leader) ── --}}
+        @if($myOwnTargets->isNotEmpty())
+        <div class="m-card" style="padding:0;">
+            <div class="section-head">
+                <span class="overline-label">Target saya</span>
+                <a href="{{ route('leader-targets.index') }}" class="more-link">Lihat semua</a>
+            </div>
+            <div style="padding:0 16px 8px;">
+                @foreach($myOwnTargets->take(3) as $target)
+                    <a href="{{ route('leader-targets.show', $target) }}"
+                       class="m-row"
+                       style="text-decoration:none;color:inherit;cursor:pointer;">
+                        <div class="row-body">
+                            <div class="row-title">{{ $target->title }}</div>
+                            <div class="row-meta">
+                                <span class="chip chip-dept-{{ str_replace('_','-',$target->department) }}">{{ ucfirst(str_replace('_',' ', $target->department)) }}</span>
+                                <span>· {{ $target->daily_task_entries_count }} laporan</span>
+                            </div>
+                        </div>
+                        <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- ── TARGET AKTIF TIM (dibuat leader untuk staff) ── --}}
         <div class="m-card" style="padding:0;">
             <div class="section-head">
                 <span class="overline-label">Target aktif</span>
                 <a href="{{ route('monthly-targets.index') }}" class="more-link">Lihat semua</a>
             </div>
             <div style="padding:0 16px 8px;">
-                @forelse ($targets->take(3) as $target)
-                    <a href="{{ $target->assigned_to 
-                        ? route('period.staff-weekly', ['year' => $target->year, 'month' => $target->month, 'staff' => $target->assigned_to, 'monthlyTarget' => $target->id]) 
+                @forelse ($teamTargets->take(3) as $target)
+                    <a href="{{ $target->assigned_to
+                        ? route('period.staff-weekly', ['year' => $target->year, 'month' => $target->month, 'staff' => $target->assigned_to, 'monthlyTarget' => $target->id])
                         : route('period.staff-list', ['year' => $target->year, 'month' => $target->month]) }}"
                        class="m-row"
                        style="text-decoration:none;color:inherit;cursor:pointer;">
@@ -1150,7 +1194,7 @@
                         <svg class="lucide sm" style="color:var(--fg-3);flex-shrink:0;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
                     </a>
                 @empty
-                    <div class="empty-state">Belum ada target bulan ini.</div>
+                    <div class="empty-state">Belum ada target tim bulan ini.</div>
                 @endforelse
             </div>
         </div>

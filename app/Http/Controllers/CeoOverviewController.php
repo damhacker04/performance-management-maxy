@@ -15,6 +15,14 @@ class CeoOverviewController extends Controller
 {
     public function index(Request $request)
     {
+        return view('ceo.overview', $this->buildOverviewData($request));
+    }
+
+    /**
+     * Bangun data overview (dipakai ulang oleh Admin\AdminOverviewController).
+     */
+    protected function buildOverviewData(Request $request): array
+    {
         $month = (int) $request->get('month', now()->month);
         $year  = (int) $request->get('year', now()->year);
         $month = max(1, min(12, $month));
@@ -83,9 +91,9 @@ class CeoOverviewController extends Controller
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $monthLabel = $monthNames[$month].' '.$year;
 
-        return view('ceo.overview', compact(
+        return compact(
             'byDept', 'totalStaff', 'avgProgress', 'pendingReview', 'needAttention',
             'month', 'year', 'monthLabel'
-        ));
+        );
     }
 }

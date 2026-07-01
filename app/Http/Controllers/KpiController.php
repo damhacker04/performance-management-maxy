@@ -7,6 +7,7 @@ use App\Http\Requests\StoreKpiActualRequest;
 use App\Models\KpiActual;
 use App\Models\KpiTarget;
 use App\Models\User;
+use App\Services\KpiAiAnalyzerService;
 use Illuminate\Http\Request;
 
 class KpiController extends Controller
@@ -16,6 +17,14 @@ class KpiController extends Controller
     // ═══════════════════════════════════════════════════════════
 
     public function index()
+    {
+        return view('kpi', $this->buildIndexData());
+    }
+
+    /**
+     * Bangun data index KPI (dipakai ulang oleh Admin\AdminKpiController).
+     */
+    protected function buildIndexData(): array
     {
         $user = auth()->user();
 
@@ -48,7 +57,7 @@ class KpiController extends Controller
             ->get()
             ->groupBy('department');
 
-        return view('kpi', compact('kpiByDept', 'groupedStaffs'));
+        return compact('kpiByDept', 'groupedStaffs');
     }
 
     public function create()
@@ -257,5 +266,66 @@ class KpiController extends Controller
             'month' => $kpiActual->month,
             'year' => $kpiActual->year,
         ])->with('success', 'KPI Actual berhasil diperbarui.');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // AI Auto-Detect KPI Realisasi
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Analisis laporan harian staf menggunakan AI untuk mengisi realisasi KPI.
+     * Dipanggil via AJAX dari halaman KPI.
+     */
+    public function analyzeWithAi(Request $request, KpiAiAnalyzerService $analyzer)
+    {
+        $validated = $request->validate([
+            'kpi_target_id' => 'required|exists:kpi_targets,id',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2024',
+        ]);
+
+        $kpiL3 = KpiTarget::with('staff')->findOrFail($validated['kpi_target_id']);
+
+        // Pastikan ini KPI L3 (staff individual)
+        if ($kpiL3->kpi_level !== 3) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya KPI staf (L3) yang bisa dianalisis AI.',
+            ], 422);
+        }
+
+        $result = $analyzer->analyzeForStaff($kpiL3, (int) $validated['month'], (int) $validated['year']);
+
+        // Simpan atau update ke kpi_actuals
+        $actual = KpiActual::updateOrCreate(
+            [
+                'kpi_target_id' => $kpiL3->id,
+                'staff_id'      => $kpiL3->user_id,
+                'month'         => $validated['month'],
+                'year'          => $validated['year'],
+            ],
+            [
+                'department'    => $kpiL3->department,
+                'actual_value'  => $result['actual_value'],
+                'source'        => 'auto_detected',
+                'notes'         => $result['reasoning'],
+                'created_by'    => auth()->id(),
+            ]
+        );
+
+        $pct = $kpiL3->target_value > 0
+            ? round(($result['actual_value'] / $kpiL3->target_value) * 100, 1)
+            : 0;
+
+        return response()->json([
+            'success'          => true,
+            'actual_value'     => $result['actual_value'],
+            'target_value'     => (float) $kpiL3->target_value,
+            'unit'             => $kpiL3->unit,
+            'percentage'       => $pct,
+            'reasoning'        => $result['reasoning'],
+            'reports_analyzed' => $result['reports_analyzed'],
+            'kpi_actual_id'    => $actual->id,
+        ]);
     }
 }

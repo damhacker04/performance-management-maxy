@@ -85,17 +85,47 @@
             ->get();
     @endphp
     @if($kpisForDept->isNotEmpty())
+        @php
+            $monthNames = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            // Kelompokkan berdasarkan kpi_name agar nama yang sama tampil berdekatan
+            $kpiGrouped = $kpisForDept->groupBy('kpi_name');
+        @endphp
         <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
                     border-radius:var(--r-md);padding:12px 14px;">
-            <div style="font-size:11px;font-weight:700;color:var(--info,#2563eb);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:700;color:var(--info,#2563eb);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">
                 KPI Departemen — Acuan Evaluasi
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                @foreach($kpisForDept as $kpi)
-                    <div style="font-size:12px;color:var(--fg-2);background:#fff;border:1px solid var(--info-200,#bfdbfe);
-                                border-radius:8px;padding:5px 10px;">
-                        <strong>{{ $kpi->kpi_name }}</strong>:
-                        {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                @foreach($kpiGrouped as $kpiName => $kpiItems)
+                    <div>
+                        {{-- Nama KPI sebagai label baris --}}
+                        <div style="font-size:11px;font-weight:700;color:var(--fg-2);margin-bottom:4px;">
+                            {{ $kpiName }}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            @foreach($kpiItems as $kpi)
+                                @php
+                                    $levelLabel = match($kpi->kpi_level ?? '') {
+                                        'individual' => 'Per Orang',
+                                        'team'       => 'Tim',
+                                        'dept'       => 'Dept',
+                                        default      => null,
+                                    };
+                                    $periodLabel = ($kpi->month && $kpi->year)
+                                        ? ($monthNames[$kpi->month] . ' ' . $kpi->year)
+                                        : null;
+                                @endphp
+                                <div style="font-size:12px;color:var(--fg-2);background:#fff;border:1px solid var(--info-200,#bfdbfe);
+                                            border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px;">
+                                    <strong>{{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln</strong>
+                                    @if($levelLabel || $periodLabel)
+                                        <span style="font-size:10px;color:var(--fg-4);border-left:1px solid var(--bd-1);padding-left:6px;">
+                                            {{ implode(' · ', array_filter([$levelLabel, $periodLabel])) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>

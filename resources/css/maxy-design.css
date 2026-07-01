@@ -212,6 +212,40 @@ summary:focus-visible {
 .tab.active .glyph { background: var(--maxy-amber-100); }
 .tab:active .glyph { transform: scale(0.94); }
 
+/* ===================== "Lainnya" Bottom Sheet (overflow tabbar mobile) ===================== */
+.more-sheet-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(19, 25, 56, 0.38);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; transition: opacity 0.2s var(--ease-standard);
+}
+.more-sheet-backdrop.open { opacity: 1; }
+.more-sheet {
+  width: 100%; max-width: var(--app-max);
+  background: #fff;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: 6px 10px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -6px 24px rgba(19, 25, 56, 0.18);
+  transform: translateY(100%); transition: transform 0.22s var(--ease-standard);
+}
+.more-sheet-backdrop.open .more-sheet { transform: translateY(0); }
+.more-sheet-grip {
+  width: 40px; height: 4px; border-radius: 999px;
+  background: var(--neutral-200); margin: 8px auto 10px;
+}
+.more-sheet-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 12px; border-radius: var(--r-md);
+  color: var(--fg-1); font-size: 15px; font-weight: 600;
+  text-decoration: none; text-align: left;
+}
+.more-sheet-item .lucide { width: 20px; height: 20px; color: var(--fg-3); flex: none; }
+.more-sheet-item.active { background: var(--maxy-amber-100); color: var(--maxy-navy); }
+.more-sheet-item.active .lucide { color: var(--maxy-navy); }
+.more-sheet-item:active { background: var(--neutral-100); }
+/* Desktop pakai sidebar — sheet tidak pernah tampil */
+@media (min-width: 1024px) { .more-sheet-backdrop { display: none !important; } }
+
 /* ===================== Page ===================== */
 .page {
   padding: 16px;
