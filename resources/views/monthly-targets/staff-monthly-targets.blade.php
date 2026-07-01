@@ -79,9 +79,16 @@
 
     {{-- ── KPI Acuan (jika ada) ── --}}
     @php
-        $kpisForDept = \App\Models\KpiTarget::whereNotNull('department')
-            ->where('department', $staff->department)
+        // Tampilkan HANYA: KPI Departemen (L2) + KPI milik staf ini sendiri (L3).
+        // KPI L3 milik staf lain sengaja disembunyikan agar tidak membingungkan.
+        $kpisForDept = \App\Models\KpiTarget::where('department', $staff->department)
             ->where('is_active', true)
+            ->where(function ($q) use ($staff) {
+                $q->where('kpi_level', 2)
+                  ->orWhere(function ($q2) use ($staff) {
+                      $q2->where('kpi_level', 3)->where('user_id', $staff->id);
+                  });
+            })
             ->get();
     @endphp
     @if($kpisForDept->isNotEmpty())
@@ -89,6 +96,7 @@
             $monthNames = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
             // Kelompokkan berdasarkan kpi_name agar nama yang sama tampil berdekatan
             $kpiGrouped = $kpisForDept->groupBy('kpi_name');
+            $staffFirst = \Illuminate\Support\Str::of($staff->name)->trim()->explode(' ')->first();
         @endphp
         <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
                     border-radius:var(--r-md);padding:12px 14px;">
@@ -105,24 +113,23 @@
                         <div style="display:flex;flex-wrap:wrap;gap:6px;">
                             @foreach($kpiItems as $kpi)
                                 @php
-                                    $levelLabel = match($kpi->kpi_level ?? '') {
-                                        'individual' => 'Per Orang',
-                                        'team'       => 'Tim',
-                                        'dept'       => 'Dept',
-                                        default      => null,
-                                    };
+                                    // kpi_level bertipe integer: 2 = target departemen, 3 = target per orang.
+                                    $isDeptKpi  = (int) $kpi->kpi_level === 2;
+                                    $levelLabel = $isDeptKpi ? 'Target Dept' : 'Target ' . $staffFirst;
                                     $periodLabel = ($kpi->month && $kpi->year)
                                         ? ($monthNames[$kpi->month] . ' ' . $kpi->year)
                                         : null;
+                                    // Warna beda: dept = netral, milik staf = amber (biar gampang dibedakan).
+                                    $chipBg     = $isDeptKpi ? '#fff' : '#FFF7EC';
+                                    $chipBorder = $isDeptKpi ? 'var(--info-200,#bfdbfe)' : '#FBB041';
+                                    $tagColor   = $isDeptKpi ? 'var(--fg-4)' : '#B4740F';
                                 @endphp
-                                <div style="font-size:12px;color:var(--fg-2);background:#fff;border:1px solid var(--info-200,#bfdbfe);
+                                <div style="font-size:12px;color:var(--fg-2);background:{{ $chipBg }};border:1px solid {{ $chipBorder }};
                                             border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px;">
                                     <strong>{{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln</strong>
-                                    @if($levelLabel || $periodLabel)
-                                        <span style="font-size:10px;color:var(--fg-4);border-left:1px solid var(--bd-1);padding-left:6px;">
-                                            {{ implode(' · ', array_filter([$levelLabel, $periodLabel])) }}
-                                        </span>
-                                    @endif
+                                    <span style="font-size:10px;font-weight:700;color:{{ $tagColor }};border-left:1px solid var(--bd-1,#e5e7eb);padding-left:6px;">
+                                        {{ $levelLabel }}@if($periodLabel) · {{ $periodLabel }}@endif
+                                    </span>
                                 </div>
                             @endforeach
                         </div>
