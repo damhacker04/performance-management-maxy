@@ -281,6 +281,19 @@ Route::get('/deploy-update', function () {
     }
 });
 
+// Route rahasia untuk seed DATA DEMO (aman diulang; hapus setelah presentasi).
+// Pakai: /seed-demo?key=maxy-demo-2026
+Route::get('/seed-demo', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        Artisan::call('db:seed', ['--class' => 'DemoSeeder', '--force' => true]);
+
+        return nl2br(e(trim(Artisan::output()))) ?: 'Data demo berhasil di-seed.';
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
 require __DIR__.'/auth.php';
 
 Route::get('/debug/run-migration', function () {
