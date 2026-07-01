@@ -121,8 +121,10 @@
 /* ── AI Reasoning Tooltip ────────────────────── */
 .ai-note {
     font-size:10px; color:var(--fg-4); font-style:italic;
-    margin-top:2px; max-width:200px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    margin-top:3px;
+    white-space:normal;
+    word-break:break-word;
+    line-height:1.5;
 }
 
 .l2-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; flex-wrap:wrap; }
