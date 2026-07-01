@@ -114,29 +114,48 @@ class KpiAiAnalyzerService
         $target      = number_format((float) $kpi->target_value, 0, ',', '.');
 
         return <<<PROMPT
-Kamu adalah asisten evaluasi KPI kinerja karyawan yang sangat teliti dan objektif.
-
-## Tugas
-Hitung total realisasi KPI berdasarkan laporan harian karyawan di bawah ini.
+Kamu adalah analis KPI kinerja karyawan yang sangat teliti, kontekstual, dan tidak boleh menyerah hanya karena tidak ada angka eksplisit.
 
 ## Informasi KPI
-- Nama KPI     : {$kpiName}
-- Target       : {$target} {$unit} per bulan
-- Periode      : {$periodLabel}
-- Nama Staf    : {$staffName}
+- Nama KPI  : {$kpiName}
+- Target    : {$target} {$unit} per bulan
+- Periode   : {$periodLabel}
+- Nama Staf : {$staffName}
 
 ## Laporan Harian ({$count} laporan)
 {$reportsText}
 
-## Instruksi
-1. Baca setiap laporan dengan cermat, termasuk isi bukti link jika ada.
-2. Identifikasi angka konkret yang berkaitan langsung dengan KPI "{$kpiName}".
-3. Jika angka tidak disebutkan eksplisit, estimasikan berdasarkan konteks (contoh: "berhasil closing dengan PT ABC" = 1 {$unit}).
-4. Jika sebuah laporan sama sekali tidak relevan dengan KPI ini, hitung sebagai 0.
-5. Jumlahkan semua pencapaian → total realisasi.
+## Cara Menghitung Realisasi (ikuti hierarki ini secara berurutan)
 
-## Format Jawaban (WAJIB JSON, tidak boleh ada teks lain)
-{"actual_value": <angka desimal>, "reasoning": "<penjelasan ringkas max 150 kata dalam Bahasa Indonesia>"}
+### Prioritas 1 — Angka Eksplisit (paling akurat)
+Cari angka yang langsung menyebut KPI ini.
+Contoh: "closing 3 deal", "dapat 5 leads", "revenue 10 juta" → langsung pakai angkanya.
+
+### Prioritas 2 — Hitung Entitas/Nama (jika tidak ada angka)
+Jika tidak ada angka eksplisit, hitung jumlah entitas yang disebutkan:
+- Nama perusahaan/klien: "PT ABC, CV Maju, UD Sejahtera" → 3 {$unit}
+- Nama orang/kontak: "Pak Budi, Bu Rina" → 2 {$unit}
+- Aktivitas unik yang relevan per laporan → hitung satu per satu
+
+### Prioritas 3 — Baca Isi Bukti Link (jika ada 📎)
+Jika laporan menyertakan isi bukti link (ditandai 📎), baca datanya dengan seksama.
+Data di spreadsheet/dokumen lebih akurat dari deskripsi teks.
+Ambil angka atau hitung entitas dari sana.
+
+### Prioritas 4 — Estimasi Konteks (terakhir)
+Jika ketiga cara di atas tidak menghasilkan angka, estimasikan berdasarkan:
+- Kata kerja tindakan: "berhasil closing", "presentasi ke klien", "follow up deal" = masing-masing 1 {$unit}
+- Intensitas: "meeting seharian dengan banyak klien" → estimasi 3-5 {$unit}
+- Hasil tersirat: "kontrak ditandatangani" → 1 {$unit}
+
+## Aturan Wajib
+- JANGAN return 0 kecuali laporan benar-benar tidak ada hubungannya sama sekali dengan "{$kpiName}".
+- Jika ragu antara 0 dan nilai tertentu, SELALU pilih nilai yang lebih konservatif tapi bukan 0.
+- Jelaskan dengan singkat metode mana yang kamu pakai dan darimana angka itu berasal.
+- Jumlahkan pencapaian dari SEMUA laporan → total realisasi bulan ini.
+
+## Format Jawaban (WAJIB JSON murni, tidak ada teks lain di luar JSON)
+{"actual_value": <angka desimal>, "reasoning": "<penjelasan singkat max 150 kata: metode yang dipakai + dari laporan mana angka berasal>"}
 PROMPT;
     }
 
