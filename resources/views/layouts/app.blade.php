@@ -293,8 +293,19 @@
             {{-- Flash messages --}}
             @if (session('success'))
                 <div style="padding:10px 16px 0;">
-                    <div class="alert alert-success">{{ session('success') }}</div>
+                    <div class="alert alert-success" id="flash-success">{{ session('success') }}</div>
                 </div>
+                <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var el = document.getElementById('flash-success');
+                    if (!el) return;
+                    // Pesan "AI sedang memproses" jadi basi kalau penilaian AI ternyata
+                    // sudah selesai (kartu pending tidak ada / kartu hasil sudah tampil).
+                    if (/memproses/i.test(el.textContent) && !document.getElementById('ai-pending-card')) {
+                        el.textContent = '✅ Laporan berhasil dikirim! Penilaian AI sudah tersedia.';
+                    }
+                });
+                </script>
             @endif
             @if (session('error'))
                 <div style="padding:10px 16px 0;">

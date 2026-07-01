@@ -27,10 +27,10 @@
                                 data-target="{{ $kpi->target_value }}"
                                 data-unit="{{ $kpi->unit }}"
                                 data-dept="{{ $kpi->department }}"
-                                {{ old('parent_id') == $kpi->id ? 'selected' : '' }}>
+                                {{ (old('parent_id') ?? request()->query('parent_id')) == $kpi->id ? 'selected' : '' }}>
                             {{ ucfirst(str_replace('_',' ', $kpi->department)) }}
-                            — {{ $kpi->kpi_name }}
-                            — {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}
+                            ï¿½ {{ $kpi->kpi_name }}
+                            ï¿½ {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}
                         </option>
                     @endforeach
                 </select></div>
@@ -48,19 +48,19 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Nama KPI</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-name">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-name">ï¿½</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Departemen</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-dept">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-dept">ï¿½</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Target Dept</span>
-                            <div style="font-size:13px;font-weight:700;color:var(--maxy-navy);" id="pi-target">—</div>
+                            <div style="font-size:13px;font-weight:700;color:var(--maxy-navy);" id="pi-target">ï¿½</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Satuan</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-unit">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="pi-unit">ï¿½</div>
                         </div>
                     </div>
                 </div>
@@ -82,7 +82,7 @@
             {{-- Pilih Staf --}}
             <div class="field">
                 <label class="">Staf <span style="color:var(--danger);">*</span></label>
-                <div class="select-wrap"><select name="user_id" class="m-select @error('user_id') is-invalid @enderror" required>
+                <div class="select-wrap"><select name="user_id" id="user_id" class="m-select @error('user_id') is-invalid @enderror" required>
                     <option value="">-- Pilih Staf --</option>
                     @foreach($staffs as $deptLabel => $deptStaffs)
                         <optgroup label="{{ $deptLabel }}">
@@ -97,6 +97,7 @@
                 @error('user_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
+                <p class="form-hint" id="staff-hint">Pilih KPI Departemen dulu untuk menyaring daftar staf.</p>
             </div>
 
             {{-- Catatan --}}
@@ -134,30 +135,68 @@
 </div>
 
 <script>
+function prettyDept(d) {
+    return d ? d.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+}
+
+/** Saring daftar staf agar hanya menampilkan staf di departemen yang sama dgn KPI parent */
+function filterStaffByDept(dept) {
+    const staffSel = document.getElementById('user_id');
+    const hint     = document.getElementById('staff-hint');
+    if (!staffSel) return;
+
+    let visibleCount = 0;
+
+    Array.from(staffSel.querySelectorAll('optgroup')).forEach(og => {
+        const match = !dept || og.label === dept;
+        og.hidden   = !match;
+        Array.from(og.children).forEach(opt => {
+            opt.hidden   = !match;
+            opt.disabled = !match;
+            if (match) visibleCount++;
+        });
+    });
+
+    // Reset pilihan staf jika tak lagi cocok dgn departemen terpilih
+    const cur = staffSel.selectedOptions[0];
+    if (cur && cur.value && cur.hidden) staffSel.value = '';
+
+    if (hint) {
+        if (!dept) {
+            hint.textContent = 'Pilih KPI Departemen dulu untuk menyaring daftar staf.';
+        } else if (visibleCount === 0) {
+            hint.textContent = 'Tidak ada staf aktif di departemen ' + prettyDept(dept) + '.';
+        } else {
+            hint.textContent = 'Menampilkan ' + visibleCount + ' staf di departemen ' + prettyDept(dept) + '.';
+        }
+    }
+}
+
 function updateParentInfo(select) {
     const opt = select.options[select.selectedIndex];
     const box = document.getElementById('parent-info-box');
 
     if (!select.value) {
         box.style.display = 'none';
+        filterStaffByDept(null);
         return;
     }
 
-    document.getElementById('pi-name').textContent   = opt.dataset.kpiName  || '—';
-    document.getElementById('pi-dept').textContent   = opt.dataset.dept
-        ? opt.dataset.dept.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-        : '—';
+    document.getElementById('pi-name').textContent   = opt.dataset.kpiName  || '-';
+    document.getElementById('pi-dept').textContent   = prettyDept(opt.dataset.dept) || '-';
     document.getElementById('pi-target').textContent = opt.dataset.target
         ? Number(opt.dataset.target).toLocaleString('id-ID') + ' ' + (opt.dataset.unit || '')
-        : '—';
-    document.getElementById('pi-unit').textContent   = opt.dataset.unit  || '—';
+        : '-';
+    document.getElementById('pi-unit').textContent   = opt.dataset.unit  || '-';
 
     box.style.display = 'block';
+    filterStaffByDept(opt.dataset.dept || null);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     const sel = document.getElementById('parent_id');
     if (sel && sel.value) updateParentInfo(sel);
+    else filterStaffByDept(null);
 });
 </script>
 </x-app-layout>
