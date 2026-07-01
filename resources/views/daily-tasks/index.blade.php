@@ -24,21 +24,23 @@
             <input type="hidden" name="tab" value="{{ $tab }}">
 
             {{-- Navigation Tabs --}}
-        @if(in_array(auth()->user()->role, ['leader', 'c_level', 'super_admin']))
+        @if(auth()->user()->isLeadership())
         <div style="display:flex;align-items:center;border-bottom:1px solid var(--bg-3);margin-top:16px;padding-bottom:12px;overflow-x:auto;gap:8px;">
-            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}" 
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;
+            <a href="{{ route('daily-tasks.index', ['tab' => 'mine']) }}"
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:{{ $tab === 'mine' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
                       color:{{ $tab === 'mine' ? '#fff' : 'var(--fg-2)' }};">
-                📝 Tugas Saya
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Tugas Saya
             </a>
-            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}" 
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+            <a href="{{ route('daily-tasks.index', ['tab' => 'review']) }}"
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:{{ $tab === 'review' ? 'var(--maxy-navy)' : 'var(--bg-2)' }};
                       color:{{ $tab === 'review' ? '#fff' : 'var(--fg-2)' }};">
-                👀 Menunggu Review
+                <svg class="lucide sm" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                Menunggu Review
                 @if($pendingReviewCount > 0)
-                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $pendingReviewCount }}</span>
+                <span style="background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;">{{ $pendingReviewCount }}</span>
                 @endif
             </a>
             @php
@@ -47,11 +49,12 @@
                 )->where('status', 'pending')->count();
             @endphp
             <a href="{{ route('backdate-requests.index') }}"
-               style="text-decoration:none;padding:6px 12px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
+               style="text-decoration:none;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;
                       background:var(--bg-2);color:var(--fg-2);">
-                📅 Izin Backdating
+                <svg class="lucide sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Izin Backdating
                 @if($backdatePendingCount > 0)
-                <span style="background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;">{{ $backdatePendingCount }}</span>
+                <span style="background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;">{{ $backdatePendingCount }}</span>
                 @endif
             </a>
         </div>
@@ -64,7 +67,7 @@
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                 <div style="display:flex;align-items:center;gap:6px;">
                     <label style="font-size:12px;font-weight:600;color:var(--fg-3);">Filter:</label>
-                    <select name="status" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <select name="status" class="filter-dropdown" style="padding:9px 12px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;background:#fff;outline:none;min-height:40px;">
                         <option value="">Semua Status</option>
                         @foreach(\App\Models\DailyTaskEntry::STATUSES as $key => $label)
                             <option value="{{ $key }}" {{ ($statusFilter ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -73,7 +76,7 @@
                 </div>
 
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <select name="date" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <select name="date" class="filter-dropdown" style="padding:9px 12px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;background:#fff;outline:none;min-height:40px;">
                         <option value="">Semua Tanggal</option>
                         <option value="{{ today()->toDateString() }}" {{ ($dateFilter ?? '') === today()->toDateString() ? 'selected' : '' }}>Hari Ini</option>
                         <option value="{{ today()->subDay()->toDateString() }}" {{ ($dateFilter ?? '') === today()->subDay()->toDateString() ? 'selected' : '' }}>Kemarin</option>
@@ -83,7 +86,7 @@
 
                 @if(isset($subordinateStaff) && $subordinateStaff->isNotEmpty())
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <select name="staff" class="filter-dropdown" style="padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;outline:none;">
+                    <select name="staff" class="filter-dropdown" style="padding:9px 12px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;background:#fff;outline:none;min-height:40px;">
                         <option value="">Semua Staf</option>
                         @foreach($subordinateStaff as $staff)
                             <option value="{{ $staff->id }}" {{ ($staffFilter ?? '') == $staff->id ? 'selected' : '' }}>{{ explode(' ', $staff->name)[0] }}</option>
@@ -94,12 +97,12 @@
             </div>
 
             {{-- Search Input --}}
-            <div style="position:relative;width:250px;flex-shrink:0;">
+            <div style="position:relative;flex:1 1 220px;min-width:200px;">
                 <svg class="lucide sm" viewBox="0 0 24 24" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--fg-4);">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..." 
-                       style="width:100%;padding:6px 10px 6px 32px;font-size:13px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;"
+                <input type="text" id="search-input" name="search" value="{{ $search ?? '' }}" placeholder="Cari laporan..."
+                       style="width:100%;padding:9px 12px 9px 34px;font-size:16px;border-radius:8px;border:1px solid #E2E8F0;outline:none;box-shadow:none;min-height:40px;"
                        onfocus="this.style.borderColor='var(--maxy-navy)'; this.style.boxShadow='0 0 0 2px rgba(18,52,130,0.2)'"
                        onblur="this.style.borderColor='#E2E8F0'; this.style.boxShadow='none'">
             </div>
@@ -177,25 +180,25 @@
                             <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
                                 
                                 {{-- Nama Pengirim (Sender) --}}
-                                <div style="display:flex; align-items:center; gap:6px; padding-bottom:8px; border-bottom:1px dashed #f1f5f9; margin-bottom:4px;">
-                                    <div style="width:20px; height:20px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; font-size:11px;">
-                                        👤
-                                    </div>
-                                    <span style="font-size:13px; font-weight:700; color:#0f172a;">{{ $entry->user->name ?? 'Unknown' }}</span>
-                                    <span style="font-size:11px; color:#64748b;">({{ ucfirst($entry->user->role ?? 'Staf') }})</span>
+                                <div style="display:flex; align-items:center; gap:6px; padding-bottom:8px; border-bottom:1px dashed var(--neutral-200); margin-bottom:4px;">
+                                    <span class="sender-av">
+                                        <svg class="lucide" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                                    </span>
+                                    <span style="font-size:13.5px; font-weight:700; color:var(--fg-1);">{{ $entry->user->name ?? 'Unknown' }}</span>
+                                    <span style="font-size:12px; color:var(--fg-3);">({{ ucfirst($entry->user->role ?? 'Staf') }})</span>
                                 </div>
 
                                 @if($entry->weeklyTarget && $entry->weeklyTarget->monthlyTarget)
                                     {{-- Target Bulanan --}}
                                     <div>
-                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <span class="eyebrow">Target Bulanan</span>
                                         <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
                                             {{ Str::limit($entry->weeklyTarget->monthlyTarget->title, 80) }}
                                         </div>
                                     </div>
                                     {{-- Target Mingguan --}}
                                     <div>
-                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Mingguan</div>
+                                        <span class="eyebrow eyebrow-amber">Target Mingguan</span>
                                         <div style="font-size:13px; font-weight:600; color:var(--fg-2); line-height:1.3;">
                                             {{ Str::limit($entry->weeklyTarget->title, 80) }}
                                         </div>
@@ -203,7 +206,7 @@
                                 @elseif($entry->monthlyTarget)
                                     {{-- Target Bulanan --}}
                                     <div>
-                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Target Bulanan</div>
+                                        <span class="eyebrow">Target Bulanan</span>
                                         <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
                                             {{ Str::limit($entry->monthlyTarget->title, 80) }}
                                         </div>
@@ -211,7 +214,7 @@
                                 @else
                                     {{-- Tugas Tambahan --}}
                                     <div>
-                                        <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Tipe Tugas</div>
+                                        <span class="eyebrow eyebrow-amber">Tipe Tugas</span>
                                         <div style="font-size:15px; font-weight:700; color:var(--fg-1); line-height:1.3;">
                                             Tugas Tambahan
                                         </div>
@@ -220,8 +223,8 @@
 
                                 {{-- Laporan --}}
                                 <div>
-                                    <div style="font-size:10px; color:var(--fg-4); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; font-weight:600;">Laporan Dikirim</div>
-                                    <div style="font-size:12px; font-weight:400; color:var(--fg-2); line-height:1.4;">
+                                    <span class="eyebrow eyebrow-muted">Laporan Dikirim</span>
+                                    <div style="font-size:13px; font-weight:400; color:var(--fg-2); line-height:1.45;">
                                         {{ $entry->task_description }}
                                     </div>
                                 </div>
@@ -236,26 +239,23 @@
                             </span>
                         </div>
                         {{-- Chips --}}
-                        <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                        <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
                             <span class="chip chip-{{ $sChip }}">{{ $entry->status_label }}</span>
-                            <span class="chip chip-{{ $entry->verification_chip }}" style="font-size:10px;">
-                                @if($entry->verification_status === 'approved') ✅
-                                @elseif($entry->verification_status === 'revision') ↩
-                                @elseif($entry->verification_status === 'rejected') ❌
-                                @else ⏳
-                                @endif
-                            </span>
+                            <span class="chip chip-{{ $entry->verification_chip }}">{{ $entry->verification_status_label }}</span>
                             @if($entry->priority !== 'medium')
-                                <span class="chip chip-{{ $priorityChip }}" style="font-size:10px;">{{ $entry->priority_label }}</span>
+                                <span class="chip chip-{{ $priorityChip }}">{{ $entry->priority_label }}</span>
                             @endif
                             @if($entry->is_overdue)
-                                <span class="chip chip-danger" style="font-size:10px;">⏰ Terlambat</span>
+                                <span class="chip chip-danger">Terlambat</span>
                             @endif
                         </div>
-                        {{-- Meta --}}
-                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--fg-3);">
-                            <span>{{ \Carbon\Carbon::parse($entry->task_date)->format('d M Y') }}</span>
-                            <span>{{ $entry->duration_label }}</span>
+                        {{-- Meta + petunjuk klik --}}
+                        <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--fg-3);border-top:1px solid var(--neutral-100);padding-top:10px;">
+                            <span>{{ \Carbon\Carbon::parse($entry->task_date)->format('d M Y') }} · {{ $entry->duration_label }}</span>
+                            <span style="display:inline-flex;align-items:center;gap:3px;color:var(--maxy-navy);font-weight:600;">
+                                Lihat
+                                <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                            </span>
                         </div>
                     </a>
                 @endforeach

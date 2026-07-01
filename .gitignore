@@ -26,3 +26,8 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Skrip debug/test lepas di root (jangan commit)
+/test_*.php
+/dispatch-jobs.php
+/evaluate_*.php

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class KpiActual extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'kpi_target_id',   // FK ke kpi_targets (L3 staff KPI)
         'staff_id',        // FK ke users

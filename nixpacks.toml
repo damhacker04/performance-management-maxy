@@ -6,5 +6,23 @@ cmds = [
     "composer install --no-dev --optimize-autoloader --no-interaction"
 ]
 
+# ─────────────────────────────────────────────────────────────────────────────
+# START
+#
+# Catatan penting (lihat docs/CODE_AUDIT_2026-06.md):
+#  1. `db:seed` SENGAJA DIHAPUS dari start. Menjalankan seeder tiap restart
+#     berisiko (dulu me-reset password user). Seed manual sekali saat provisioning:
+#         php artisan db:seed --class=UserSeeder --force
+#  2. Queue worker WAJIB jalan, kalau tidak semua evaluasi AI / gap analysis /
+#     workload report menumpuk di tabel `jobs` dan tak pernah diproses.
+#  3. Scheduler WAJIB jalan untuk auto-reject revisi kedaluwarsa & cleanup.
+#  4. `php -S` adalah server dev single-thread — HANYA stop-gap. Untuk produksi
+#     sesungguhnya migrasikan ke nginx + php-fpm (atau FrankenPHP) dan jalankan
+#     worker sebagai proses/kontainer terpisah dengan auto-restart (supervisor).
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. `view:cache` WAJIB di-warm saat start. Tanpa ini, Blade dikompilasi
+#    on-demand; kalau request terpotong di tengah kompilasi (php -S single-thread),
+#    file compiled jadi buntung dan memunculkan ParseError "expecting endif"
+#    yang persisten (lihat memory: blade-parseerror-truncated-compiled).
 [start]
-cmd = "php artisan migrate --force && php artisan db:seed --class=UserSeeder --force && php -S 0.0.0.0:$PORT -t public"
+cmd = "php artisan migrate --force && php artisan view:cache && (php artisan queue:work --tries=3 --max-time=3600 --sleep=3 &) && (php artisan schedule:work &) && php -S 0.0.0.0:$PORT -t public"

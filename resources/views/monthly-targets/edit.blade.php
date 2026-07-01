@@ -1,8 +1,13 @@
 <x-app-layout>
+@php
+    $backUrl = request()->query('back')
+        ? urldecode(request()->query('back'))
+        : (url()->previous() !== url()->current() ? url()->previous() : route('monthly-targets.index'));
+@endphp
 
 <div class="page">
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
+        <a href="{{ $backUrl }}" class="icon-btn" style="margin-left:-8px;">
             <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </a>
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Edit Target</h1>

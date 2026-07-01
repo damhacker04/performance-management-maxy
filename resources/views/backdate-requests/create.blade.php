@@ -22,7 +22,7 @@
     @if(count($availableDates) === 0)
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <p style="font-size:14px;font-weight:600;color:var(--fg-1);margin-bottom:4px;">Tidak ada tanggal yang tersedia</p>
                 <p style="font-size:13px;color:var(--fg-3);">Semua permintaan backdating 3 hari terakhir sudah kamu ajukan atau sudah disetujui.</p>
             </div>
@@ -61,7 +61,7 @@
                               placeholder="Contoh: Kemarin saya masih mengerjakan pekerjaan sampai dini hari dan tidak sempat mengisi laporan..."
                               minlength="10"
                               required>{{ old('reason') }}</textarea>
-                    <small style="color:var(--fg-4);font-size:11px;">Minimal 10 karakter. Jelaskan dengan jelas agar leader bisa mempertimbangkan.</small>
+                    <small style="color:var(--fg-3);font-size:11px;">Minimal 10 karakter. Jelaskan dengan jelas agar leader bisa mempertimbangkan.</small>
                     @error('reason')<span class="err">{{ $message }}</span>@enderror
                 </div>
 

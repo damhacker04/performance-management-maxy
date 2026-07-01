@@ -44,7 +44,7 @@ class LeaderTargetController extends Controller
         $user = auth()->user();
 
         // Hanya boleh lihat target dept-nya sendiri yang dibuat C-Level
-        if (!in_array($user->role, ['c_level', 'super_admin'])) {
+        if (!$user->isExecutive()) {
             abort_if(
                 $monthlyTarget->department !== $user->department,
                 403,
@@ -52,9 +52,9 @@ class LeaderTargetController extends Controller
             );
         }
 
-        // Pastikan yang buat adalah C-Level
+        // Pastikan yang buat adalah C-Level atau Super Admin (keduanya setara secara akses)
         abort_if(
-            $monthlyTarget->user?->role !== 'c_level',
+            !in_array($monthlyTarget->user?->role, ['c_level', 'super_admin']),
             403,
             'Target ini bukan target dari C-Level.'
         );

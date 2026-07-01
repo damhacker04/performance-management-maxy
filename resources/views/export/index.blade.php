@@ -66,10 +66,10 @@
                           text-decoration:none;color:var(--fg-1);transition:background .15s;"
                    onmouseover="this.style.background='var(--bg-2)'"
                    onmouseout="this.style.background=''">
-                    <span style="font-size:18px;">📊</span>
+                    <span style="font-size:18px;"></span>
                     <div>
                         <div style="font-size:13px;font-weight:600;">Excel (.xlsx)</div>
-                        <div style="font-size:10px;color:var(--fg-4);">Untuk analisis & filter data</div>
+                        <div style="font-size:11px;color:var(--fg-3);">Untuk analisis & filter data</div>
                     </div>
                 </a>
 
@@ -88,7 +88,7 @@
                     <span style="font-size:18px;">📄</span>
                     <div>
                         <div style="font-size:13px;font-weight:600;">PDF / Print</div>
-                        <div style="font-size:10px;color:var(--fg-4);">Print atau simpan sebagai PDF</div>
+                        <div style="font-size:11px;color:var(--fg-3);">Print atau simpan sebagai PDF</div>
                     </div>
                 </a>
             </div>
@@ -120,7 +120,7 @@
 
                 {{-- Dari tanggal --}}
                 <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
-                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
+                    <label style="font-size:11px;font-weight:700;color:var(--fg-3);
                                   text-transform:uppercase;letter-spacing:.06em;">
                         Dari Tanggal
                     </label>
@@ -133,7 +133,7 @@
 
                 {{-- Sampai tanggal --}}
                 <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
-                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
+                    <label style="font-size:11px;font-weight:700;color:var(--fg-3);
                                   text-transform:uppercase;letter-spacing:.06em;">
                         Sampai Tanggal
                     </label>
@@ -146,7 +146,7 @@
 
                 {{-- Filter nama staff --}}
                 <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;">
-                    <label style="font-size:10px;font-weight:700;color:var(--fg-3);
+                    <label style="font-size:11px;font-weight:700;color:var(--fg-3);
                                   text-transform:uppercase;letter-spacing:.06em;">
                         Nama Staff
                     </label>
@@ -183,7 +183,7 @@
 
             {{-- Shortcut periode cepat --}}
             <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-                <span style="font-size:10px;color:var(--fg-4);align-self:center;">Cepat:</span>
+                <span style="font-size:11px;color:var(--fg-3);align-self:center;">Cepat:</span>
                 @php
                     $shortcuts = [
                         'Bulan ini'  => [now()->startOfMonth()->format('Y-m-d'), now()->endOfMonth()->format('Y-m-d')],
@@ -209,7 +209,7 @@
     @if(count($reports) === 0)
         <div class="m-card">
             <div class="empty-state">
-                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-4);" viewBox="0 0 24 24">
+                <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                     <line x1="16" y1="13" x2="8" y2="13"/>
@@ -229,7 +229,7 @@
         {{-- Summary --}}
         <div style="display:flex;align-items:center;gap:8px;">
             <span class="overline-label">Hasil</span>
-            <span class="chip chip-neutral" style="font-size:10px;">
+            <span class="chip chip-neutral" style="font-size:11px;">
                 {{ count($reports) }} anggota
                 @if($selectedUserId) &nbsp;·&nbsp; 1 staff dipilih @endif
                 &nbsp;·&nbsp; {{ $periodLabel }}
@@ -260,14 +260,14 @@
                         <div style="font-size:11px;color:var(--fg-3);display:flex;align-items:center;gap:5px;">
                             {{ ucfirst(str_replace('_', ' ', $u->department ?? '-')) }}
                             <span class="chip {{ $u->role === 'leader' ? 'chip-info' : 'chip-success' }}"
-                                  style="font-size:10px;padding:1px 6px;">
+                                  style="font-size:11px;padding:1px 6px;">
                                 {{ ucfirst($u->role) }}
                             </span>
                         </div>
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
-                        <span class="chip chip-neutral" style="font-size:10px;">{{ $entries->count() }} task</span>
-                        <span class="chip chip-success" style="font-size:10px;">
+                        <span class="chip chip-neutral" style="font-size:11px;">{{ $entries->count() }} task</span>
+                        <span class="chip chip-success" style="font-size:11px;">
                             {{ $entries->where('status','selesai')->count() }} selesai
                         </span>
                     </div>
@@ -278,23 +278,23 @@
                     <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:680px;">
                         <thead>
                             <tr style="background:#1e40af;">
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;white-space:nowrap;width:28px;">#</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;white-space:nowrap;width:72px;">Tanggal</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;">Target Bulanan</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;">Target Mingguan</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;">Task / Deskripsi</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;white-space:nowrap;width:65px;">Prioritas</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:center;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:center;font-size:11px;
                                            font-weight:700;white-space:nowrap;width:55px;">Durasi</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;white-space:nowrap;width:78px;">Status</th>
-                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:10px;
+                                <th style="color:#fff;padding:7px 10px;text-align:left;font-size:11px;
                                            font-weight:700;">Notes</th>
                             </tr>
                         </thead>
@@ -306,7 +306,7 @@
                                     $sLabel = $entry->status_label;
                                 @endphp
                                 <tr style="{{ $i % 2 === 1 ? 'background:#fafbff;' : '' }}">
-                                    <td style="padding:6px 10px;text-align:center;color:var(--fg-4);
+                                    <td style="padding:6px 10px;text-align:center;color:var(--fg-3);
                                                border-bottom:1px solid #f3f4f6;">{{ $i + 1 }}</td>
                                     <td style="padding:6px 10px;white-space:nowrap;color:var(--fg-2);
                                                border-bottom:1px solid #f3f4f6;">
@@ -326,7 +326,7 @@
                                     </td>
                                     <td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">
                                         <span style="display:inline-block;padding:2px 7px;border-radius:99px;
-                                                     font-size:10px;font-weight:700;
+                                                     font-size:11px;font-weight:700;
                                                      {{ $priorityColors[$prio] ?? $priorityColors['medium'] }}">
                                             {{ $priorityLabels[$prio] ?? 'Medium' }}
                                         </span>
@@ -336,7 +336,7 @@
                                         {{ $entry->duration_label }}
                                     </td>
                                     <td style="padding:6px 10px;border-bottom:1px solid #f3f4f6;">
-                                        <span class="chip {{ $sChip }}" style="font-size:10px;">{{ $sLabel }}</span>
+                                        <span class="chip {{ $sChip }}" style="font-size:11px;">{{ $sLabel }}</span>
                                     </td>
                                     <td style="padding:6px 10px;color:var(--fg-3);font-size:11px;
                                                border-bottom:1px solid #f3f4f6;line-height:1.4;">

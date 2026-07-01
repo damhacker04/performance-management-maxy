@@ -66,7 +66,7 @@
                             });
                         @endphp
                         <option value="" {{ empty($selectedWeekly) ? 'selected' : '' }}>
-                            📌 Tidak terkait target mingguan (tugas tambahan/mendadak)
+                            Tidak terkait target mingguan (tugas tambahan/mendadak)
                         </option>
                         @foreach($groupedTargets as $monthlyId => $wTargets)
                             @php
@@ -83,13 +83,13 @@
                         @endforeach
                     </select>
                 </div>
-                <small style="color:var(--fg-4);font-size:11px;">Pilih target mingguan yang terkait, atau pilih "Tidak terkait" untuk tugas tambahan.</small>
+                <small style="color:var(--fg-3);font-size:11px;">Pilih target mingguan yang terkait, atau pilih "Tidak terkait" untuk tugas tambahan.</small>
                 @error('weekly_target_id')<span class="err">{{ $message }}</span>@enderror
             </div>
 
             <!-- Tanggal (read-only — tanggal asli submit) -->
             <div class="field">
-                <label>Tanggal Tugas <span style="color:var(--fg-4);font-weight:400;">(tidak bisa diubah)</span></label>
+                <label>Tanggal Tugas <span style="color:var(--fg-3);font-weight:400;">(tidak bisa diubah)</span></label>
                 <input type="text"
                        value="{{ \Carbon\Carbon::parse($dailyTask->task_date)->isoFormat('dddd, D MMMM YYYY') }}"
                        class="m-input"
@@ -114,10 +114,10 @@
                         <select id="priority" name="priority"
                                 class="m-select {{ $errors->has('priority') ? 'err' : '' }}" required>
                             @php $defaultPriority = old('priority', $dailyTask->priority); @endphp
-                            <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>🔴 Kritis</option>
-                            <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>🟠 Tinggi</option>
-                            <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>🟡 Sedang</option>
-                            <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>🔵 Rendah</option>
+                            <option value="critical" {{ $defaultPriority === 'critical' ? 'selected' : '' }}>Kritis</option>
+                            <option value="high"     {{ $defaultPriority === 'high'     ? 'selected' : '' }}>Tinggi</option>
+                            <option value="medium"   {{ $defaultPriority === 'medium'   ? 'selected' : '' }}>Sedang</option>
+                            <option value="low"      {{ $defaultPriority === 'low'      ? 'selected' : '' }}>Rendah</option>
                         </select>
                     </div>
                     @error('priority')<span class="err">{{ $message }}</span>@enderror
@@ -177,15 +177,22 @@
                           placeholder="Jelaskan apa yang sudah dikerjakan / progres / hambatan…"
                           minlength="5"
                           required>{{ old('notes', $dailyTask->notes) }}</textarea>
-                <small style="color:var(--fg-4);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
+                <small style="color:var(--fg-3);font-size:11px;">Minimal 5 karakter. Konteks task dibutuhkan untuk evaluasi KPI.</small>
                 @error('notes')<span class="err">{{ $message }}</span>@enderror
             </div>
 
             @if($dailyTask->verification_status === 'revision')
+            @php
+                $reviewerLabel = match(auth()->user()->role) {
+                    'leader' => 'C-Level',
+                    'staff'  => 'Leader',
+                    default  => 'Atasan',
+                };
+            @endphp
             <div class="field" style="background:#FFF8E8;padding:12px;border:1px solid #FDE68A;border-radius:10px;">
                 <label for="revision_response" style="color:#B45309;display:flex;align-items:center;gap:6px;">
                     <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                    Balasan Revisi untuk Leader
+                    Balasan Revisi untuk {{ $reviewerLabel }}
                     <span style="color:var(--danger);">*</span>
                 </label>
                 <textarea id="revision_response" name="revision_response"
@@ -193,7 +200,7 @@
                           style="min-height:80px;border-color:#FBB041;background:#fff;"
                           placeholder="Tuliskan balasan atau konfirmasi bahwa revisi sudah dilakukan..."
                           required>{{ old('revision_response') }}</textarea>
-                <small style="color:#8B5A00;font-size:11px;">Catatan ini akan muncul langsung di Activity Log saat membalas revisi leader.</small>
+                <small style="color:#8B5A00;font-size:11px;">Catatan ini akan muncul langsung di Activity Log saat membalas revisi {{ strtolower($reviewerLabel) }}.</small>
                 @error('revision_response')<span class="err">{{ $message }}</span>@enderror
             </div>
             @endif
@@ -206,9 +213,9 @@
                         <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-navy);" viewBox="0 0 24 24"><path d="M15.5 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V8.5L15.5 3z"/><polyline points="15 3 15 9 21 9"/></svg>
                         Bukti Laporan (Multi)
                         @if($isSales)
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
+                            <span style="font-size:11px;color:var(--fg-3);font-weight:400;">(Wajib minimal 1 untuk Sales)</span>
                         @else
-                            <span style="font-size:10px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
+                            <span style="font-size:11px;color:var(--fg-3);font-weight:400;">(Opsional)</span>
                         @endif
                     </div>
                 </label>
@@ -246,9 +253,9 @@
             <div style="flex:1;">
                 <label style="font-size: 11px; color:var(--fg-3); font-weight:600;">Tipe Bukti</label>
                 <select name="evidences[__INDEX__][type]" class="m-input evidence-type-select" onchange="changeEvidenceType(this)" style="padding: 6px; font-size:13px; height:auto;">
-                    <option value="link">🔗 Link URL</option>
-                    <option value="file">📄 Upload File (PDF/Image)</option>
-                    <option value="image">🖼️ Screenshot (Ctrl+V)</option>
+                    <option value="link">Link URL</option>
+                    <option value="file">Upload File (PDF/Image)</option>
+                    <option value="image">Screenshot (Ctrl+V)</option>
                 </select>
             </div>
             <div style="flex:2;">
@@ -280,7 +287,7 @@
         <div class="evidence-input-image" style="display: none;">
             <div style="font-size:11px;color:var(--fg-3);margin-bottom:4px;">Bisa paste lebih dari 1 screenshot secara berurutan</div>
             <div class="paste-zone" tabindex="0"
-                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-4);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
+                 style="border:2px dashed var(--bg-3);border-radius:6px;padding:16px;text-align:center;color:var(--fg-3);font-size:12px;background:var(--bg-2);cursor:pointer;outline:none;transition:all 0.2s;"
                  title="Klik di sini lalu tekan Ctrl+V">
                 <svg class="lucide" style="width:20px;height:20px;margin:0 auto 6px;display:block;" viewBox="0 0 24 24"><path d="M9 2h6v2H9zM4 6h16v16H4z"/></svg>
                 Klik di sini, lalu tekan <kbd style="background:var(--bg-3);padding:1px 5px;border-radius:4px;font-size:11px;">Ctrl+V</kbd> untuk paste screenshot
@@ -291,7 +298,7 @@
         </div>
         
         <div style="display:flex; justify-content:flex-end; margin-top:12px; padding-top:12px; border-top:1px dashed var(--bg-3);">
-            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:10px;">✖</span></button>
+            <button type="button" onclick="this.closest('.evidence-row').remove()" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FCA5A5; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size:12px; display:flex; align-items:center; gap:6px;">Hapus <span style="font-size:11px;">✖</span></button>
         </div>
     </div>
 </template>
@@ -324,7 +331,7 @@ function addEvidenceRow(existingData = null) {
         realInput.addEventListener('change', (e) => {
             for (let file of e.target.files) {
                 if (file.size > 2 * 1024 * 1024) {
-                    alert('Ukuran file "' + file.name + '" melebihi batas 2 MB. Silakan pilih file yang lebih kecil.');
+                    window.maxyToast('Ukuran file "' + file.name + '" melebihi batas 2 MB. Silakan pilih file yang lebih kecil.', 'danger');
                     continue;
                 }
                 dt.items.add(file);
@@ -342,7 +349,7 @@ function addEvidenceRow(existingData = null) {
                 
                 const nameSpan = document.createElement('span');
                 nameSpan.style = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
-                nameSpan.textContent = '📄 ' + file.name;
+                nameSpan.textContent = file.name;
                 
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
@@ -391,9 +398,9 @@ function addEvidenceRow(existingData = null) {
         } else if (existingData.type === 'file') {
             const fileDiv = row.querySelector('.evidence-input-file');
             const filename = existingData.path_or_url.split('/').pop();
-            fileDiv.innerHTML = `<div style="font-size:12px;color:var(--fg-3);margin-bottom:4px;">📄 File tersimpan: <a href="/storage/${existingData.path_or_url}" target="_blank" style="color:var(--maxy-navy);font-weight:600;">${filename}</a></div>
+            fileDiv.innerHTML = `<div style="font-size:12px;color:var(--fg-3);margin-bottom:4px;">File tersimpan: <a href="/storage/${existingData.path_or_url}" target="_blank" style="color:var(--maxy-navy);font-weight:600;">${filename}</a></div>
                                  <input type="hidden" name="evidences[${evidenceCount}][path_or_url]" value="${existingData.path_or_url}">
-                                 <div style="font-size:11px;color:var(--fg-4);">(Hapus baris ini untuk mengganti file)</div>`;
+                                 <div style="font-size:11px;color:var(--fg-3);">(Hapus baris ini untuk mengganti file)</div>`;
         } else if (existingData.type === 'image') {
             const imgDiv = row.querySelector('.evidence-input-image');
             imgDiv.querySelector('.paste-zone').style.display = 'none';
@@ -496,7 +503,7 @@ function clearRowImage(btn) {
             if (!blob) continue;
 
             if (blob.size > 2 * 1024 * 1024) {
-                alert('Ukuran gambar melebihi batas 2 MB. Silakan perkecil resolusi gambar Anda.');
+                window.maxyToast('Ukuran gambar melebihi batas 2 MB. Silakan perkecil resolusi gambar Anda.', 'danger');
                 continue;
             }
 
@@ -525,7 +532,7 @@ function clearRowImage(btn) {
 
                     const data = await resp.json();
                     if (resp.ok && data.path) {
-                        status.textContent = '✅ Gambar berhasil disimpan.';
+                        status.textContent = 'Gambar berhasil disimpan.';
                         status.style.color = '#16A571';
                         
                         const div = document.createElement('div');
@@ -539,17 +546,18 @@ function clearRowImage(btn) {
                         
                         setTimeout(() => status.textContent = '', 3000);
                     } else {
-                        status.textContent = '⚠️ Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
+                        status.textContent = 'Gagal menyimpan: ' + (data.error ?? 'Coba lagi.');
                         status.style.color = 'var(--danger)';
                     }
                 } catch (err) {
-                    status.textContent = '⚠️ Gagal terhubung ke server.';
+                    status.textContent = 'Gagal terhubung ke server.';
                     status.style.color = 'var(--danger)';
                 }
             };
             reader.readAsDataURL(blob);
-            break; 
+            break;
         }
     });
 })();
 </script>
+</x-app-layout>

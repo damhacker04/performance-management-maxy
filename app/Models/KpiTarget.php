@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class KpiTarget extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'parent_id',     // FK ke kpi_targets (null = L2 dept, ada = L3 staff)
         'kpi_level',     // 2 = dept benchmark, 3 = staff individual
