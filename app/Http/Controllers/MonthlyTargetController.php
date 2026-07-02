@@ -120,11 +120,16 @@ class MonthlyTargetController extends Controller
                 ->groupBy('department');
         }
 
-        // KPI aktif untuk ditampilkan sebagai acuan
+        // KPI aktif untuk ditampilkan sebagai acuan.
+        // - Admin/CEO (executive): HANYA KPI Departemen (L2) — acuan target ke leader.
+        // - Leader: KPI Dept (L2) + KPI Staff (L3) di departemennya (bisa mengaitkan ke KPI staff).
         $kpiRefs = \App\Models\KpiTarget::whereNotNull('department')
             ->where('is_active', true)
             ->when(!$user->isExecutive(), fn($q) =>
                 $q->where('department', $user->department)
+            )
+            ->when($user->isExecutive(), fn($q) =>
+                $q->where(fn($sub) => $sub->where('kpi_level', '!=', 3)->orWhereNull('kpi_level'))
             )
             ->orderBy('department')
             ->get()
@@ -316,7 +321,20 @@ class MonthlyTargetController extends Controller
     public function edit(MonthlyTarget $monthlyTarget)
     {
         $this->authorizeEdit($monthlyTarget);
-        return view('monthly-targets.edit', compact('monthlyTarget'));
+
+        $user = auth()->user();
+        // Acuan KPI untuk form edit (agar bisa ditautkan menyusul):
+        // - Admin/CEO: hanya KPI Departemen (L2). Leader: L2 + L3. Difilter ke dept target ini.
+        $kpiRefs = \App\Models\KpiTarget::where('department', $monthlyTarget->department)
+            ->where('is_active', true)
+            ->when($user->isExecutive(), fn($q) =>
+                $q->where(fn($sub) => $sub->where('kpi_level', '!=', 3)->orWhereNull('kpi_level'))
+            )
+            ->orderBy('department')
+            ->get()
+            ->groupBy('department');
+
+        return view('monthly-targets.edit', compact('monthlyTarget', 'kpiRefs'));
     }
 
     public function update(Request $request, MonthlyTarget $monthlyTarget)
@@ -324,13 +342,21 @@ class MonthlyTargetController extends Controller
         $this->authorizeEdit($monthlyTarget);
 
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'month'       => 'required|integer|min:1|max:12',
-            'year'        => 'required|integer|min:2024|max:2030',
+            'title'         => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'month'         => 'required|integer|min:1|max:12',
+            'year'          => 'required|integer|min:2024|max:2030',
+            'kpi_target_id' => 'nullable|exists:kpi_targets,id',
         ]);
 
-        $monthlyTarget->update($validated);
+        $monthlyTarget->update([
+            'title'         => $validated['title'],
+            'description'   => $validated['description'] ?? null,
+            'month'         => $validated['month'],
+            'year'          => $validated['year'],
+            // "" (Tidak dikaitkan) → null; id valid → tersimpan.
+            'kpi_target_id' => $request->filled('kpi_target_id') ? $validated['kpi_target_id'] : null,
+        ]);
 
         // Kembali ke asal (?back= dari hidden input / query) bila ada — konsisten dgn store().
         $back = $request->input('back') ?: $request->query('back');

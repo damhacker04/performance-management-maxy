@@ -97,7 +97,141 @@ class KpiAiAnalyzerService
         return array_merge($parsed, ['reports_analyzed' => $reportsCount]);
     }
 
+    /**
+     * Analisis KPI level departemen (shared / milestone) — baca laporan SELURUH
+     * staf di departemen, lalu AI estimasi realisasi (shared) atau progress %
+     * (milestone). Untuk milestone, hasil dijaga di rentang 0–100.
+     *
+     * @return array{actual_value: float, reasoning: string, reports_analyzed: int}
+     */
+    public function analyzeForDept(KpiTarget $kpiL2, int $month, int $year): array
+    {
+        $isMile = $kpiL2->isMilestone();
+
+        $staffIds = \App\Models\User::where('department', $kpiL2->department)
+            ->where('is_active', true)
+            ->whereIn('role', ['staff', 'leader'])
+            ->pluck('id');
+
+        $entries = DailyTaskEntry::whereIn('user_id', $staffIds)
+            ->whereMonth('task_date', $month)
+            ->whereYear('task_date', $year)
+            ->where(function ($q) {
+                $q->where('status', 'selesai')->orWhere('verification_status', 'approved');
+            })
+            ->orderBy('task_date')
+            ->get(['id', 'user_id', 'task_date', 'task_description', 'proof_url']);
+
+        if ($entries->isEmpty()) {
+            return [
+                'actual_value'     => 0,
+                'reasoning'        => 'Tidak ada laporan yang selesai/disetujui di departemen ini pada periode.',
+                'reports_analyzed' => 0,
+            ];
+        }
+
+        // Batasi jumlah laporan agar prompt tetap wajar.
+        $reportLines = [];
+        foreach ($entries->take(40) as $i => $entry) {
+            $num  = $i + 1;
+            $date = $entry->task_date->format('d M Y');
+            $desc = trim($entry->task_description ?? '(tidak ada deskripsi)');
+            $line = "{$num}. [{$date}] {$desc}";
+            if (!empty($entry->proof_url)) {
+                $c = $this->linkExtractor->extract($entry->proof_url);
+                if ($c) {
+                    $line .= "\n   📎 Isi bukti link: " . mb_substr(trim($c), 0, 300);
+                }
+            }
+            $reportLines[] = $line;
+        }
+
+        $reportsText  = implode("\n\n", $reportLines);
+        $reportsCount = $entries->count();
+        $monthNames   = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        $prompt = $this->buildDeptPrompt($kpiL2, $isMile, $month, $year, $monthNames, $reportsText, $reportsCount);
+        $raw    = $this->callGroq($prompt);
+
+        if (!$raw) {
+            return [
+                'actual_value'     => 0,
+                'reasoning'        => 'AI tidak dapat merespons. Coba lagi nanti.',
+                'reports_analyzed' => $reportsCount,
+            ];
+        }
+
+        $parsed = $this->parseResponse($raw);
+        if ($isMile) {
+            $parsed['actual_value'] = min(100, max(0, (float) $parsed['actual_value']));
+        }
+
+        return array_merge($parsed, ['reports_analyzed' => $reportsCount]);
+    }
+
     // ─── Prompt Builder ────────────────────────────────────────────────────
+
+    private function buildDeptPrompt(
+        KpiTarget $kpi,
+        bool $isMile,
+        int $month,
+        int $year,
+        array $monthNames,
+        string $reportsText,
+        int $count
+    ): string {
+        $periodLabel = "{$monthNames[$month]} {$year}";
+        $deptLabel   = ucfirst(str_replace('_', ' ', $kpi->department ?? ''));
+        $kpiName     = $kpi->kpi_name;
+
+        if ($isMile) {
+            return <<<PROMPT
+Kamu analis KPI. Perkirakan PROGRESS sebuah milestone/proyek dalam persen (0–100) berdasarkan aktivitas kolektif satu departemen.
+
+## Milestone
+- Nama     : {$kpiName}
+- Periode  : {$periodLabel}
+- Dept     : {$deptLabel}
+
+## Laporan Harian Seluruh Staf Dept ({$count} laporan)
+{$reportsText}
+
+## Tugas
+Perkirakan berapa persen (0–100) progress milestone "{$kpiName}" berdasarkan laporan di atas.
+- Jika banyak aktivitas relevan & tuntas → progress tinggi.
+- Jika baru sebagian/persiapan → progress rendah-menengah.
+- Jika hampir tidak ada aktivitas terkait → progress rendah.
+
+## Format Jawaban (WAJIB JSON murni)
+{"actual_value": <angka 0-100>, "reasoning": "<max 150 kata: dasar estimasi progress + dari laporan mana>"}
+PROMPT;
+        }
+
+        $unit   = $kpi->unit;
+        $target = number_format((float) $kpi->target_value, 0, ',', '.');
+
+        return <<<PROMPT
+Kamu analis KPI. Perkirakan REALISASI sebuah KPI TIM (level departemen) berdasarkan aktivitas kolektif staf.
+
+## KPI Tim
+- Nama    : {$kpiName}
+- Target  : {$target} {$unit}
+- Periode : {$periodLabel}
+- Dept    : {$deptLabel}
+
+## Laporan Harian Seluruh Staf Dept ({$count} laporan)
+{$reportsText}
+
+## Tugas
+Estimasi nilai realisasi KPI "{$kpiName}" dalam satuan {$unit} untuk seluruh departemen.
+Jika metrik ini biasanya diukur sistem (mis. uptime, SLA, kepatuhan) dan tak bisa dipastikan dari laporan,
+beri estimasi terbaik yang konservatif dan SEBUTKAN bahwa ini perkiraan yang perlu diverifikasi manual.
+
+## Format Jawaban (WAJIB JSON murni)
+{"actual_value": <angka {$unit}>, "reasoning": "<max 150 kata: dasar estimasi + catatan ketidakpastian bila ada>"}
+PROMPT;
+    }
 
     private function buildPrompt(
         KpiTarget $kpi,

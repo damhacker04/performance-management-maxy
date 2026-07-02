@@ -42,6 +42,44 @@
                 <textarea id="description" name="description" class="m-textarea">{{ old('description', $monthlyTarget->description) }}</textarea>
             </div>
 
+            {{-- Acuan KPI (opsional) — bisa ditautkan menyusul setelah KPI staff dibuat --}}
+            <div class="field">
+                <label for="kpi_target_id">Acuan KPI <span style="color:var(--fg-3);font-weight:400;">(opsional)</span></label>
+                <div class="select-wrap">
+                    <select id="kpi_target_id" name="kpi_target_id" class="m-select">
+                        <option value="">-- Tidak dikaitkan ke KPI spesifik --</option>
+                        @foreach(($kpiRefs ?? collect()) as $deptKey => $kpis)
+                            @php
+                                $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey;
+                                $deptKpis  = $kpis->filter(fn($k) => (int)$k->kpi_level !== 3);
+                                $staffKpis = $kpis->where('kpi_level', 3);
+                            @endphp
+                            @if($deptKpis->isNotEmpty())
+                                <optgroup label="KPI Dept — {{ $deptLabel }}">
+                                    @foreach($deptKpis as $kpi)
+                                        <option value="{{ $kpi->id }}" {{ (int) old('kpi_target_id', $monthlyTarget->kpi_target_id) === (int) $kpi->id ? 'selected' : '' }}>
+                                            {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                            @if($staffKpis->isNotEmpty())
+                                <optgroup label="KPI Staff — {{ $deptLabel }}">
+                                    @foreach($staffKpis as $kpi)
+                                        <option value="{{ $kpi->id }}" {{ (int) old('kpi_target_id', $monthlyTarget->kpi_target_id) === (int) $kpi->id ? 'selected' : '' }}>
+                                            {{ $kpi->staff?->name ?? 'Staf' }} · {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <small style="font-size:11px;color:var(--fg-4);line-height:1.5;display:block;margin-top:4px;">
+                    Belum ada KPI individu untuk stafnya? Kaitkan ke <strong>KPI Departemen</strong> dulu, atau biarkan kosong — bisa ditautkan lagi di sini setelah HR/C-Level membuat KPI-nya.
+                </small>
+            </div>
+
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="field">
                     <label for="month">Bulan <span style="color:var(--danger);">*</span></label>

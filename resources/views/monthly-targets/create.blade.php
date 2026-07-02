@@ -19,19 +19,44 @@
                 KPI Departemen Aktif (Acuan)
             </div>
             @foreach($kpiRefs as $deptKey => $kpis)
-                @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
+                @php
+                    $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey;
+                    // L2 = benchmark dept (level null/legacy diperlakukan sbg dept); L3 = per staff.
+                    $deptKpis  = $kpis->filter(fn($k) => (int)$k->kpi_level !== 3);
+                    $staffKpis = $kpis->where('kpi_level', 3);
+                @endphp
                 <div style="font-size:11px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px;">
                     {{ $deptLabel }}
                 </div>
-                @foreach($kpis as $kpi)
+
+                {{-- KPI Departemen (L2) --}}
+                @foreach($deptKpis as $kpi)
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                         <span style="width:6px;height:6px;border-radius:50%;background:var(--info,#2563eb);flex-shrink:0;"></span>
                         <span style="font-size:13px;color:var(--fg-2);">
                             <strong>{{ $kpi->kpi_name }}</strong>:
                             {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bulan
                         </span>
+                        <span style="font-size:10px;font-weight:700;color:var(--info,#2563eb);background:#fff;border:1px solid var(--info-200,#bfdbfe);border-radius:6px;padding:1px 6px;">Dept</span>
                     </div>
                 @endforeach
+
+                {{-- KPI per Staff (L3) — hanya tampil untuk leader --}}
+                @if($staffKpis->isNotEmpty())
+                    <div style="font-size:10px;font-weight:700;color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 4px 14px;">
+                        Per Staff
+                    </div>
+                    @foreach($staffKpis as $kpi)
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding-left:14px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:var(--maxy-amber,#FBB041);flex-shrink:0;"></span>
+                            <span style="font-size:13px;color:var(--fg-2);">
+                                {{ $kpi->staff?->name ?? 'Staf' }} · <strong>{{ $kpi->kpi_name }}</strong>:
+                                {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bulan
+                            </span>
+                            <span style="font-size:10px;font-weight:700;color:#B4740F;background:#FFF7EC;border:1px solid #FBB041;border-radius:6px;padding:1px 6px;">Staff</span>
+                        </div>
+                    @endforeach
+                @endif
             @endforeach
             <div style="font-size:11px;color:var(--fg-3);margin-top:8px;">
                 Target yang dibuat harus mendukung pencapaian KPI di atas.
@@ -152,6 +177,9 @@
                         </select>
                     </div>
                     @error('kpi_target_id')<span class="err">{{ $message }}</span>@enderror
+                    <small style="font-size:11px;color:var(--fg-4);line-height:1.5;display:block;margin-top:4px;">
+                        Belum ada KPI individu untuk staf yang dipilih? Kaitkan ke <strong>KPI Departemen</strong> dulu, atau biarkan kosong — bisa ditautkan menyusul lewat Edit setelah HR/C-Level membuat KPI-nya.
+                    </small>
                     <div id="kpi-preview" style="display:none;align-items:center;gap:8px;margin-top:8px;
                                 padding:8px 12px;border-radius:8px;
                                 background:var(--success-50,#ecfdf5);border:1px solid var(--success-200,#a7f3d0);
