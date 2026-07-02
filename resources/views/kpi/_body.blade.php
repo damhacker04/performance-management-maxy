@@ -226,25 +226,13 @@
             {{-- ── KPI L2 Aktif (accordion) ── --}}
             @foreach($activeKpis as $kpi)
                 @php
-                    // L3 staff KPIs (anak yang aktif)
-                    $children   = $kpi->children->where('is_active', true);
-                    $deptTarget = (float) $kpi->target_value;
-                    $allocated  = (float) $children->sum('target_value');
-                    $unalloc    = $deptTarget - $allocated;
-                    $allocPct   = $deptTarget > 0 ? min(100, round($allocated / $deptTarget * 100)) : 0;
-                    $allocColor = $allocated > $deptTarget ? 'var(--danger)' : 'var(--maxy-navy)';
-
-                    // Realisasi tim: jumlah actual tiap anak (match periode anak, fallback terbaru)
-                    $totalActual  = 0.0;
-                    $hasAnyActual = false;
-                    foreach ($children as $ch) {
-                        $act = $ch->actuals->first(fn($a) => (int)$a->month === (int)$ch->month && (int)$a->year === (int)$ch->year)
-                            ?? $ch->actuals->sortByDesc(fn($a) => $a->year * 100 + $a->month)->first();
-                        if ($act) { $totalActual += (float) $act->actual_value; $hasAnyActual = true; }
-                    }
-                    $realPct   = $allocated > 0 ? round($totalActual / $allocated * 100) : 0;
-                    $realColor = !$hasAnyActual ? 'var(--fg-4)'
-                                : ($realPct >= 80 ? 'var(--success)' : ($realPct >= 60 ? 'var(--warning)' : 'var(--danger)'));
+                    // Rollup terpusat (branch per jenis di KpiTarget::deptRollup).
+                    $roll       = $kpi->deptRollup($kpi->month, $kpi->year);
+                    $children   = $kpi->children->where('is_active', true); // relevan sum/average
+                    $pct        = $roll['pct'];
+                    $realColor  = $pct === null ? 'var(--fg-4)'
+                                : ($pct >= 80 ? 'var(--success)' : ($pct >= 60 ? 'var(--warning)' : 'var(--danger)'));
+                    $aggChip    = ['sum'=>'Jumlah','average'=>'Rata-rata','shared'=>'Tim','milestone'=>'Milestone'][$kpi->aggregation ?? 'sum'] ?? 'Jumlah';
                 @endphp
 
                 <div class="kpi-l2">
@@ -259,39 +247,57 @@
                         <div class="kpi-info">
                             <div class="kpi-name">{{ $kpi->kpi_name }}</div>
                             <div class="kpi-meta">
-                                Target Dept: <span class="kpi-target">{{ number_format($deptTarget, 0, ',', '.') }} {{ $kpi->unit }}</span>
+                                @if($kpi->isMilestone())
+                                    <span class="kpi-target">Milestone (progress %)</span>
+                                @else
+                                    Target Dept: <span class="kpi-target">{{ number_format((float) $kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}</span>
+                                @endif
                                 &nbsp;·&nbsp; {{ $monthNames[$kpi->month] }} {{ $kpi->year }}
                                 @if($kpi->setter) &nbsp;·&nbsp; Oleh: {{ $kpi->setter->name }} @endif
                             </div>
 
-                            {{-- Mini bars --}}
+                            {{-- Mini bars (per jenis KPI) --}}
                             <div class="kpi-bars">
-                                {{-- Alokasi --}}
+                                @if(($kpi->aggregation ?? 'sum') === 'sum')
+                                    {{-- Alokasi --}}
+                                    <div class="kpi-bar-row">
+                                        <span class="kpi-bar-lbl">Alokasi</span>
+                                        <span class="kpi-bar-track">
+                                            <span class="kpi-bar-fill" style="width:{{ $roll['target'] > 0 ? min(100, round($roll['allocated'] / $roll['target'] * 100)) : 0 }}%;background:{{ $roll['allocated'] > $roll['target'] ? 'var(--danger)' : 'var(--maxy-navy)' }};"></span>
+                                        </span>
+                                        <span class="kpi-bar-val">
+                                            {{ number_format($roll['allocated'], 0, ',', '.') }}/{{ number_format($roll['target'], 0, ',', '.') }}
+                                            @if($roll['unallocated'] > 0)
+                                                <span style="color:var(--fg-4);font-weight:500;">· sisa {{ number_format($roll['unallocated'], 0, ',', '.') }}</span>
+                                            @elseif($roll['unallocated'] < 0)
+                                                <span style="color:var(--danger);font-weight:500;">· lebih {{ number_format(abs($roll['unallocated']), 0, ',', '.') }}</span>
+                                            @else
+                                                <span style="color:var(--success);font-weight:500;">· pas</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endif
+
+                                {{-- Realisasi / Rata-rata / Progress --}}
                                 <div class="kpi-bar-row">
-                                    <span class="kpi-bar-lbl">Alokasi</span>
+                                    <span class="kpi-bar-lbl">
+                                        @switch($kpi->aggregation ?? 'sum')
+                                            @case('average') Rata-rata @break
+                                            @case('milestone') Progress @break
+                                            @default Realisasi
+                                        @endswitch
+                                    </span>
                                     <span class="kpi-bar-track">
-                                        <span class="kpi-bar-fill" style="width:{{ $allocPct }}%;background:{{ $allocColor }};"></span>
+                                        <span class="kpi-bar-fill" id="deptbar-fill-{{ $kpi->id }}" style="width:{{ $pct !== null ? min(100, $pct) : 0 }}%;background:{{ $realColor }};"></span>
                                     </span>
-                                    <span class="kpi-bar-val">
-                                        {{ number_format($allocated, 0, ',', '.') }}/{{ number_format($deptTarget, 0, ',', '.') }}
-                                        @if($unalloc > 0)
-                                            <span style="color:var(--fg-4);font-weight:500;">· sisa {{ number_format($unalloc, 0, ',', '.') }}</span>
-                                        @elseif($unalloc < 0)
-                                            <span style="color:var(--danger);font-weight:500;">· lebih {{ number_format(abs($unalloc), 0, ',', '.') }}</span>
-                                        @else
-                                            <span style="color:var(--success);font-weight:500;">· pas</span>
-                                        @endif
-                                    </span>
-                                </div>
-                                {{-- Realisasi --}}
-                                <div class="kpi-bar-row">
-                                    <span class="kpi-bar-lbl">Realisasi</span>
-                                    <span class="kpi-bar-track">
-                                        <span class="kpi-bar-fill" style="width:{{ min(100, $realPct) }}%;background:{{ $realColor }};"></span>
-                                    </span>
-                                    <span class="kpi-bar-val">
-                                        @if($hasAnyActual)
-                                            {{ $realPct }}% <span style="color:var(--fg-4);font-weight:500;">· {{ number_format($totalActual, 0, ',', '.') }} {{ $kpi->unit }}</span>
+                                    <span class="kpi-bar-val" id="deptbar-val-{{ $kpi->id }}">
+                                        @if($roll['has_data'])
+                                            {{ $pct }}%
+                                            @if($roll['actual'] !== null && ! $roll['is_percent'])
+                                                <span style="color:var(--fg-4);font-weight:500;">· {{ number_format($roll['actual'], 0, ',', '.') }} {{ $kpi->unit }}</span>
+                                            @elseif(($kpi->aggregation ?? '') === 'average')
+                                                <span style="color:var(--fg-4);font-weight:500;">· rata-rata capaian staf</span>
+                                            @endif
                                         @else
                                             <span style="color:var(--fg-4);font-weight:500;">belum ada data</span>
                                         @endif
@@ -301,7 +307,7 @@
                         </div>
 
                         <div class="kpi-l2-right">
-                            <span class="staff-count">{{ $children->count() }} staff</span>
+                            <span class="staff-count">{{ $kpi->hasStaffBreakdown() ? $children->count().' staff' : $aggChip }}</span>
                             <svg class="lucide sm chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
                         </div>
                     </button>
@@ -312,6 +318,7 @@
                             <div style="font-size:11px;color:var(--fg-3);font-style:italic;padding:10px 0 4px;">{{ $kpi->notes }}</div>
                         @endif
 
+                        @if($kpi->hasStaffBreakdown())
                         @forelse($children as $ch)
                             @php
                                 $act = $ch->actuals->first(fn($a) => (int)$a->month === (int)$ch->month && (int)$a->year === (int)$ch->year)
@@ -369,14 +376,39 @@
                         @empty
                             <div class="l3-empty">Belum ada KPI staff untuk target dept ini.</div>
                         @endforelse
+                        @else
+                            {{-- shared / milestone: diukur di level departemen, tanpa pecahan staf --}}
+                            <div class="l3-empty" style="font-style:normal;">
+                                KPI ini diukur di <strong>level departemen</strong> ({{ $aggChip }}) — tanpa rincian per staf.
+                            </div>
+                            @if($canManage)
+                                <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
+                                    <button type="button" class="btn-ai" id="deptai-btn-{{ $kpi->id }}"
+                                            onclick="analyzeDeptKpi({{ $kpi->id }}, {{ $kpi->month }}, {{ $kpi->year }})"
+                                            title="Estimasi dari laporan harian seluruh staf dept via AI">
+                                        <span class="btn-ai-icon">✨</span>
+                                        <span class="spin"></span>
+                                        Analisis AI
+                                    </button>
+                                    <span style="font-size:11px;color:var(--fg-4);">
+                                        atau <a href="{{ route('kpi.actuals.create') }}" style="color:var(--maxy-navy);font-weight:600;text-decoration:none;">Input manual</a>
+                                    </span>
+                                </div>
+                                <div class="ai-note" id="deptai-note-{{ $kpi->id }}" style="margin-top:6px;"></div>
+                            @endif
+                        @endif
 
                         {{-- ── Actions ── --}}
                         @if($canManage)
                             <div class="l2-foot">
+                                @if($kpi->hasStaffBreakdown())
                                 <a href="{{ route('kpi.staff.create', ['parent_id' => $kpi->id]) }}" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
                                     <svg class="lucide sm" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                     Tambah KPI Staff
                                 </a>
+                                @else
+                                <span></span>
+                                @endif
                                 <div style="display:flex;gap:6px;">
                                     <a href="{{ route('kpi.edit', $kpi) }}" class="btn btn-outline btn-sm" title="Edit KPI Dept">
                                         <svg class="lucide sm" viewBox="0 0 24 24">
@@ -520,6 +552,50 @@ async function analyzeKpi(kpiTargetId, staffId, month, year) {
         console.error(err);
         alert('Terjadi kesalahan jaringan.');
         if (aiNote) aiNote.textContent = '';
+    } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+    }
+}
+
+// ── AI analyze untuk KPI level departemen (shared / milestone) ──
+async function analyzeDeptKpi(kpiId, month, year) {
+    const btn  = document.getElementById('deptai-btn-' + kpiId);
+    const fill = document.getElementById('deptbar-fill-' + kpiId);
+    const val  = document.getElementById('deptbar-val-' + kpiId);
+    const note = document.getElementById('deptai-note-' + kpiId);
+    if (!btn) return;
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+    if (note) note.textContent = '⏳ Menganalisis laporan departemen...';
+
+    try {
+        const res = await fetch(_analyzeUrl, {
+            method : 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': _csrfToken,
+                'Accept'      : 'application/json',
+            },
+            body: JSON.stringify({ kpi_target_id: kpiId, month, year }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            alert('Gagal: ' + (data.message || 'Terjadi kesalahan.'));
+            return;
+        }
+        const pct   = data.percentage;
+        const color = pct >= 80 ? 'var(--success)' : pct >= 60 ? 'var(--warning)' : 'var(--danger)';
+        if (fill) { fill.style.width = Math.min(100, pct) + '%'; fill.style.background = color; }
+        if (val)  { val.textContent = pct + '%'; }
+        if (note) { note.textContent = '💬 ' + (data.reasoning || ''); note.title = data.reasoning || ''; }
+        btn.innerHTML = '<span>✨</span> Analisis Ulang';
+        btn.title = 'Dianalisis dari ' + data.reports_analyzed + ' laporan dept';
+    } catch (err) {
+        console.error(err);
+        alert('Terjadi kesalahan jaringan.');
+        if (note) note.textContent = '';
     } finally {
         btn.classList.remove('loading');
         btn.disabled = false;

@@ -19,7 +19,8 @@ class StoreKpiActualRequest extends FormRequest
     {
         return [
             'kpi_target_id' => 'required|exists:kpi_targets,id',
-            'staff_id'      => 'required|exists:users,id',
+            // Nullable: KPI level dept (shared/milestone) tak terikat staf tertentu.
+            'staff_id'      => 'nullable|exists:users,id',
             'month'         => 'required|integer|min:1|max:12',
             'year'          => 'required|integer|min:2024|max:2030',
             'actual_value'  => 'required|numeric|min:0',
