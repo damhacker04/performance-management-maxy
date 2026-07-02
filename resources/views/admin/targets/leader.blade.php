@@ -27,10 +27,7 @@
 
     {{-- ── HEADER ──────────────────────────────────────────────── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('admin.targets.index', ['month' => $filterMonth, 'year' => $filterYear]) }}"
-           class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('admin.targets.index', ['month' => $filterMonth, 'year' => $filterYear])" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                 <span class="chip chip-dept-{{ str_replace('_','-',(string)$deptKey) }}">{{ $deptLabel }}</span>
@@ -108,6 +105,15 @@
                                class="icon-btn" title="Edit">
                                 <svg class="lucide sm" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                             </a>
+                            <form method="POST" action="{{ route('monthly-targets.destroy', $t) }}" style="margin:0;"
+                                  data-confirm="Hapus target bulanan ini beserta SEMUA target mingguan & laporan harian di dalamnya? Tindakan ini permanen."
+                                  data-confirm-variant="danger" data-confirm-ok="Ya, Hapus">
+                                @csrf @method('DELETE')
+                                <input type="hidden" name="back" value="{{ url()->full() }}">
+                                <button type="submit" class="icon-btn" title="Hapus" style="color:var(--danger);">
+                                    <svg class="lucide sm" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6"/></svg>
+                                </button>
+                            </form>
                             <a href="{{ route('weekly-targets.create', [
                                     'monthly_target_id' => $t->id,
                                     'context'           => 'leader',

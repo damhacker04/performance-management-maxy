@@ -43,17 +43,7 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back: gunakan ?back= jika ada (misal dari CEO targets), fallback ke period.staff-list --}}
-        @php
-            $backRoute = request()->query('back')
-                ? urldecode(request()->query('back'))
-                : (isset($year, $month)
-                    ? route('period.staff-list', ['year' => $year, 'month' => $month])
-                    : route('monthly-targets.index'));
-        @endphp
-        <a href="{{ $backRoute }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="isset($year, $month) ? route('period.staff-list', ['year' => $year, 'month' => $month]) : route('monthly-targets.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
                 {{-- Avatar mini --}}
@@ -119,6 +109,8 @@
                                     $periodLabel = ($kpi->month && $kpi->year)
                                         ? ($monthNames[$kpi->month] . ' ' . $kpi->year)
                                         : null;
+                                    $isMile   = $kpi->isMilestone();
+                                    $aggShort = ['sum'=>'Jumlah','average'=>'Rata²','shared'=>'Tim','milestone'=>'Milestone'][$kpi->aggregation ?? 'sum'] ?? 'Jumlah';
                                     // Warna beda: dept = netral, milik staf = amber (biar gampang dibedakan).
                                     $chipBg     = $isDeptKpi ? '#fff' : '#FFF7EC';
                                     $chipBorder = $isDeptKpi ? 'var(--info-200,#bfdbfe)' : '#FBB041';
@@ -126,9 +118,9 @@
                                 @endphp
                                 <div style="font-size:12px;color:var(--fg-2);background:{{ $chipBg }};border:1px solid {{ $chipBorder }};
                                             border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px;">
-                                    <strong>{{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln</strong>
+                                    <strong>@if($isMile) Milestone (progress %) @else {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln @endif</strong>
                                     <span style="font-size:10px;font-weight:700;color:{{ $tagColor }};border-left:1px solid var(--bd-1,#e5e7eb);padding-left:6px;">
-                                        {{ $levelLabel }}@if($periodLabel) · {{ $periodLabel }}@endif
+                                        {{ $levelLabel }} · {{ $aggShort }}@if($periodLabel) · {{ $periodLabel }}@endif
                                     </span>
                                 </div>
                             @endforeach

@@ -72,6 +72,13 @@ class KpiController extends Controller
         $user = auth()->user();
 
         $validated = $request->validated();
+        $validated['aggregation'] = $validated['aggregation'] ?? 'sum';
+
+        // Milestone: tak pakai angka target — pakai konvensi 100 / '%' (actual = progress 0–100).
+        if ($validated['aggregation'] === 'milestone') {
+            $validated['target_value'] = 100;
+            $validated['unit'] = '%';
+        }
 
         KpiTarget::create([
             ...$validated,
@@ -94,6 +101,15 @@ class KpiController extends Controller
     {
         $validated = $request->validated();
 
+        // Jenis KPI dikunci setelah dibuat (cegah data L3/actual jadi tak konsisten).
+        unset($validated['aggregation']);
+
+        // Pertahankan konvensi milestone (100 / '%').
+        if ($kpiTarget->isMilestone()) {
+            $validated['target_value'] = 100;
+            $validated['unit'] = '%';
+        }
+
         $kpiTarget->update($validated);
 
         return redirect()->route('kpi')->with('success', 'KPI berhasil diperbarui.');
@@ -113,8 +129,10 @@ class KpiController extends Controller
     /** Form tambah KPI L3 per staf */
     public function createStaffKpi()
     {
-        // KPI L2 yang tersedia sebagai parent
+        // KPI L2 yang tersedia sebagai parent — HANYA jenis yang punya pecahan staf
+        // (sum & average). Shared & milestone diukur di level dept, tanpa KPI staf.
         $kpiDepts = KpiTarget::level2()->where('is_active', true)
+            ->whereIn('aggregation', ['sum', 'average'])
             ->orderBy('department')
             ->orderBy('kpi_name')
             ->get();
@@ -148,6 +166,7 @@ class KpiController extends Controller
         KpiTarget::create([
             'parent_id' => $parent->id,
             'kpi_level' => 3,
+            'aggregation' => $parent->aggregation,  // L3 mewarisi jenis dari parent
             'user_id' => $staff->id,
             'department' => $parent->department,
             'kpi_name' => $parent->kpi_name,
@@ -192,17 +211,24 @@ class KpiController extends Controller
     /** Form input KPI Actual */
     public function createActual()
     {
-        // KPI L3 yang sudah diassign ke staf
+        // KPI L3 yang sudah diassign ke staf (sum/average — per staf)
         $kpiStaffs = KpiTarget::level3()
             ->where('is_active', true)
             ->with('staff')
             ->orderBy('department')
             ->get();
 
+        // KPI level departemen (shared/milestone) — realisasi diinput di level dept.
+        $kpiDeptLevel = KpiTarget::level2()
+            ->where('is_active', true)
+            ->whereIn('aggregation', ['shared', 'milestone'])
+            ->orderBy('department')
+            ->get();
+
         $months = range(1, 12);
         $years = range(2024, now()->year + 1);
 
-        return view('kpi.actuals.create', compact('kpiStaffs', 'months', 'years'));
+        return view('kpi.actuals.create', compact('kpiStaffs', 'kpiDeptLevel', 'months', 'years'));
     }
 
     /** Simpan KPI Actual */
@@ -214,16 +240,25 @@ class KpiController extends Controller
 
         $kpiTarget = KpiTarget::findOrFail($validated['kpi_target_id']);
 
+        // KPI level dept (shared/milestone) tak punya staf → staff_id null.
+        $staffId = $kpiTarget->isDeptLevel() ? null : ($validated['staff_id'] ?? null);
+
+        // Milestone: nilai = progress, dijaga di rentang 0–100.
+        $value = (float) $validated['actual_value'];
+        if ($kpiTarget->isMilestone()) {
+            $value = min(100, max(0, $value));
+        }
+
         KpiActual::updateOrCreate(
             [
                 'kpi_target_id' => $validated['kpi_target_id'],
-                'staff_id' => $validated['staff_id'],
+                'staff_id' => $staffId,
                 'month' => $validated['month'],
                 'year' => $validated['year'],
             ],
             [
                 'department' => $kpiTarget->department,
-                'actual_value' => $validated['actual_value'],
+                'actual_value' => $value,
                 'source' => 'manual',
                 'notes' => $validated['notes'] ?? null,
                 'created_by' => $user->id,
@@ -256,8 +291,14 @@ class KpiController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Milestone: progress dijaga di rentang 0–100.
+        $value = (float) $validated['actual_value'];
+        if ($kpiActual->kpiTarget?->isMilestone()) {
+            $value = min(100, max(0, $value));
+        }
+
         $kpiActual->update([
-            'actual_value' => $validated['actual_value'],
+            'actual_value' => $value,
             'notes' => $validated['notes'] ?? null,
             'created_by' => $user->id,
         ]);
@@ -284,44 +325,60 @@ class KpiController extends Controller
             'year'          => 'required|integer|min:2024',
         ]);
 
-        $kpiL3 = KpiTarget::with('staff')->findOrFail($validated['kpi_target_id']);
+        $kpi   = KpiTarget::with('staff')->findOrFail($validated['kpi_target_id']);
+        $month = (int) $validated['month'];
+        $year  = (int) $validated['year'];
 
-        // Pastikan ini KPI L3 (staff individual)
-        if ($kpiL3->kpi_level !== 3) {
+        // Tentukan mode: per-staf (L3 sum/average) atau level-dept (L2 shared/milestone).
+        if ($kpi->kpi_level === 3 && $kpi->hasStaffBreakdown()) {
+            $mode    = 'staff';
+            $staffId = $kpi->user_id;
+            $result  = $analyzer->analyzeForStaff($kpi, $month, $year);
+        } elseif ($kpi->kpi_level === 2 && $kpi->isDeptLevel()) {
+            $mode    = 'dept';
+            $staffId = null;
+            $result  = $analyzer->analyzeForDept($kpi, $month, $year);
+        } else {
             return response()->json([
                 'success' => false,
-                'message' => 'Hanya KPI staf (L3) yang bisa dianalisis AI.',
+                'message' => 'KPI ini tidak bisa dianalisis AI.',
             ], 422);
         }
 
-        $result = $analyzer->analyzeForStaff($kpiL3, (int) $validated['month'], (int) $validated['year']);
+        // Milestone: nilai adalah progress 0–100.
+        $value = (float) $result['actual_value'];
+        if ($kpi->isMilestone()) {
+            $value = min(100, max(0, $value));
+        }
 
-        // Simpan atau update ke kpi_actuals
         $actual = KpiActual::updateOrCreate(
             [
-                'kpi_target_id' => $kpiL3->id,
-                'staff_id'      => $kpiL3->user_id,
-                'month'         => $validated['month'],
-                'year'          => $validated['year'],
+                'kpi_target_id' => $kpi->id,
+                'staff_id'      => $staffId,
+                'month'         => $month,
+                'year'          => $year,
             ],
             [
-                'department'    => $kpiL3->department,
-                'actual_value'  => $result['actual_value'],
+                'department'    => $kpi->department,
+                'actual_value'  => $value,
                 'source'        => 'auto_detected',
                 'notes'         => $result['reasoning'],
                 'created_by'    => auth()->id(),
             ]
         );
 
-        $pct = $kpiL3->target_value > 0
-            ? round(($result['actual_value'] / $kpiL3->target_value) * 100, 1)
-            : 0;
+        // Milestone: actual sudah %. Lainnya: actual/target*100.
+        $pct = $kpi->isMilestone()
+            ? round(min(100, max(0, $value)), 1)
+            : ($kpi->target_value > 0 ? round($value / $kpi->target_value * 100, 1) : 0);
 
         return response()->json([
             'success'          => true,
-            'actual_value'     => $result['actual_value'],
-            'target_value'     => (float) $kpiL3->target_value,
-            'unit'             => $kpiL3->unit,
+            'mode'             => $mode,
+            'kpi_id'           => $kpi->id,
+            'actual_value'     => $value,
+            'target_value'     => (float) $kpi->target_value,
+            'unit'             => $kpi->unit,
             'percentage'       => $pct,
             'reasoning'        => $result['reasoning'],
             'reports_analyzed' => $result['reports_analyzed'],

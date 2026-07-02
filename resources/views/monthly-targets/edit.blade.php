@@ -7,9 +7,7 @@
 
 <div class="page">
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ $backUrl }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="$backUrl" style="margin-left:-8px;" />
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Edit Target</h1>
     </div>
 
@@ -17,6 +15,10 @@
         <form method="POST" action="{{ route('monthly-targets.update', $monthlyTarget) }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf @method('PATCH')
+            {{-- Teruskan asal (?back=) agar setelah simpan kembali ke halaman yang benar (mis. /admin/targets/leader/..). --}}
+            @if(request('back'))
+                <input type="hidden" name="back" value="{{ request('back') }}">
+            @endif
 
             <div class="field">
                 <label>Departemen</label>
@@ -38,6 +40,44 @@
             <div class="field">
                 <label for="description">Deskripsi</label>
                 <textarea id="description" name="description" class="m-textarea">{{ old('description', $monthlyTarget->description) }}</textarea>
+            </div>
+
+            {{-- Acuan KPI (opsional) — bisa ditautkan menyusul setelah KPI staff dibuat --}}
+            <div class="field">
+                <label for="kpi_target_id">Acuan KPI <span style="color:var(--fg-3);font-weight:400;">(opsional)</span></label>
+                <div class="select-wrap">
+                    <select id="kpi_target_id" name="kpi_target_id" class="m-select">
+                        <option value="">-- Tidak dikaitkan ke KPI spesifik --</option>
+                        @foreach(($kpiRefs ?? collect()) as $deptKey => $kpis)
+                            @php
+                                $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey;
+                                $deptKpis  = $kpis->filter(fn($k) => (int)$k->kpi_level !== 3);
+                                $staffKpis = $kpis->where('kpi_level', 3);
+                            @endphp
+                            @if($deptKpis->isNotEmpty())
+                                <optgroup label="KPI Dept — {{ $deptLabel }}">
+                                    @foreach($deptKpis as $kpi)
+                                        <option value="{{ $kpi->id }}" {{ (int) old('kpi_target_id', $monthlyTarget->kpi_target_id) === (int) $kpi->id ? 'selected' : '' }}>
+                                            {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                            @if($staffKpis->isNotEmpty())
+                                <optgroup label="KPI Staff — {{ $deptLabel }}">
+                                    @foreach($staffKpis as $kpi)
+                                        <option value="{{ $kpi->id }}" {{ (int) old('kpi_target_id', $monthlyTarget->kpi_target_id) === (int) $kpi->id ? 'selected' : '' }}>
+                                            {{ $kpi->staff?->name ?? 'Staf' }} · {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                        </option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+                <small style="font-size:11px;color:var(--fg-4);line-height:1.5;display:block;margin-top:4px;">
+                    Belum ada KPI individu untuk stafnya? Kaitkan ke <strong>KPI Departemen</strong> dulu, atau biarkan kosong — bisa ditautkan lagi di sini setelah HR/C-Level membuat KPI-nya.
+                </small>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">

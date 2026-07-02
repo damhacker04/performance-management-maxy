@@ -43,8 +43,20 @@
                 @enderror
             </div>
 
-            {{-- Target & Satuan --}}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            {{-- Jenis KPI --}}
+            <div class="field">
+                <label class="">Jenis KPI <span style="color:var(--danger);">*</span></label>
+                <div class="select-wrap"><select name="aggregation" id="aggregation" class="m-select @error('aggregation') is-invalid @enderror" required onchange="onAggChange(this.value)">
+                    @foreach(\App\Models\KpiTarget::AGGREGATIONS as $key => $label)
+                        <option value="{{ $key }}" {{ old('aggregation','sum') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select></div>
+                @error('aggregation')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <p class="form-hint" id="agg-hint"></p>
+            </div>
+
+            {{-- Target & Satuan (disembunyikan untuk Milestone) --}}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="target-unit-row">
                 <div class="field">
                     <label class="">Target Nilai <span style="color:var(--danger);">*</span></label>
                     <input type="number" name="target_value" step="0.01" min="0"
@@ -132,6 +144,30 @@
         </form>
     </div>
 </div>
+
+<script>
+function onAggChange(val) {
+    const row  = document.getElementById('target-unit-row');
+    const tv   = document.querySelector('[name="target_value"]');
+    const un   = document.querySelector('[name="unit"]');
+    const hint = document.getElementById('agg-hint');
+    const isMile = val === 'milestone';
+    if (row) row.style.display = isMile ? 'none' : 'grid';
+    if (tv) tv.required = !isMile;
+    if (un) un.required = !isMile;
+    const hints = {
+        sum:       'Angka staf dijumlahkan jadi angka dept. Contoh: revenue, jumlah deal, tugas selesai.',
+        average:   'Dept = rata-rata pencapaian staf. Contoh: conversion rate, response time.',
+        shared:    'Target tim bersama, tidak dibagi ke staf. Contoh: uptime 99%, SLA.',
+        milestone: 'Diukur sebagai progress 0–100%. Contoh: rilis fitur, lulus audit. Target angka tak perlu.'
+    };
+    if (hint) hint.textContent = hints[val] || '';
+}
+document.addEventListener('DOMContentLoaded', function () {
+    const sel = document.getElementById('aggregation');
+    if (sel) onAggChange(sel.value);
+});
+</script>
 </x-app-layout>
 
 
