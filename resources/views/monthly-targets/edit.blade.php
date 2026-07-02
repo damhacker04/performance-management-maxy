@@ -15,6 +15,10 @@
         <form method="POST" action="{{ route('monthly-targets.update', $monthlyTarget) }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf @method('PATCH')
+            {{-- Teruskan asal (?back=) agar setelah simpan kembali ke halaman yang benar (mis. /admin/targets/leader/..). --}}
+            @if(request('back'))
+                <input type="hidden" name="back" value="{{ request('back') }}">
+            @endif
 
             <div class="field">
                 <label>Departemen</label>

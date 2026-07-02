@@ -332,8 +332,12 @@ class MonthlyTargetController extends Controller
 
         $monthlyTarget->update($validated);
 
-        return redirect()->route('monthly-targets.index')
-            ->with('success', 'Target bulanan berhasil diperbarui.');
+        // Kembali ke asal (?back= dari hidden input / query) bila ada — konsisten dgn store().
+        $back = $request->input('back') ?: $request->query('back');
+
+        return $back
+            ? redirect(urldecode($back))->with('success', 'Target bulanan berhasil diperbarui.')
+            : redirect()->route('monthly-targets.index')->with('success', 'Target bulanan berhasil diperbarui.');
     }
 
     public function destroy(MonthlyTarget $monthlyTarget)
