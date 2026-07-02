@@ -27,10 +27,7 @@
 
     {{-- ── HEADER ──────────────────────────────────────────────── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('admin.targets.index', ['month' => $filterMonth, 'year' => $filterYear]) }}"
-           class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('admin.targets.index', ['month' => $filterMonth, 'year' => $filterYear])" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                 <span class="chip chip-dept-{{ str_replace('_','-',(string)$deptKey) }}">{{ $deptLabel }}</span>
