@@ -28,10 +28,7 @@
         }
     @endphp
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ $backUrl ?? route('period.staff-targets', ['year' => $monthlyTarget->year, 'month' => $monthlyTarget->month, 'staff' => $personKey ?? auth()->id()]) }}"
-           class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="$backUrl ?? route('period.staff-targets', ['year' => $monthlyTarget->year, 'month' => $monthlyTarget->month, 'staff' => $personKey ?? auth()->id()])" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                 <span class="chip chip-neutral" style="font-size:11px;">{{ $monthName }} {{ $monthlyTarget->year }}</span>

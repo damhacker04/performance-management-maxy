@@ -43,17 +43,7 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back: gunakan ?back= jika ada (misal dari CEO targets), fallback ke period.staff-list --}}
-        @php
-            $backRoute = request()->query('back')
-                ? urldecode(request()->query('back'))
-                : (isset($year, $month)
-                    ? route('period.staff-list', ['year' => $year, 'month' => $month])
-                    : route('monthly-targets.index'));
-        @endphp
-        <a href="{{ $backRoute }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="isset($year, $month) ? route('period.staff-list', ['year' => $year, 'month' => $month]) : route('monthly-targets.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
                 {{-- Avatar mini --}}

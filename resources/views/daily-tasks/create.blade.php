@@ -8,9 +8,7 @@
     @endphp
 
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('daily-tasks.index') }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('daily-tasks.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.2;">Laporan Harian</h1>
             <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">{{ $displayDate->isoFormat('dddd, D MMMM YYYY') }}</p>
