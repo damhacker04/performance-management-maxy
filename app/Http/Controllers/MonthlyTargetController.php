@@ -366,14 +366,20 @@ class MonthlyTargetController extends Controller
             : redirect()->route('monthly-targets.index')->with('success', 'Target bulanan berhasil diperbarui.');
     }
 
-    public function destroy(MonthlyTarget $monthlyTarget)
+    public function destroy(Request $request, MonthlyTarget $monthlyTarget)
     {
         $this->authorizeEdit($monthlyTarget);
 
+        // Menghapus monthly target ikut menghapus weekly target & laporan harian
+        // di dalamnya (cascade FK). Konfirmasi ditangani di sisi UI (data-confirm).
         $monthlyTarget->delete();
 
-        return redirect()->route('monthly-targets.index')
-            ->with('success', 'Target bulanan berhasil dihapus.');
+        // Kembali ke asal (?back=) bila ada — konsisten dgn store()/update().
+        $back = $request->input('back') ?: $request->query('back');
+
+        return $back
+            ? redirect(urldecode($back))->with('success', 'Target bulanan berhasil dihapus.')
+            : redirect()->route('monthly-targets.index')->with('success', 'Target bulanan berhasil dihapus.');
     }
 
     private function authorizeEdit(MonthlyTarget $monthlyTarget)
