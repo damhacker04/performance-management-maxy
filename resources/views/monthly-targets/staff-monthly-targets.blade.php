@@ -43,15 +43,7 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        {{-- Back ke daftar staf untuk bulan ini (period.staff-list) --}}
-        @php
-            $backRoute = isset($year, $month)
-                ? route('period.staff-list', ['year' => $year, 'month' => $month])
-                : route('monthly-targets.index');
-        @endphp
-        <a href="{{ $backRoute }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="isset($year, $month) ? route('period.staff-list', ['year' => $year, 'month' => $month]) : route('monthly-targets.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px;">
                 {{-- Avatar mini --}}
@@ -77,23 +69,62 @@
 
     {{-- ── KPI Acuan (jika ada) ── --}}
     @php
-        $kpisForDept = \App\Models\KpiTarget::whereNotNull('department')
-            ->where('department', $staff->department)
+        // Tampilkan HANYA: KPI Departemen (L2) + KPI milik staf ini sendiri (L3).
+        // KPI L3 milik staf lain sengaja disembunyikan agar tidak membingungkan.
+        $kpisForDept = \App\Models\KpiTarget::where('department', $staff->department)
             ->where('is_active', true)
+            ->where(function ($q) use ($staff) {
+                $q->where('kpi_level', 2)
+                  ->orWhere(function ($q2) use ($staff) {
+                      $q2->where('kpi_level', 3)->where('user_id', $staff->id);
+                  });
+            })
             ->get();
     @endphp
     @if($kpisForDept->isNotEmpty())
+        @php
+            $monthNames = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            // Kelompokkan berdasarkan kpi_name agar nama yang sama tampil berdekatan
+            $kpiGrouped = $kpisForDept->groupBy('kpi_name');
+            $staffFirst = \Illuminate\Support\Str::of($staff->name)->trim()->explode(' ')->first();
+        @endphp
         <div style="background:var(--info-50,#eff6ff);border:1px solid var(--info-200,#bfdbfe);
                     border-radius:var(--r-md);padding:12px 14px;">
-            <div style="font-size:11px;font-weight:700;color:var(--info,#2563eb);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:700;color:var(--info,#2563eb);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">
                 KPI Departemen — Acuan Evaluasi
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                @foreach($kpisForDept as $kpi)
-                    <div style="font-size:12px;color:var(--fg-2);background:#fff;border:1px solid var(--info-200,#bfdbfe);
-                                border-radius:8px;padding:5px 10px;">
-                        <strong>{{ $kpi->kpi_name }}</strong>:
-                        {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                @foreach($kpiGrouped as $kpiName => $kpiItems)
+                    <div>
+                        {{-- Nama KPI sebagai label baris --}}
+                        <div style="font-size:11px;font-weight:700;color:var(--fg-2);margin-bottom:4px;">
+                            {{ $kpiName }}
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                            @foreach($kpiItems as $kpi)
+                                @php
+                                    // kpi_level bertipe integer: 2 = target departemen, 3 = target per orang.
+                                    $isDeptKpi  = (int) $kpi->kpi_level === 2;
+                                    $levelLabel = $isDeptKpi ? 'Target Dept' : 'Target ' . $staffFirst;
+                                    $periodLabel = ($kpi->month && $kpi->year)
+                                        ? ($monthNames[$kpi->month] . ' ' . $kpi->year)
+                                        : null;
+                                    $isMile   = $kpi->isMilestone();
+                                    $aggShort = ['sum'=>'Jumlah','average'=>'Rata²','shared'=>'Tim','milestone'=>'Milestone'][$kpi->aggregation ?? 'sum'] ?? 'Jumlah';
+                                    // Warna beda: dept = netral, milik staf = amber (biar gampang dibedakan).
+                                    $chipBg     = $isDeptKpi ? '#fff' : '#FFF7EC';
+                                    $chipBorder = $isDeptKpi ? 'var(--info-200,#bfdbfe)' : '#FBB041';
+                                    $tagColor   = $isDeptKpi ? 'var(--fg-4)' : '#B4740F';
+                                @endphp
+                                <div style="font-size:12px;color:var(--fg-2);background:{{ $chipBg }};border:1px solid {{ $chipBorder }};
+                                            border-radius:8px;padding:5px 10px;display:flex;align-items:center;gap:6px;">
+                                    <strong>@if($isMile) Milestone (progress %) @else {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bln @endif</strong>
+                                    <span style="font-size:10px;font-weight:700;color:{{ $tagColor }};border-left:1px solid var(--bd-1,#e5e7eb);padding-left:6px;">
+                                        {{ $levelLabel }} · {{ $aggShort }}@if($periodLabel) · {{ $periodLabel }}@endif
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -149,7 +180,7 @@
                     {{-- Link ke showStaffInPeriod (period.staff-weekly) jika ada context year/month,
                          fallback ke legacy monthly-targets.staff --}}
                     <a href="{{ isset($year, $month)
-                        ? route('period.staff-weekly', ['year' => $year, 'month' => $month, 'staff' => $staff->id, 'monthlyTarget' => $mt->id])
+                        ? route('period.staff-weekly', ['year' => $year, 'month' => $month, 'staff' => $staff->id, 'monthlyTarget' => $mt->id]) . '?back=' . urlencode(url()->full())
                         : route('monthly-targets.staff', ['monthlyTarget' => $mt->id, 'assignee' => $staff->id]) }}"
                        class="mt-card" style="border-color: {{ $isActive ? 'var(--warning)' : 'var(--neutral-200)' }};">
 

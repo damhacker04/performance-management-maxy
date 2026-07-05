@@ -1,11 +1,13 @@
 <x-app-layout>
+@php
+    $backParam = request()->query('back') ? urldecode(request()->query('back')) : null;
+    $backHref  = $backParam ?? route('monthly-targets.index');
+@endphp
 
 <div class="page">
     <!-- Back -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="$backHref" style="margin-left:-8px;" />
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Target Baru</h1>
     </div>
 
@@ -17,19 +19,44 @@
                 KPI Departemen Aktif (Acuan)
             </div>
             @foreach($kpiRefs as $deptKey => $kpis)
-                @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
+                @php
+                    $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey;
+                    // L2 = benchmark dept (level null/legacy diperlakukan sbg dept); L3 = per staff.
+                    $deptKpis  = $kpis->filter(fn($k) => (int)$k->kpi_level !== 3);
+                    $staffKpis = $kpis->where('kpi_level', 3);
+                @endphp
                 <div style="font-size:11px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.04em;margin:6px 0 4px;">
                     {{ $deptLabel }}
                 </div>
-                @foreach($kpis as $kpi)
+
+                {{-- KPI Departemen (L2) --}}
+                @foreach($deptKpis as $kpi)
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                         <span style="width:6px;height:6px;border-radius:50%;background:var(--info,#2563eb);flex-shrink:0;"></span>
                         <span style="font-size:13px;color:var(--fg-2);">
                             <strong>{{ $kpi->kpi_name }}</strong>:
                             {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bulan
                         </span>
+                        <span style="font-size:10px;font-weight:700;color:var(--info,#2563eb);background:#fff;border:1px solid var(--info-200,#bfdbfe);border-radius:6px;padding:1px 6px;">Dept</span>
                     </div>
                 @endforeach
+
+                {{-- KPI per Staff (L3) — hanya tampil untuk leader --}}
+                @if($staffKpis->isNotEmpty())
+                    <div style="font-size:10px;font-weight:700;color:var(--fg-4);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 4px 14px;">
+                        Per Staff
+                    </div>
+                    @foreach($staffKpis as $kpi)
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding-left:14px;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:var(--maxy-amber,#FBB041);flex-shrink:0;"></span>
+                            <span style="font-size:13px;color:var(--fg-2);">
+                                {{ $kpi->staff?->name ?? 'Staf' }} · <strong>{{ $kpi->kpi_name }}</strong>:
+                                {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}/bulan
+                            </span>
+                            <span style="font-size:10px;font-weight:700;color:#B4740F;background:#FFF7EC;border:1px solid #FBB041;border-radius:6px;padding:1px 6px;">Staff</span>
+                        </div>
+                    @endforeach
+                @endif
             @endforeach
             <div style="font-size:11px;color:var(--fg-3);margin-top:8px;">
                 Target yang dibuat harus mendukung pencapaian KPI di atas.
@@ -38,7 +65,7 @@
     @endif
 
     <div class="m-card">
-        <form method="POST" action="{{ route('monthly-targets.store') }}"
+        <form method="POST" action="{{ route('monthly-targets.store') . ($backParam ? '?back=' . urlencode($backParam) : '') }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
 
@@ -113,19 +140,50 @@
                         <select id="kpi_target_id" name="kpi_target_id" class="m-select">
                             <option value="">-- Tidak dikaitkan ke KPI spesifik --</option>
                             @foreach($kpiRefs as $deptKey => $kpis)
-                                @php $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey; @endphp
-                                <optgroup label="{{ $deptLabel }}">
-                                    @foreach($kpis as $kpi)
-                                        <option value="{{ $kpi->id }}"
-                                                {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
-                                            {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
-                                        </option>
-                                    @endforeach
-                                </optgroup>
+                                @php
+                                    $deptLabel = \App\Models\User::DEPARTMENTS[$deptKey] ?? $deptKey;
+                                    // L2 = benchmark dept; L3 = breakdown per staff. Level null/legacy diperlakukan sbg L2.
+                                    $deptKpis  = $kpis->filter(fn($k) => (int)$k->kpi_level !== 3);
+                                    $staffKpis = $kpis->where('kpi_level', 3);
+                                @endphp
+
+                                @if($deptKpis->isNotEmpty())
+                                    <optgroup label="KPI Dept — {{ $deptLabel }}">
+                                        @foreach($deptKpis as $kpi)
+                                            <option value="{{ $kpi->id }}" data-level="2" data-staff-id=""
+                                                    data-kpiname="{{ $kpi->kpi_name }}"
+                                                    data-figure="{{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}"
+                                                    {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
+                                                {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+
+                                @if($staffKpis->isNotEmpty())
+                                    <optgroup label="KPI Staff — {{ $deptLabel }}">
+                                        @foreach($staffKpis as $kpi)
+                                            <option value="{{ $kpi->id }}" data-level="3" data-staff-id="{{ $kpi->user_id }}"
+                                                    data-staff-name="{{ $kpi->staff?->name ?? 'Staf' }}"
+                                                    data-kpiname="{{ $kpi->kpi_name }}"
+                                                    data-figure="{{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}"
+                                                    {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
+                                                {{ $kpi->staff?->name ?? 'Staf' }} · {{ $kpi->kpi_name }} — {{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             @endforeach
                         </select>
                     </div>
                     @error('kpi_target_id')<span class="err">{{ $message }}</span>@enderror
+                    <small style="font-size:11px;color:var(--fg-4);line-height:1.5;display:block;margin-top:4px;">
+                        Belum ada KPI individu untuk staf yang dipilih? Kaitkan ke <strong>KPI Departemen</strong> dulu, atau biarkan kosong — bisa ditautkan menyusul lewat Edit setelah HR/C-Level membuat KPI-nya.
+                    </small>
+                    <div id="kpi-preview" style="display:none;align-items:center;gap:8px;margin-top:8px;
+                                padding:8px 12px;border-radius:8px;
+                                background:var(--success-50,#ecfdf5);border:1px solid var(--success-200,#a7f3d0);
+                                font-size:12px;color:var(--fg-2);line-height:1.4;"></div>
                 </div>
             @endif
 
@@ -194,7 +252,96 @@ function filterStaffByDept(selectedDept) {
 
     // Reset pilihan staf kalau dept berubah
     select.value = '';
+    onStaffChange();
 }
+
+// ── LAPIS 1: Filter Acuan KPI sesuai staff yang dipilih ──
+// KPI Dept (L2) selalu valid. KPI Staff (L3) hanya tampil milik staff terpilih.
+// Target Tim (tanpa staff) → semua L3 disembunyikan.
+function filterKpiByStaff() {
+    const staffSel = document.getElementById('assigned_to');
+    const kpiSel   = document.getElementById('kpi_target_id');
+    if (!staffSel || !kpiSel) return;
+
+    const staffId = staffSel.value;
+
+    Array.from(kpiSel.options).forEach(o => {
+        if (!o.dataset.level) return; // opsi "-- tidak dikaitkan --"
+        const show = o.dataset.level === '2'
+            ? true
+            : (!!staffId && o.dataset.staffId === staffId);
+        o.hidden = !show;
+        o.disabled = !show;
+    });
+
+    // Sembunyikan optgroup yang seluruh isinya tersembunyi
+    Array.from(kpiSel.querySelectorAll('optgroup')).forEach(og => {
+        og.hidden = !Array.from(og.children).some(o => !o.hidden);
+    });
+
+    // Kalau pilihan saat ini jadi tidak valid → lepaskan
+    const cur = kpiSel.selectedOptions[0];
+    if (cur && cur.hidden) kpiSel.value = '';
+}
+
+// Auto-pilih Acuan KPI berdasarkan staff yang dipilih (KPI L3 milik staff itu)
+function autoPickKpiForStaff() {
+    const staffSel = document.getElementById('assigned_to');
+    const kpiSel   = document.getElementById('kpi_target_id');
+    if (!staffSel || !kpiSel) return;
+
+    const staffId = staffSel.value;
+    const cur     = kpiSel.selectedOptions[0];
+
+    if (!staffId) {
+        if (cur && cur.dataset.level === '3') kpiSel.value = '';
+        return;
+    }
+
+    const matches = Array.from(kpiSel.options)
+        .filter(o => o.dataset.level === '3' && o.dataset.staffId === staffId);
+
+    if (matches.length === 1) {
+        kpiSel.value = matches[0].value; // tepat 1 KPI L3 → auto-isi
+    } else if (cur && cur.dataset.level === '3' && cur.dataset.staffId !== staffId) {
+        kpiSel.value = '';
+    }
+}
+
+// ── LAPIS 2: Kotak konfirmasi acuan yang terpilih ──
+function updateKpiPreview() {
+    const kpiSel = document.getElementById('kpi_target_id');
+    const box    = document.getElementById('kpi-preview');
+    if (!kpiSel || !box) return;
+
+    const o = kpiSel.selectedOptions[0];
+    if (!o || !o.value || !o.dataset.level) { box.style.display = 'none'; return; }
+
+    const isStaff    = o.dataset.level === '3';
+    const levelLabel = isStaff ? 'KPI Staff' : 'KPI Dept';
+    const owner      = isStaff ? (' · milik <strong>' + (o.dataset.staffName || 'Staf') + '</strong>') : '';
+    const check      = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--success,#16a34a)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg>';
+
+    box.innerHTML = check + '<span>Acuan: <strong>' + (o.dataset.kpiname || '') + ' — ' + (o.dataset.figure || '') + '</strong> · ' + levelLabel + owner + '</span>';
+    box.style.display = 'flex';
+}
+
+function onStaffChange() {
+    filterKpiByStaff();
+    autoPickKpiForStaff();
+    updateKpiPreview();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const staffSel = document.getElementById('assigned_to');
+    const kpiSel   = document.getElementById('kpi_target_id');
+    if (staffSel) staffSel.addEventListener('change', onStaffChange);
+    if (kpiSel)   kpiSel.addEventListener('change', updateKpiPreview);
+
+    // Inisialisasi — hormati nilai old() setelah validasi gagal (tanpa auto-pick)
+    filterKpiByStaff();
+    updateKpiPreview();
+});
 </script>
 
 </x-app-layout>

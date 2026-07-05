@@ -17,9 +17,7 @@
 
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('staff-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('staff-targets.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             {{-- Breadcrumb konteks --}}
             <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;

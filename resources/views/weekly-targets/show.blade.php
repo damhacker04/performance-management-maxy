@@ -2,6 +2,10 @@
 @php
     $months = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
     [$rStart, $rEnd] = \App\Models\WeeklyTarget::WEEK_RANGES[$weeklyTarget->week_number] ?? [1, 7];
+    // Jika ada ?back= di URL (misal dari CEO targets), gunakan itu sebagai back URL
+    if (request()->query('back')) {
+        $backUrl = urldecode(request()->query('back'));
+    }
 
     $statusMap = [
         'belum_mulai'  => 'neutral',
@@ -18,10 +22,7 @@
 <div class="page">
     <!-- Back & Header -->
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ $backUrl ?? (($weeklyTarget->monthlyTarget && ($weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to)) ? route('period.staff-weekly', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month, 'staff' => $weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to, 'monthlyTarget' => $weeklyTarget->monthlyTarget->id]) : ($weeklyTarget->monthlyTarget ? route('period.staff-list', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month]) : route('weekly-targets.index'))) }}"
-           class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="$backUrl ?? (($weeklyTarget->monthlyTarget && ($weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to)) ? route('period.staff-weekly', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month, 'staff' => $weeklyTarget->assigned_to ?? $weeklyTarget->monthlyTarget->assigned_to, 'monthlyTarget' => $weeklyTarget->monthlyTarget->id]) : ($weeklyTarget->monthlyTarget ? route('period.staff-list', ['year' => $weeklyTarget->year, 'month' => $weeklyTarget->month]) : route('monthly-targets.index')))" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
                 <span class="chip chip-neutral">Minggu {{ $weeklyTarget->week_number }}</span>

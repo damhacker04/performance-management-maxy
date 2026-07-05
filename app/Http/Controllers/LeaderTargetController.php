@@ -52,9 +52,9 @@ class LeaderTargetController extends Controller
             );
         }
 
-        // Pastikan yang buat adalah C-Level
+        // Pastikan yang buat adalah C-Level atau Super Admin (keduanya setara secara akses)
         abort_if(
-            $monthlyTarget->user?->role !== 'c_level',
+            !in_array($monthlyTarget->user?->role, ['c_level', 'super_admin']),
             403,
             'Target ini bukan target dari C-Level.'
         );

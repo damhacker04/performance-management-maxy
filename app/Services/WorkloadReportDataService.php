@@ -33,16 +33,21 @@ class WorkloadReportDataService
         $completed = $tasks->where('status', 'selesai')->count();
         $monthlyPct = $taskCount > 0 ? round($completed / $taskCount * 100) : 0;
 
+        // kpi_pct = rata-rata capaian tiap KPI staf (benar untuk jenis sum & average;
+        // shared/milestone bukan per-staf → tak masuk ringkasan staf).
         $kpiL3 = KpiTarget::forStaff($staff->id)->where('is_active', true)->get();
-        $kpiActual = KpiActual::where('staff_id', $staff->id)
-            ->where('month', $month)->where('year', $year)->get();
+        $actualsByTarget = KpiActual::where('staff_id', $staff->id)
+            ->where('month', $month)->where('year', $year)
+            ->get()->keyBy('kpi_target_id');
 
-        $kpiPct = null;
-        if ($kpiL3->count() > 0 && $kpiActual->count() > 0) {
-            $totalTarget = $kpiL3->sum('target_value');
-            $totalActual = $kpiActual->sum('actual_value');
-            $kpiPct = $totalTarget > 0 ? round($totalActual / $totalTarget * 100) : null;
+        $pcts = [];
+        foreach ($kpiL3 as $k) {
+            $act = $actualsByTarget->get($k->id);
+            if ($act && $k->target_value > 0) {
+                $pcts[] = $act->actual_value / $k->target_value * 100;
+            }
         }
+        $kpiPct = count($pcts) ? (int) round(array_sum($pcts) / count($pcts)) : null;
 
         $savedReport = WorkloadReport::where('staff_id', $staff->id)
             ->where('month', $month)

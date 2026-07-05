@@ -32,9 +32,7 @@
 
     {{-- ── Header ── --}}
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('monthly-targets.index') }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('monthly-targets.index')" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">
                 <span class="chip chip-neutral" style="font-size:11px;">{{ $monthLabel }}</span>
@@ -48,8 +46,16 @@
         </div>
     </div>
 
+    @php
+        // Leader hanya melihat staff-nya sendiri (role = 'staff').
+        // C-Level/super_admin bisa melihat semua (termasuk leader).
+        $filteredByStaff = $user->isExecutive()
+            ? $byStaff
+            : $byStaff->filter(fn($data) => ($data['staff']?->role ?? '') === 'staff');
+    @endphp
+
     {{-- ── Empty state ── --}}
-    @if($byStaff->isEmpty())
+    @if($filteredByStaff->isEmpty())
         <div class="m-card">
             <div class="empty-state">
                 <svg class="lucide lg" style="margin:0 auto 12px;color:var(--fg-3);" viewBox="0 0 24 24">
@@ -68,12 +74,12 @@
     @else
         {{-- Info summary --}}
         <div style="font-size:12px;color:var(--fg-3);padding:0 2px;">
-            {{ $byStaff->count() }} staf dengan target di {{ $monthLabel }}
+            {{ $filteredByStaff->count() }} staf dengan target di {{ $monthLabel }}
         </div>
 
         {{-- ── Daftar Staf ── --}}
         <div style="display:flex;flex-direction:column;gap:8px;">
-            @foreach($byStaff as $staffId => $data)
+            @foreach($filteredByStaff as $staffId => $data)
                 @php
                     $s        = $data['staff'];
                     $progress = $data['progress'];

@@ -13,27 +13,38 @@
         <form method="POST" action="{{ route('kpi.actuals.store') }}" style="display:flex;flex-direction:column;gap:16px;">
             @csrf
 
-            {{-- Hidden staff_id (auto-filled by JS) --}}
+            {{-- Hidden staff_id (auto-filled by JS; kosong untuk KPI level dept) --}}
             <input type="hidden" name="staff_id" id="staff_id" value="{{ old('staff_id') }}">
 
-            {{-- Pilih KPI Staf --}}
+            {{-- Pilih KPI --}}
             <div class="field">
-                <label class="">KPI Staf <span style="color:var(--danger);">*</span></label>
+                <label class="">KPI <span style="color:var(--danger);">*</span></label>
                 <select name="kpi_target_id" id="kpi_target_id"
                         class="m-input @error('kpi_target_id') is-invalid @enderror"
                         onchange="onKpiChange(this)"
                         required>
-                    <option value="">-- Pilih KPI Staf --</option>
-                    @foreach($kpiStaffs as $kpi)
-                        <option value="{{ $kpi->id }}"
-                                {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
-                            [{{ ucfirst(str_replace('_',' ', $kpi->department ?? '')) }}]
-                            {{ $kpi->staff?->name ?? '—' }}
-                            — {{ $kpi->kpi_name }}
-                            (Target: {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }})
-                        </option>
-                    @endforeach
-                </select></div>
+                    <option value="">-- Pilih KPI --</option>
+                    <optgroup label="KPI per Staff">
+                        @foreach($kpiStaffs as $kpi)
+                            <option value="{{ $kpi->id }}" {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
+                                [{{ ucfirst(str_replace('_',' ', $kpi->department ?? '')) }}]
+                                {{ $kpi->staff?->name ?? 'Staf' }} Â· {{ $kpi->kpi_name }}
+                                (Target: {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }})
+                            </option>
+                        @endforeach
+                    </optgroup>
+                    @if(($kpiDeptLevel ?? collect())->isNotEmpty())
+                    <optgroup label="KPI Tim / Milestone (level dept)">
+                        @foreach($kpiDeptLevel as $kpi)
+                            <option value="{{ $kpi->id }}" {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
+                                [{{ ucfirst(str_replace('_',' ', $kpi->department ?? '')) }}]
+                                {{ $kpi->kpi_name }}
+                                @if($kpi->isMilestone()) (Milestone â€” progress %) @else (Target: {{ number_format($kpi->target_value, 0, ',', '.') }} {{ $kpi->unit }}) @endif
+                            </option>
+                        @endforeach
+                    </optgroup>
+                    @endif
+                </select>
                 @error('kpi_target_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -48,19 +59,19 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Nama KPI</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-name">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-name">-</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Departemen</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-dept">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-dept">-</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Target</span>
-                            <div style="font-size:13px;font-weight:700;color:var(--maxy-navy);" id="ki-target">—</div>
+                            <div style="font-size:13px;font-weight:700;color:var(--maxy-navy);" id="ki-target">-</div>
                         </div>
                         <div>
                             <span style="font-size:11px;color:var(--fg-4);">Staf</span>
-                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-staff">—</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--fg-1);" id="ki-staff">-</div>
                         </div>
                     </div>
                 </div>
@@ -98,8 +109,8 @@
 
             {{-- Nilai Aktual --}}
             <div class="field">
-                <label class="">Nilai Aktual Realisasi <span style="color:var(--danger);">*</span></label>
-                <input type="number" name="actual_value" step="0.01" min="0"
+                <label class="" id="actual-label">Nilai Aktual Realisasi <span style="color:var(--danger);">*</span></label>
+                <input type="number" name="actual_value" id="actual_value" step="0.01" min="0"
                        class="m-input @error('actual_value') is-invalid @enderror"
                        value="{{ old('actual_value') }}"
                        placeholder="0" required>
@@ -126,7 +137,8 @@
                     Info Tentang Nilai Actual
                 </div>
                 <div style="font-size:12px;color:var(--fg-3);line-height:1.5;">
-                    Nilai ini akan digunakan AI sebagai acuan dalam Workload Report untuk menghitung gap pencapaian.
+                    KPI per staff = capaian orang tsb. KPI level dept (tim/milestone) = capaian satu departemen.
+                    Milestone diisi sebagai progress 0â€“100%.
                 </div>
             </div>
 
@@ -143,7 +155,6 @@
 </div>
 
 <script>
-// Build kpiData mapping from PHP
 const kpiData = {
 @foreach($kpiStaffs as $kpi)
     {{ $kpi->id }}: {
@@ -153,34 +164,59 @@ const kpiData = {
         target_value: {{ $kpi->target_value }},
         unit:         @json($kpi->unit),
         dept:         @json($kpi->department ?? ''),
+        is_dept:      false,
+        is_milestone: false,
+    },
+@endforeach
+@foreach(($kpiDeptLevel ?? collect()) as $kpi)
+    {{ $kpi->id }}: {
+        staff_id:     null,
+        staff_name:   'â€” (level dept)',
+        kpi_name:     @json($kpi->kpi_name),
+        target_value: {{ $kpi->target_value }},
+        unit:         @json($kpi->unit),
+        dept:         @json($kpi->department ?? ''),
+        is_dept:      true,
+        is_milestone: {{ $kpi->isMilestone() ? 'true' : 'false' }},
     },
 @endforeach
 };
 
+function setActualLabel(text) {
+    const label = document.getElementById('actual-label');
+    if (label && label.childNodes.length) label.childNodes[0].nodeValue = text + ' ';
+}
+
 function onKpiChange(select) {
-    const box = document.getElementById('kpi-info-box');
-    const id  = parseInt(select.value);
+    const box   = document.getElementById('kpi-info-box');
+    const input = document.getElementById('actual_value');
+    const id    = parseInt(select.value);
 
     if (!id || !kpiData[id]) {
         box.style.display = 'none';
         document.getElementById('staff_id').value = '';
+        setActualLabel('Nilai Aktual Realisasi');
+        if (input) { input.removeAttribute('max'); input.placeholder = '0'; }
         return;
     }
 
     const d = kpiData[id];
+    document.getElementById('staff_id').value = d.is_dept ? '' : (d.staff_id || '');
+    document.getElementById('ki-name').textContent = d.kpi_name || '-';
+    document.getElementById('ki-dept').textContent = d.dept
+        ? d.dept.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '-';
+    document.getElementById('ki-target').textContent = d.is_milestone
+        ? 'Progress 0â€“100%'
+        : (d.target_value ? Number(d.target_value).toLocaleString('id-ID') + ' ' + (d.unit || '') : '-');
+    document.getElementById('ki-staff').textContent = d.staff_name || '-';
 
-    // Auto-fill hidden staff_id
-    document.getElementById('staff_id').value = d.staff_id || '';
-
-    // Update info box
-    document.getElementById('ki-name').textContent   = d.kpi_name   || '—';
-    document.getElementById('ki-dept').textContent   = d.dept
-        ? d.dept.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-        : '—';
-    document.getElementById('ki-target').textContent = d.target_value
-        ? Number(d.target_value).toLocaleString('id-ID') + ' ' + (d.unit || '')
-        : '—';
-    document.getElementById('ki-staff').textContent  = d.staff_name  || '—';
+    if (d.is_milestone) {
+        setActualLabel('Progress Milestone (0â€“100%)');
+        if (input) { input.max = 100; input.placeholder = '0â€“100'; }
+    } else {
+        setActualLabel('Nilai Aktual Realisasi');
+        if (input) { input.removeAttribute('max'); input.placeholder = '0'; }
+    }
 
     box.style.display = 'block';
 }
@@ -191,5 +227,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 </x-app-layout>
-
-

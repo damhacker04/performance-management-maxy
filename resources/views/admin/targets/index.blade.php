@@ -26,7 +26,7 @@
         <div style="font-size:11px;font-weight:700;color:var(--fg-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">
             Pilih Periode
         </div>
-        <form method="GET" action="{{ route('ceo.targets.index') }}"
+        <form method="GET" action="{{ route('admin.targets.index') }}"
               style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <div class="select-wrap" style="flex:1;min-width:120px;">
                 <select name="month" class="m-select" onchange="this.form.submit()" style="height:40px;">
@@ -66,7 +66,7 @@
                         $pct  = $g['progress'];
                         $pcol = $pct >= 70 ? 'var(--success)' : ($pct >= 40 ? 'var(--maxy-navy)' : 'var(--danger)');
                     @endphp
-                    <a href="{{ route('ceo.targets.leader', ['leader' => $g['leader']->id, 'month' => $filterMonth, 'year' => $filterYear]) }}"
+                    <a href="{{ route('admin.targets.leader', ['leader' => $g['leader']->id, 'month' => $filterMonth, 'year' => $filterYear]) }}"
                        class="m-card" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:12px;padding:14px 16px;">
 
                         {{-- Avatar --}}

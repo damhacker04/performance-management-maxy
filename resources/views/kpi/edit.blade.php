@@ -44,7 +44,18 @@
                 @enderror
             </div>
 
-            {{-- Target & Satuan --}}
+            {{-- Jenis KPI (dikunci setelah dibuat) --}}
+            <div class="field">
+                <label class="">Jenis KPI</label>
+                <div class="m-input" style="display:flex;align-items:center;background:var(--neutral-50);color:var(--fg-2);cursor:default;">
+                    {{ $kpiTarget->aggregationLabel() }}
+                </div>
+                <input type="hidden" name="aggregation" value="{{ $kpiTarget->aggregation }}">
+                <p class="form-hint">Jenis KPI tidak dapat diubah setelah dibuat.</p>
+            </div>
+
+            {{-- Target & Satuan (tak ada untuk Milestone) --}}
+            @unless($kpiTarget->isMilestone())
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="field">
                     <label class="">Target Nilai <span style="color:var(--danger);">*</span></label>
@@ -68,6 +79,7 @@
                     @enderror
                 </div>
             </div>
+            @endunless
 
             {{-- Berlaku Bulan & Tahun --}}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">

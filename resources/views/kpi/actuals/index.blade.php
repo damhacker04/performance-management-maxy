@@ -8,9 +8,9 @@
     {{-- Header --}}
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
         <div>
-            <h1 style="font-size:20px;font-weight:800;color:var(--maxy-navy);margin:0;letter-spacing:-.02em;">KPI Actual — Realisasi Bulanan</h1>
+            <h1 style="font-size:20px;font-weight:800;color:var(--maxy-navy);margin:0;letter-spacing:-.02em;">KPI Actual â€” Realisasi Bulanan</h1>
             <p style="font-size:13px;color:var(--fg-3);margin:4px 0 0;">
-                Pencatatan realisasi KPI staf per bulan
+                Pencatatan realisasi KPI per bulan (staf & level departemen)
             </p>
         </div>
         <a href="{{ route('kpi.actuals.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;">
@@ -110,11 +110,15 @@
                     <tbody>
                         @foreach($actuals as $actual)
                             @php
-                                $target   = $actual->kpiTarget;
-                                $staff    = $actual->staff;
-                                $capaian  = $target && $target->target_value > 0
-                                    ? round($actual->actual_value / $target->target_value * 100, 1)
-                                    : 0;
+                                $target  = $actual->kpiTarget;
+                                $staff   = $actual->staff;
+                                $isMile  = $target?->isMilestone() ?? false;
+                                // Milestone: actual sudah %. Lainnya: actual/target*100.
+                                $capaian = $isMile
+                                    ? round(min(100, max(0, $actual->actual_value)), 1)
+                                    : ($target && $target->target_value > 0
+                                        ? round($actual->actual_value / $target->target_value * 100, 1)
+                                        : 0);
 
                                 if ($capaian >= 80) {
                                     $capColor = '#16A34A'; $capBg = '#DCFCE7';
@@ -132,19 +136,17 @@
 
                                 {{-- Staf --}}
                                 <td style="padding:10px 14px;">
-                                    <span style="font-weight:600;color:var(--fg-1);">{{ $staff?->name ?? '—' }}</span>
+                                    <span style="font-weight:600;color:var(--fg-1);">{{ $staff?->name ?? 'â€” (level dept)' }}</span>
                                 </td>
 
                                 {{-- Departemen --}}
                                 <td style="padding:10px 14px;color:var(--fg-3);">
-                                    {{ $target?->department
-                                        ? ucfirst(str_replace('_', ' ', $target->department))
-                                        : '—' }}
+                                    {{ $target?->department ? ucfirst(str_replace('_', ' ', $target->department)) : '-' }}
                                 </td>
 
                                 {{-- KPI --}}
                                 <td style="padding:10px 14px;">
-                                    <span style="color:var(--fg-1);">{{ $target?->kpi_name ?? '—' }}</span>
+                                    <span style="color:var(--fg-1);">{{ $target?->kpi_name ?? '-' }}</span>
                                     @if($target)
                                         <div style="font-size:11px;color:var(--fg-4);">
                                             {{ $monthNames[$actual->month] ?? '' }} {{ $actual->year }}
@@ -154,13 +156,19 @@
 
                                 {{-- Target --}}
                                 <td style="padding:10px 14px;text-align:right;font-weight:600;color:var(--fg-2);">
-                                    {{ $target ? number_format($target->target_value, 0, ',', '.') . ' ' . $target->unit : '—' }}
+                                    @if($isMile)
+                                        <span style="color:var(--fg-4);">Progress %</span>
+                                    @elseif($target)
+                                        {{ number_format($target->target_value, 0, ',', '.') }} {{ $target->unit }}
+                                    @else
+                                        -
+                                    @endif
                                 </td>
 
                                 {{-- Actual --}}
                                 <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--maxy-navy);">
                                     {{ number_format($actual->actual_value, 0, ',', '.') }}
-                                    <span style="font-size:11px;font-weight:400;color:var(--fg-4);">{{ $target?->unit }}</span>
+                                    <span style="font-size:11px;font-weight:400;color:var(--fg-4);">{{ $isMile ? '%' : $target?->unit }}</span>
                                 </td>
 
                                 {{-- Capaian% --}}
@@ -218,5 +226,3 @@
 
 </div>
 </x-app-layout>
-
-

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminKpiController;
+use App\Http\Controllers\Admin\AdminOverviewController;
+use App\Http\Controllers\Admin\AdminTargetController;
 use App\Http\Controllers\Admin\KpiSettingsController;
 use App\Http\Controllers\Admin\TargetAssignmentController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -132,6 +135,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/kpi/actuals', [KpiController::class, 'storeActual'])->name('kpi.actuals.store');
             Route::get('/kpi/actuals/{kpiActual}/edit', [KpiController::class, 'editActual'])->name('kpi.actuals.edit');
             Route::patch('/kpi/actuals/{kpiActual}', [KpiController::class, 'updateActual'])->name('kpi.actuals.update');
+            // AI Auto-Detect KPI Realisasi
+            Route::post('/kpi/actuals/analyze-ai', [KpiController::class, 'analyzeWithAi'])->name('kpi.actuals.analyze-ai');
         });
 
         // AI Workload & Performance Report — C-Level, Admin HR, Leader
@@ -223,6 +228,13 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::patch('users/{user}/toggle-active', [UserManagementController::class, 'toggleActive'])
         ->name('users.toggle-active');
 
+    // Halaman monitoring khusus Admin HR (versi sendiri, lepas dari halaman CEO).
+    // Logika query dibagi via inheritance dari controller CEO/KPI.
+    Route::get('overview', [AdminOverviewController::class, 'index'])->name('overview');
+    Route::get('targets', [AdminTargetController::class, 'index'])->name('targets.index');
+    Route::get('targets/leader/{leader}', [AdminTargetController::class, 'showLeader'])->name('targets.leader');
+    Route::get('kpi', [AdminKpiController::class, 'index'])->name('kpi');
+
     // Assign Target ke Staff
     Route::get('target-assignment', [TargetAssignmentController::class, 'index'])
         ->name('target-assignment.index');
@@ -264,6 +276,19 @@ Route::get('/deploy-update', function () {
         ]);
 
         return 'Berhasil! Database Production (Railway) sudah di-migrate dan seluruh akun (termasuk dummy) sudah di-seed dengan aman.';
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
+// Route rahasia untuk seed DATA DEMO (aman diulang; hapus setelah presentasi).
+// Pakai: /seed-demo?key=maxy-demo-2026
+Route::get('/seed-demo', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        Artisan::call('db:seed', ['--class' => 'DemoSeeder', '--force' => true]);
+
+        return nl2br(e(trim(Artisan::output()))) ?: 'Data demo berhasil di-seed.';
     } catch (Exception $e) {
         return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
     }

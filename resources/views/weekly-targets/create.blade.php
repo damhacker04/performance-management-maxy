@@ -9,24 +9,17 @@
     <!-- Back -->
     <div style="display:flex;align-items:center;gap:8px;">
 @php
+    // $backParam diteruskan ke action form (redirect setelah simpan) — tetap dipakai di bawah.
     $backParam = request()->query('back') ? urldecode(request()->query('back')) : null;
-    $backHref  = $backParam ?? (url()->previous() !== url()->current() ? url()->previous() : route('monthly-targets.index'));
 @endphp
-        <a href="{{ $backHref }}"
-           class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('monthly-targets.index')" style="margin-left:-8px;" />
         <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;">Target Mingguan Baru</h1>
     </div>
 
     <div class="m-card">
-        <form method="POST" action="{{ route('weekly-targets.store') }}"
+        <form method="POST" action="{{ route('weekly-targets.store') . ($backParam ? '?back=' . urlencode($backParam) : '') }}"
               style="display:flex;flex-direction:column;gap:16px;">
             @csrf
-            {{-- Teruskan ?back= agar setelah store bisa redirect ke period context --}}
-            @if($backParam ?? null)
-                <input type="hidden" name="back" value="{{ $backParam }}">
-            @endif
 
             <!-- Pilih Monthly Target (wajib) -->
             <div class="field">

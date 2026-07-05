@@ -2,9 +2,7 @@
 
 <div class="page">
     <div style="display:flex;align-items:center;gap:8px;">
-        <a href="{{ route('daily-tasks.show', $dailyTask) }}" class="icon-btn" style="margin-left:-8px;">
-            <svg class="lucide" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </a>
+        <x-back-button :fallback="route('daily-tasks.show', $dailyTask)" style="margin-left:-8px;" />
         <div style="flex:1;min-width:0;">
             <h1 style="font-size:18px;font-weight:700;color:var(--fg-1);margin:0;line-height:1.2;">Edit Laporan</h1>
             <p style="font-size:12px;color:var(--fg-3);margin:2px 0 0;">
@@ -182,10 +180,17 @@
             </div>
 
             @if($dailyTask->verification_status === 'revision')
+            @php
+                $reviewerLabel = match(auth()->user()->role) {
+                    'leader' => 'C-Level',
+                    'staff'  => 'Leader',
+                    default  => 'Atasan',
+                };
+            @endphp
             <div class="field" style="background:#FFF8E8;padding:12px;border:1px solid #FDE68A;border-radius:10px;">
                 <label for="revision_response" style="color:#B45309;display:flex;align-items:center;gap:6px;">
                     <svg class="lucide" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                    Balasan Revisi untuk Leader
+                    Balasan Revisi untuk {{ $reviewerLabel }}
                     <span style="color:var(--danger);">*</span>
                 </label>
                 <textarea id="revision_response" name="revision_response"
@@ -193,7 +198,7 @@
                           style="min-height:80px;border-color:#FBB041;background:#fff;"
                           placeholder="Tuliskan balasan atau konfirmasi bahwa revisi sudah dilakukan..."
                           required>{{ old('revision_response') }}</textarea>
-                <small style="color:#8B5A00;font-size:11px;">Catatan ini akan muncul langsung di Activity Log saat membalas revisi leader.</small>
+                <small style="color:#8B5A00;font-size:11px;">Catatan ini akan muncul langsung di Activity Log saat membalas revisi {{ strtolower($reviewerLabel) }}.</small>
                 @error('revision_response')<span class="err">{{ $message }}</span>@enderror
             </div>
             @endif

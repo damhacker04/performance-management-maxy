@@ -1,4 +1,7 @@
 <x-app-layout>
+@php
+    $isMile = $kpiActual->kpiTarget?->isMilestone() ?? false;
+@endphp
 <div class="page" style="max-width:580px;">
 
     {{-- Back --}}
@@ -23,18 +26,22 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                     <div>
                         <span style="font-size:11px;color:var(--fg-4);">Staf</span>
-                        <div style="font-size:13px;font-weight:600;color:var(--fg-1);">{{ $kpiActual->staff?->name ?? '—' }}</div>
+                        <div style="font-size:13px;font-weight:600;color:var(--fg-1);">{{ $kpiActual->staff?->name ?? 'â€” (level dept)' }}</div>
                     </div>
                     <div>
                         <span style="font-size:11px;color:var(--fg-4);">Nama KPI</span>
-                        <div style="font-size:13px;font-weight:600;color:var(--fg-1);">{{ $kpiActual->kpiTarget?->kpi_name ?? '—' }}</div>
+                        <div style="font-size:13px;font-weight:600;color:var(--fg-1);">{{ $kpiActual->kpiTarget?->kpi_name ?? '-' }}</div>
                     </div>
                     <div>
                         <span style="font-size:11px;color:var(--fg-4);">Target</span>
                         <div style="font-size:13px;font-weight:700;color:var(--maxy-navy);">
-                            {{ $kpiActual->kpiTarget
-                                ? number_format($kpiActual->kpiTarget->target_value, 0, ',', '.') . ' ' . $kpiActual->kpiTarget->unit
-                                : '—' }}
+                            @if($isMile)
+                                Progress 0â€“100%
+                            @elseif($kpiActual->kpiTarget)
+                                {{ number_format($kpiActual->kpiTarget->target_value, 0, ',', '.') }} {{ $kpiActual->kpiTarget->unit }}
+                            @else
+                                -
+                            @endif
                         </div>
                     </div>
                     <div>
@@ -43,7 +50,7 @@
                             @php
                                 $monthNames = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
                             @endphp
-                            {{ $monthNames[$kpiActual->month] ?? '—' }} {{ $kpiActual->year }}
+                            {{ $monthNames[$kpiActual->month] ?? '-' }} {{ $kpiActual->year }}
                         </div>
                     </div>
                 </div>
@@ -51,15 +58,17 @@
 
             {{-- Nilai Aktual (editable) --}}
             <div class="field">
-                <label class="">Nilai Aktual Realisasi <span style="color:var(--danger);">*</span></label>
-                <input type="number" name="actual_value" step="0.01" min="0"
+                <label class="">{{ $isMile ? 'Progress Milestone (0â€“100%)' : 'Nilai Aktual Realisasi' }} <span style="color:var(--danger);">*</span></label>
+                <input type="number" name="actual_value" step="0.01" min="0" {{ $isMile ? 'max=100' : '' }}
                        class="m-input @error('actual_value') is-invalid @enderror"
                        value="{{ old('actual_value', $kpiActual->actual_value) }}"
                        required>
                 @error('actual_value')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-                @if($kpiActual->kpiTarget)
+                @if($isMile)
+                    <p class="form-hint">Isi progress 0â€“100%.</p>
+                @elseif($kpiActual->kpiTarget)
                     <p class="form-hint">
                         Target: {{ number_format($kpiActual->kpiTarget->target_value, 0, ',', '.') }} {{ $kpiActual->kpiTarget->unit }}
                     </p>
@@ -89,5 +98,3 @@
     </div>
 </div>
 </x-app-layout>
-
-
