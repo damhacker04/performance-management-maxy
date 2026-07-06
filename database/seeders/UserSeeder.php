@@ -291,12 +291,26 @@ class UserSeeder extends Seeder
         // login via Google. Tambahkan dept ke sini saat mau diuji manual.
         $manualLoginDepts = ['product_it'];
 
+        // Akun spesifik (per-email) yang juga diberi login manual 'maxy2026'.
+        // Dipakai untuk C-Level (department null → tak tercakup $manualLoginDepts)
+        // dan manager/leader asli agar bisa diuji login di staging & main.
+        $manualLoginEmails = [
+            'isaac.munandar@gmail.com',       // CEO
+            'tang.torodeveloper@gmail.com',   // CTO
+            'hello.linkdataku.id@gmail.com',  // Manager Ops
+            'jessica.maxy.academy@gmail.com', // Manager Univ Partnership
+            'joseph.maxy.academy@gmail.com',  // SPV Marcom
+        ];
+
         foreach ($users as $data) {
             // Akun whitelist asli (Gmail) default TANPA password → login via Google
-            // (dipaksa buat password saat pertama login). Dummy @maxy.academy & dept
-            // di $manualLoginDepts diberi password 'maxy2026' untuk testing manual.
+            // (dipaksa buat password saat pertama login). Dummy @maxy.academy, dept
+            // di $manualLoginDepts, & email di $manualLoginEmails diberi password
+            // 'maxy2026' untuk testing manual.
             $isGmail     = str_ends_with($data['email'], '@gmail.com');
-            $manualLogin = ! $isGmail || in_array($data['department'] ?? '', $manualLoginDepts, true);
+            $manualLogin = ! $isGmail
+                || in_array($data['department'] ?? '', $manualLoginDepts, true)
+                || in_array($data['email'], $manualLoginEmails, true);
 
             User::updateOrCreate(
                 ['email' => $data['email']],
