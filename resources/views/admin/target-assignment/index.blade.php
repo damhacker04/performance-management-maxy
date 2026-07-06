@@ -3,8 +3,8 @@
 
     {{-- Header --}}
     <div>
-        <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Assign Target ke Staff</h1>
-        <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">Pilih departemen untuk melihat daftar staff dan target yang tersedia.</p>
+        <h1 style="font-size:22px;font-weight:700;color:var(--fg-1);margin:0;">Distribusi Target Mingguan ke Staf</h1>
+        <p style="font-size:13px;color:var(--fg-3);margin:2px 0 0;">Bagikan target <strong>mingguan yang sudah ada</strong> ke staf tertentu. Untuk <em>membuat</em> target baru, gunakan menu "Target &rarr; Buat Target".</p>
     </div>
 
     {{-- Filter Departemen --}}

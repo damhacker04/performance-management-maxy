@@ -294,6 +294,49 @@ Route::get('/seed-demo', function () {
     }
 });
 
+// Route rahasia untuk IMPOR laporan harian historis dari Excel (aman diulang).
+// Jalankan SETELAH /deploy-update agar semua user sudah ter-seed.
+// Pakai: /import-reports?key=maxy-demo-2026
+Route::get('/import-reports', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        Artisan::call('import:daily-reports', [
+            'file' => database_path('data/daily-reports.xlsx'),
+        ]);
+
+        return nl2br(e(trim(Artisan::output()))) ?: 'Laporan harian berhasil diimpor.';
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
+// Route rahasia untuk RESET PENUH data aktivitas (target bulanan + mingguan +
+// laporan harian). PERMANEN & tak bisa di-undo. Jalankan SEBELUM /import-reports.
+// Anak (evidence, ai_evaluations) ikut terhapus via cascade.
+// Pakai: /wipe-reports?key=maxy-demo-2026&confirm=yes
+Route::get('/wipe-reports', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    abort_unless(request('confirm') === 'yes', 400, 'Tambahkan &confirm=yes untuk konfirmasi penghapusan permanen.');
+    try {
+        $db = \Illuminate\Support\Facades\DB::connection();
+        $counts = [
+            'daily'   => $db->table('daily_task_entries')->count(),
+            'weekly'  => $db->table('weekly_targets')->count(),
+            'monthly' => $db->table('monthly_targets')->count(),
+        ];
+        // Hapus anak dulu → induk (aman untuk MySQL & SQLite tanpa toggle FK).
+        $db->table('daily_task_entries')->delete(); // cascade → evidence, ai_evaluations
+        $db->table('weekly_targets')->delete();
+        $db->table('monthly_targets')->delete();
+
+        return "Reset selesai. Terhapus: {$counts['daily']} laporan harian, "
+             . "{$counts['weekly']} target mingguan, {$counts['monthly']} target bulanan. "
+             . "Jalankan /import-reports?key=maxy-demo-2026 untuk memuat data historis.";
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
 require __DIR__.'/auth.php';
 
 Route::get('/debug/run-migration', function () {

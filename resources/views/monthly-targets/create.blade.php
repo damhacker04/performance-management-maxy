@@ -100,7 +100,12 @@
             @endif
 
             <!-- Assign ke penerima target -->
-            @php $assignLabel = auth()->user()->isExecutive() ? 'Leader' : 'Staf'; @endphp
+            @php
+                $u = auth()->user();
+                $assignLabel = $u->isSuperAdmin()
+                    ? 'Penerima (Leader / Staf)'
+                    : ($u->isExecutive() ? 'Leader / Staf CEO Office' : 'Staf');
+            @endphp
             <div class="field">
                 <label for="assigned_to">
                     Target untuk {{ $assignLabel }}
@@ -125,7 +130,7 @@
                 </div>
                 @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
                 <small style="color:var(--fg-3);font-size:11px;">
-                    Jika diisi, target ini akan muncul secara personal untuk {{ strtolower($assignLabel) }} tersebut dan digunakan sebagai acuan AI.
+                    Jika diisi, target ini akan muncul secara personal untuk penerima tersebut dan digunakan sebagai acuan AI.
                 </small>
             </div>
 
