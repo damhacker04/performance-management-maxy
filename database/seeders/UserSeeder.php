@@ -47,16 +47,8 @@ class UserSeeder extends Seeder
                 'role'          => 'staff', 
                 'is_management' => false,
             ],
-      [
-        'name'          => 'Ghufron',
-        'email'         => 'ghufron.maxy.academy@gmail.com',
-        'department'    => 'Operational',
-        'division'      => 'General Affair',
-        'role'          => 'staff',
-        'is_management' => false,
-      ],
             [
-                'name'          => 'Brigitha', 
+                'name'          => 'Brigitha',
                 'email'         => 'brigithap.maxy.academy@gmail.com', 
                 'department'    => 'Operational', 
                 'division'      => 'Corporate Legal',
@@ -202,6 +194,33 @@ class UserSeeder extends Seeder
                 'is_management' => false,
             ],
 
+            // ── CEO Office (intern pembantu CEO — dept datar, tanpa leader) ──
+            // Ditugaskan & di-track langsung oleh Ko Isaac / management.
+            [
+                'name'          => 'Ghufron',
+                'email'         => 'ghufron.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Elroy',
+                'email'         => 'elroy.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Olivia',
+                'email'         => 'olivia.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
             // ── Product / IT (impor Data Karyawan 2026) ──────────────────────
             // Leader: Stefen Laksana. Sisanya staff. Email kantor Gmail → login via Google.
             [
@@ -289,7 +308,7 @@ class UserSeeder extends Seeder
         // Departemen yang login MANUAL (email+password) diaktifkan untuk testing.
         // Karyawan Gmail-nya diberi password default 'maxy2026' selain tetap bisa
         // login via Google. Tambahkan dept ke sini saat mau diuji manual.
-        $manualLoginDepts = ['product_it'];
+        $manualLoginDepts = ['product_it', 'ceo_office'];
 
         // Akun spesifik (per-email) yang juga diberi login manual 'maxy2026'.
         // Dipakai untuk C-Level (department null → tak tercakup $manualLoginDepts)
