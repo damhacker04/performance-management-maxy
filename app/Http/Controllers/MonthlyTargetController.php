@@ -102,11 +102,16 @@ class MonthlyTargetController extends Controller
         $user = auth()->user();
 
         // Daftar penerima target yang bisa di-assign (grouped per departemen).
-        // - C-Level / Super Admin: hanya boleh menargetkan LEADER (bukan staff langsung).
+        // - C-Level / Super Admin: menargetkan LEADER — PLUS staff CEO Office langsung
+        //   (dept datar tanpa leader, dikelola langsung management).
         // - Leader: menargetkan STAFF di departemennya.
         if ($user->isExecutive()) {
-            $staffList = \App\Models\User::where('role', 'leader')
-                ->where('is_active', true)
+            $staffList = \App\Models\User::where('is_active', true)
+                ->where(function ($q) {
+                    $q->where('role', 'leader')
+                      ->orWhere(fn ($s) => $s->where('role', 'staff')
+                                              ->where('department', 'ceo_office'));
+                })
                 ->orderBy('department')
                 ->orderBy('name')
                 ->get()
@@ -158,12 +163,16 @@ class MonthlyTargetController extends Controller
 
         $validated = $request->validate($rules);
 
-        // C-Level hanya boleh menargetkan Leader (tidak langsung ke staff).
+        // C-Level menargetkan Leader — atau staff CEO Office langsung (dept datar
+        // tanpa leader, dikelola langsung management).
         if ($user->isExecutive() && ! empty($validated['assigned_to'])) {
             $assignee = User::find($validated['assigned_to']);
-            if (! $assignee || $assignee->role !== 'leader') {
+            $isLeader = $assignee && $assignee->role === 'leader';
+            $isCeoOfficeStaff = $assignee && $assignee->role === 'staff'
+                && $assignee->department === 'ceo_office';
+            if (! $isLeader && ! $isCeoOfficeStaff) {
                 return back()->withInput()->withErrors([
-                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader.',
+                    'assigned_to' => 'C-Level hanya dapat memberikan target kepada Leader atau staf CEO Office.',
                 ]);
             }
         }
