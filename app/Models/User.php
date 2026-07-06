@@ -31,6 +31,7 @@ class User extends Authenticatable
         'ga' => 'General Affairs',
         'creative' => 'Creative',
         'customer_support' => 'Customer Support',
+        'univ_partnership' => 'Univ Partnership',
     ];
 
     public const ROLES = [

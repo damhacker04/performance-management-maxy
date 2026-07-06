@@ -160,6 +160,48 @@ class UserSeeder extends Seeder
                 'is_management' => false,
             ],
 
+            // ── Leadership asli (C-Level & Manager/Leader per dept) ──────────
+            [
+                'name'          => 'Isaac Munandar',
+                'email'         => 'isaac.munandar@gmail.com',
+                'department'    => null,
+                'division'      => 'CEO',
+                'role'          => 'c_level',
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'CTO',
+                'email'         => 'tang.torodeveloper@gmail.com',
+                'department'    => null,
+                'division'      => 'CTO',
+                'role'          => 'c_level',
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Manager Operational',
+                'email'         => 'hello.linkdataku.id@gmail.com',
+                'department'    => 'operational',
+                'division'      => 'Manager Operational',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Jessica Charisma Perdana',
+                'email'         => 'jessica.maxy.academy@gmail.com',
+                'department'    => 'univ_partnership',
+                'division'      => 'Manager Univ Partnership',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Joseph Christian Seraf Sasongko',
+                'email'         => 'joseph.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => 'SPV Marcom',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+
             // ── Product / IT (impor Data Karyawan 2026) ──────────────────────
             // Leader: Stefen Laksana. Sisanya staff. Email kantor Gmail → login via Google.
             [
