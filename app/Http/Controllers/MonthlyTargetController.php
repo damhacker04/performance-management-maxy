@@ -102,10 +102,19 @@ class MonthlyTargetController extends Controller
         $user = auth()->user();
 
         // Daftar penerima target yang bisa di-assign (grouped per departemen).
-        // - C-Level / Super Admin: menargetkan LEADER — PLUS staff CEO Office langsung
-        //   (dept datar tanpa leader, dikelola langsung management).
+        // - Super Admin (Admin HR): mode master — boleh menargetkan SIAPA PUN
+        //   (leader atau staff, dept mana pun).
+        // - C-Level: menargetkan LEADER — PLUS staff CEO Office langsung (dept datar
+        //   tanpa leader, dikelola langsung management).
         // - Leader: menargetkan STAFF di departemennya.
-        if ($user->isExecutive()) {
+        if ($user->isSuperAdmin()) {
+            $staffList = \App\Models\User::whereIn('role', ['leader', 'staff'])
+                ->where('is_active', true)
+                ->orderBy('department')
+                ->orderBy('name')
+                ->get()
+                ->groupBy('department');
+        } elseif ($user->isExecutive()) {
             $staffList = \App\Models\User::where('is_active', true)
                 ->where(function ($q) {
                     $q->where('role', 'leader')
@@ -164,8 +173,9 @@ class MonthlyTargetController extends Controller
         $validated = $request->validate($rules);
 
         // C-Level menargetkan Leader — atau staff CEO Office langsung (dept datar
-        // tanpa leader, dikelola langsung management).
-        if ($user->isExecutive() && ! empty($validated['assigned_to'])) {
+        // tanpa leader, dikelola langsung management). Super Admin (Admin HR) bebas
+        // ke siapa pun, jadi lewati batasan ini.
+        if (! $user->isSuperAdmin() && $user->isExecutive() && ! empty($validated['assigned_to'])) {
             $assignee = User::find($validated['assigned_to']);
             $isLeader = $assignee && $assignee->role === 'leader';
             $isCeoOfficeStaff = $assignee && $assignee->role === 'staff'
