@@ -160,6 +160,48 @@ class UserSeeder extends Seeder
                 'is_management' => false,
             ],
 
+            // ── Leadership asli (C-Level & Manager/Leader per dept) ──────────
+            [
+                'name'          => 'Isaac Munandar',
+                'email'         => 'isaac.munandar@gmail.com',
+                'department'    => null,
+                'division'      => 'CEO',
+                'role'          => 'c_level',
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'CTO',
+                'email'         => 'tang.torodeveloper@gmail.com',
+                'department'    => null,
+                'division'      => 'CTO',
+                'role'          => 'c_level',
+                'is_management' => true,
+            ],
+            [
+                'name'          => 'Manager Operational',
+                'email'         => 'hello.linkdataku.id@gmail.com',
+                'department'    => 'operational',
+                'division'      => 'Manager Operational',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Jessica Charisma Perdana',
+                'email'         => 'jessica.maxy.academy@gmail.com',
+                'department'    => 'univ_partnership',
+                'division'      => 'Manager Univ Partnership',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Joseph Christian Seraf Sasongko',
+                'email'         => 'joseph.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => 'SPV Marcom',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+
             // ── Product / IT (impor Data Karyawan 2026) ──────────────────────
             // Leader: Stefen Laksana. Sisanya staff. Email kantor Gmail → login via Google.
             [
@@ -249,12 +291,26 @@ class UserSeeder extends Seeder
         // login via Google. Tambahkan dept ke sini saat mau diuji manual.
         $manualLoginDepts = ['product_it'];
 
+        // Akun spesifik (per-email) yang juga diberi login manual 'maxy2026'.
+        // Dipakai untuk C-Level (department null → tak tercakup $manualLoginDepts)
+        // dan manager/leader asli agar bisa diuji login di staging & main.
+        $manualLoginEmails = [
+            'isaac.munandar@gmail.com',       // CEO
+            'tang.torodeveloper@gmail.com',   // CTO
+            'hello.linkdataku.id@gmail.com',  // Manager Ops
+            'jessica.maxy.academy@gmail.com', // Manager Univ Partnership
+            'joseph.maxy.academy@gmail.com',  // SPV Marcom
+        ];
+
         foreach ($users as $data) {
             // Akun whitelist asli (Gmail) default TANPA password → login via Google
-            // (dipaksa buat password saat pertama login). Dummy @maxy.academy & dept
-            // di $manualLoginDepts diberi password 'maxy2026' untuk testing manual.
+            // (dipaksa buat password saat pertama login). Dummy @maxy.academy, dept
+            // di $manualLoginDepts, & email di $manualLoginEmails diberi password
+            // 'maxy2026' untuk testing manual.
             $isGmail     = str_ends_with($data['email'], '@gmail.com');
-            $manualLogin = ! $isGmail || in_array($data['department'] ?? '', $manualLoginDepts, true);
+            $manualLogin = ! $isGmail
+                || in_array($data['department'] ?? '', $manualLoginDepts, true)
+                || in_array($data['email'], $manualLoginEmails, true);
 
             User::updateOrCreate(
                 ['email' => $data['email']],
