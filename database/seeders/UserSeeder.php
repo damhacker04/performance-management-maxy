@@ -244,17 +244,23 @@ class UserSeeder extends Seeder
             ],
         ];
 
+        // Departemen yang login MANUAL (email+password) diaktifkan untuk testing.
+        // Karyawan Gmail-nya diberi password default 'maxy2026' selain tetap bisa
+        // login via Google. Tambahkan dept ke sini saat mau diuji manual.
+        $manualLoginDepts = ['product_it'];
+
         foreach ($users as $data) {
-            // Akun whitelist asli (Gmail) sengaja TANPA password, supaya saat
-            // pertama kali login lewat Google mereka diwajibkan membuat password.
-            // Akun dummy @maxy.academy tetap diberi password untuk testing manual.
-            $isGmail = str_ends_with($data['email'], '@gmail.com');
+            // Akun whitelist asli (Gmail) default TANPA password → login via Google
+            // (dipaksa buat password saat pertama login). Dummy @maxy.academy & dept
+            // di $manualLoginDepts diberi password 'maxy2026' untuk testing manual.
+            $isGmail     = str_ends_with($data['email'], '@gmail.com');
+            $manualLogin = ! $isGmail || in_array($data['department'] ?? '', $manualLoginDepts, true);
 
             User::updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name'          => $data['name'],
-                    'password'      => $isGmail ? null : Hash::make('maxy2026'),
+                    'password'      => $manualLogin ? Hash::make('maxy2026') : null,
                     'role'          => $data['role'],
                     'department'    => strtolower($data['department'] ?? ''), // Gunakan format lowercase untuk logic
                     'division'      => $data['division'],
