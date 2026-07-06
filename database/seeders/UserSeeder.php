@@ -152,26 +152,115 @@ class UserSeeder extends Seeder
                 'is_management' => true,
             ],
             [
-                'name'          => 'Staff Dummy', 
-                'email'         => 'staff@maxy.academy', 
-                'department'    => 'Operational', 
+                'name'          => 'Staff Dummy',
+                'email'         => 'staff@maxy.academy',
+                'department'    => 'Operational',
                 'division'      => 'Operational',
-                'role'          => 'staff', 
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Product / IT (impor Data Karyawan 2026) ──────────────────────
+            // Leader: Stefen Laksana. Sisanya staff. Email kantor Gmail → login via Google.
+            [
+                'name'          => 'Stefen Laksana',
+                'email'         => 'stefen.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => 'Head of Product / IT',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Nathanael Abellito Leo',
+                'email'         => 'nathanleo.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Wahyudi',
+                'email'         => 'wahyudi.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Nabila Melsyana',
+                'email'         => 'nabila.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Yanuarin Salwa Afranita',
+                'email'         => 'salwa.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Syabina Nur Pajriyanti',
+                'email'         => 'ina.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Luvena Cornelia',
+                'email'         => 'luve.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Johan Kevin Kenneth Hutagalung',
+                'email'         => 'johan.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Rian Ahmad Sugita',
+                'email'         => 'rian.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Gama Anom Multi Riyadi',
+                'email'         => 'gamaanom.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
                 'is_management' => false,
             ],
         ];
 
+        // Departemen yang login MANUAL (email+password) diaktifkan untuk testing.
+        // Karyawan Gmail-nya diberi password default 'maxy2026' selain tetap bisa
+        // login via Google. Tambahkan dept ke sini saat mau diuji manual.
+        $manualLoginDepts = ['product_it'];
+
         foreach ($users as $data) {
-            // Akun whitelist asli (Gmail) sengaja TANPA password, supaya saat
-            // pertama kali login lewat Google mereka diwajibkan membuat password.
-            // Akun dummy @maxy.academy tetap diberi password untuk testing manual.
-            $isGmail = str_ends_with($data['email'], '@gmail.com');
+            // Akun whitelist asli (Gmail) default TANPA password → login via Google
+            // (dipaksa buat password saat pertama login). Dummy @maxy.academy & dept
+            // di $manualLoginDepts diberi password 'maxy2026' untuk testing manual.
+            $isGmail     = str_ends_with($data['email'], '@gmail.com');
+            $manualLogin = ! $isGmail || in_array($data['department'] ?? '', $manualLoginDepts, true);
 
             User::updateOrCreate(
                 ['email' => $data['email']],
                 [
                     'name'          => $data['name'],
-                    'password'      => $isGmail ? null : Hash::make('maxy2026'),
+                    'password'      => $manualLogin ? Hash::make('maxy2026') : null,
                     'role'          => $data['role'],
                     'department'    => strtolower($data['department'] ?? ''), // Gunakan format lowercase untuk logic
                     'division'      => $data['division'],

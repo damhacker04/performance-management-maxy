@@ -38,7 +38,8 @@
                 </select>
             </div>
 
-            @if(auth()->user()->isLeadership() || auth()->user()->is_management)
+            @if($canFilterDept ?? auth()->user()->isExecutive())
+            {{-- Hanya C-Level & Super Admin yang boleh memfilter/lihat semua dept --}}
             <div class="form-group" style="margin:0;min-width:160px;">
                 <label class="form-label" style="margin-bottom:4px;">Departemen</label>
                 <select name="department" class="form-control form-control-sm">
@@ -47,6 +48,14 @@
                         <option value="{{ $key }}" {{ $dept == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+            </div>
+            @elseif($dept)
+            {{-- Leader: terkunci ke departemennya sendiri --}}
+            <div class="form-group" style="margin:0;min-width:160px;">
+                <label class="form-label" style="margin-bottom:4px;">Departemen</label>
+                <div class="form-control form-control-sm" style="background:var(--neutral-50,#f8fafc);color:var(--fg-2);cursor:default;">
+                    {{ \App\Models\User::DEPARTMENTS[$dept] ?? ucfirst(str_replace('_',' ', (string) $dept)) }} <span style="color:var(--fg-4);">· tim Anda</span>
+                </div>
             </div>
             @endif
 
