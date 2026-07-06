@@ -100,7 +100,12 @@
             @endif
 
             <!-- Assign ke penerima target -->
-            @php $assignLabel = auth()->user()->isExecutive() ? 'Leader' : 'Staf'; @endphp
+            @php
+                $u = auth()->user();
+                $assignLabel = $u->isSuperAdmin()
+                    ? 'Penerima (Leader / Staf)'
+                    : ($u->isExecutive() ? 'Leader / Staf CEO Office' : 'Staf');
+            @endphp
             <div class="field">
                 <label for="assigned_to">
                     Target untuk {{ $assignLabel }}
@@ -125,7 +130,7 @@
                 </div>
                 @error('assigned_to')<span class="err">{{ $message }}</span>@enderror
                 <small style="color:var(--fg-3);font-size:11px;">
-                    Jika diisi, target ini akan muncul secara personal untuk {{ strtolower($assignLabel) }} tersebut dan digunakan sebagai acuan AI.
+                    Jika diisi, target ini akan muncul secara personal untuk penerima tersebut dan digunakan sebagai acuan AI.
                 </small>
             </div>
 
@@ -151,6 +156,7 @@
                                     <optgroup label="KPI Dept — {{ $deptLabel }}">
                                         @foreach($deptKpis as $kpi)
                                             <option value="{{ $kpi->id }}" data-level="2" data-staff-id=""
+                                                    data-dept="{{ $deptKey }}"
                                                     data-kpiname="{{ $kpi->kpi_name }}"
                                                     data-figure="{{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}"
                                                     {{ old('kpi_target_id') == $kpi->id ? 'selected' : '' }}>
@@ -164,6 +170,7 @@
                                     <optgroup label="KPI Staff — {{ $deptLabel }}">
                                         @foreach($staffKpis as $kpi)
                                             <option value="{{ $kpi->id }}" data-level="3" data-staff-id="{{ $kpi->user_id }}"
+                                                    data-dept="{{ $deptKey }}"
                                                     data-staff-name="{{ $kpi->staff?->name ?? 'Staf' }}"
                                                     data-kpiname="{{ $kpi->kpi_name }}"
                                                     data-figure="{{ number_format($kpi->target_value,0,',','.') }} {{ $kpi->unit }}"
@@ -261,15 +268,20 @@ function filterStaffByDept(selectedDept) {
 function filterKpiByStaff() {
     const staffSel = document.getElementById('assigned_to');
     const kpiSel   = document.getElementById('kpi_target_id');
+    const deptSel  = document.getElementById('department'); // hanya ada untuk executive
     if (!staffSel || !kpiSel) return;
 
-    const staffId = staffSel.value;
+    const staffId      = staffSel.value;
+    const selectedDept = deptSel ? deptSel.value : '';
 
     Array.from(kpiSel.options).forEach(o => {
         if (!o.dataset.level) return; // opsi "-- tidak dikaitkan --"
-        const show = o.dataset.level === '2'
+        // Saring per departemen terpilih (kalau ada), lalu per staff untuk KPI L3.
+        const deptOk  = !selectedDept || o.dataset.dept === selectedDept;
+        const staffOk = o.dataset.level === '2'
             ? true
             : (!!staffId && o.dataset.staffId === staffId);
+        const show = deptOk && staffOk;
         o.hidden = !show;
         o.disabled = !show;
     });

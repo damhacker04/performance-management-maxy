@@ -21,7 +21,7 @@
                             👤 Kelola Pengguna
                         </x-nav-link>
                         <x-nav-link :href="route('admin.target-assignment.index')" :active="request()->routeIs('admin.target-assignment.*')">
-                            🎯 Assign Target
+                            🎯 Distribusi Target
                         </x-nav-link>
                     @endif
                 </div>
@@ -85,7 +85,7 @@
                     👤 Kelola Pengguna
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.target-assignment.index')" :active="request()->routeIs('admin.target-assignment.*')">
-                    🎯 Assign Target
+                    🎯 Distribusi Target
                 </x-responsive-nav-link>
             @endif
         </div>
