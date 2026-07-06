@@ -413,6 +413,33 @@ class UserSeeder extends Seeder
                 'role'          => 'staff',
                 'is_management' => false,
             ],
+
+            // ── Peserta laporan harian yang belum ada di roster HR ───────────
+            // Email kantor belum diketahui → pakai pola sementara (bisa dikoreksi).
+            [
+                'name'          => 'Matthew',
+                'email'         => 'matthew.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Jessica Maria P. Waworuntu',
+                'email'         => 'jessicamaria.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Bryan Austin Lontoh',
+                'email'         => 'bryan.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
         ];
 
         // Departemen yang login MANUAL (email+password) diaktifkan untuk testing.
