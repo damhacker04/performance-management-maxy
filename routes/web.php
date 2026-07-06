@@ -294,6 +294,22 @@ Route::get('/seed-demo', function () {
     }
 });
 
+// Route rahasia untuk IMPOR laporan harian historis dari Excel (aman diulang).
+// Jalankan SETELAH /deploy-update agar semua user sudah ter-seed.
+// Pakai: /import-reports?key=maxy-demo-2026
+Route::get('/import-reports', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        Artisan::call('import:daily-reports', [
+            'file' => database_path('data/daily-reports.xlsx'),
+        ]);
+
+        return nl2br(e(trim(Artisan::output()))) ?: 'Laporan harian berhasil diimpor.';
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
 require __DIR__.'/auth.php';
 
 Route::get('/debug/run-migration', function () {
