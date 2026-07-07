@@ -150,7 +150,7 @@
                 <a href="{{ route('admin.target-assignment.index') }}"
                    class="dt-nav-item {{ $onAdminAssign ? 'active' : '' }}">
                     <svg class="dt-nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                    Assign Target
+                    Distribusi Target
                 </a>
             @endif
 
@@ -371,12 +371,12 @@
                     Pengguna
                 </a>
 
-                {{-- Assign Target --}}
+                {{-- Distribusi Target Mingguan --}}
                 <a href="{{ route('admin.target-assignment.index') }}" class="tab {{ $onAdminAssign ? 'active' : '' }}">
                     <span class="glyph">
                         <svg class="lucide" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                     </span>
-                    Assign
+                    Distribusi
                 </a>
 
                 {{-- Lainnya (buka sheet: Target, KPI, Report, Export, Profil) --}}

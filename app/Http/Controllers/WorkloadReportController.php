@@ -29,14 +29,19 @@ class WorkloadReportController extends Controller
         $year = (int) $request->input('year', now()->year);
         $dept = $request->input('department');
 
-        // Tentukan dept scope berdasarkan role
+        // HANYA C-Level & Super Admin yang boleh lihat semua departemen / memfilter.
+        // Leader (dan management biasa) DIKUNCI ke departemennya sendiri —
+        // konsisten dengan alur Target.
+        $canFilterDept = $user->isExecutive();
+        if (! $canFilterDept) {
+            $dept = $user->department;
+        }
+
         $query = User::where('is_active', true)
             ->whereNotIn('role', ['c_level', 'super_admin'])
             ->orderBy('department')
             ->orderBy('name');
 
-        // Semua leadership (C-Level/HR/Leader) boleh memfilter departemen atau
-        // melihat semua departemen. Leader tidak lagi dikunci ke dept sendiri.
         if ($dept) {
             $query->where('department', $dept);
         }
@@ -58,7 +63,7 @@ class WorkloadReportController extends Controller
 
         return view('workload-report.index', compact(
             'staffData', 'departments', 'months', 'monthNames',
-            'month', 'year', 'dept', 'user'
+            'month', 'year', 'dept', 'user', 'canFilterDept'
         ));
     }
 
@@ -72,6 +77,11 @@ class WorkloadReportController extends Controller
         // Batasi parameter periode dari URL agar tidak liar.
         if ($month < 1 || $month > 12 || $year < 2024 || $year > 2030) {
             abort(404);
+        }
+
+        // Leader hanya boleh membuka detail staf di departemennya sendiri.
+        if (! $user->isExecutive() && $staff->department !== $user->department) {
+            abort(403, 'Anda hanya dapat melihat laporan staf di departemen Anda.');
         }
 
         $data = $this->dataService->buildFullStaffData($staff, $month, $year);
@@ -109,6 +119,11 @@ class WorkloadReportController extends Controller
         $month = (int) $request->month;
         $year = (int) $request->year;
 
+        // Leader hanya boleh generate untuk staf di departemennya sendiri.
+        if (! $user->isExecutive() && $staff->department !== $user->department) {
+            return response()->json(['error' => 'Akses ditolak untuk staf departemen lain.'], 403);
+        }
+
         $data = $this->dataService->buildFullStaffData($staff, $month, $year);
 
         try {
@@ -144,13 +159,14 @@ class WorkloadReportController extends Controller
             'department' => 'required|string',
         ]);
 
-        // Ambil list staf
+        // Leader dikunci ke departemennya; C-Level/Super Admin bebas pilih dept.
+        $dept = $user->isExecutive() ? $request->department : $user->department;
+
         $query = User::where('is_active', true)
             ->whereNotIn('role', ['c_level', 'super_admin']);
 
-        // Semua leadership/management boleh men-generate departemen mana pun.
-        if ($request->department) {
-            $query->where('department', $request->department);
+        if ($dept) {
+            $query->where('department', $dept);
         }
 
         $users = $query->get();

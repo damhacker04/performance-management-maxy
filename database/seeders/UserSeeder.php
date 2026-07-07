@@ -121,14 +121,6 @@ class UserSeeder extends Seeder
                 'role'          => 'staff',
                 'is_management' => false,
             ],
-      [
-        'name'          => 'Ghufron',
-        'email'         => 'ghufron.maxy.academy@gmail.com',
-        'department'    => 'Operational',
-        'division'      => 'General Affair',
-        'role'          => 'staff',
-        'is_management' => false,
-      ],
             [
                 'name'          => 'Brigitha',
                 'email'         => 'brigithap.maxy.academy@gmail.com',
@@ -225,6 +217,261 @@ class UserSeeder extends Seeder
                 'role'          => 'staff',
                 'is_management' => false,
             ],
+
+            // ── CEO Office (intern pembantu CEO — dept datar, tanpa leader) ──
+            // Ditugaskan & di-track langsung oleh Ko Isaac / management.
+            [
+                'name'          => 'Elroy Pemerena Karosekali',
+                'email'         => 'elroy.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Kartika Saraswati',
+                'email'         => 'kartika.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Ghufron Bagaskara',
+                'email'         => 'ghufron.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Olivia Abigail Silitonga',
+                'email'         => 'olivia.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Product / IT (impor Data Karyawan 2026) ──────────────────────
+            // Leader: Stefen Laksana. Sisanya staff. Email kantor Gmail → login via Google.
+            [
+                'name'          => 'Stefen Laksana',
+                'email'         => 'stefen.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => 'Head of Product / IT',
+                'role'          => 'leader',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Nathanael Abellito Leo',
+                'email'         => 'nathanleo.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Wahyudi',
+                'email'         => 'wahyudi.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Nabila Melsyana',
+                'email'         => 'nabila.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Yanuarin Salwa Afranita',
+                'email'         => 'salwa.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Syabina Nur Pajriyanti',
+                'email'         => 'ina.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Luvena Cornelia',
+                'email'         => 'luve.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Johan Kevin Kenneth Hutagalung',
+                'email'         => 'johan.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Rian Ahmad Sugita',
+                'email'         => 'rian.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Gama Anom Multi Riyadi',
+                'email'         => 'gamaanom.maxy.academy@gmail.com',
+                'department'    => 'product_it',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Sales (impor Data Karyawan 2026) — belum ada leader ──────────
+            [
+                'name'          => 'Sydney Yuanita',
+                'email'         => 'yua.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Ruky Dwi Jayanti',
+                'email'         => 'rukydwi.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Wempi Darwis Napitupulu',
+                'email'         => 'wempi.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Maria Felicia Widyawati',
+                'email'         => 'feli.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Mirfan Afandi',
+                'email'         => 'mirfan.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Marketing (impor Data Karyawan 2026) — leader: Joseph (di atas) ─
+            [
+                'name'          => 'Vincent Susanto',
+                'email'         => 'vincent.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Muhammad Khalid Ar Rasyid',
+                'email'         => 'khalid.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Kania Rachmayanti Satiyawira',
+                'email'         => 'kania.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Kemal Bregas Dewantoro',
+                'email'         => 'kemal.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Lingga Canastain Aulia',
+                'email'         => 'lingga.maxy.academy@gmail.com',
+                'department'    => 'marketing',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Univ Partnership (impor Data Karyawan 2026) — leader: Jessica (di atas) ─
+            [
+                'name'          => 'Andira Putri Farahdila',
+                'email'         => 'andira.maxy.academy@gmail.com',
+                'department'    => 'univ_partnership',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+
+            // ── Peserta laporan harian yang belum ada di roster HR ───────────
+            // Email kantor belum diketahui → pakai pola sementara (bisa dikoreksi).
+            [
+                'name'          => 'Matthew',
+                'email'         => 'matthew.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Jessica Maria P. Waworuntu',
+                'email'         => 'jessicamaria.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                'name'          => 'Bryan Austin Lontoh',
+                'email'         => 'bryan.maxy.academy@gmail.com',
+                'department'    => 'ceo_office',
+                'division'      => 'CEO Office Intern',
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+        ];
+
+        // Departemen yang login MANUAL (email+password) diaktifkan untuk testing.
+        // Karyawan Gmail-nya diberi password default 'maxy2026' selain tetap bisa
+        // login via Google. Tambahkan dept ke sini saat mau diuji manual.
+        $manualLoginDepts = ['product_it', 'ceo_office', 'operational', 'sales', 'marketing', 'univ_partnership'];
+
+        // Akun spesifik (per-email) yang juga diberi login manual 'maxy2026'.
+        // Dipakai untuk C-Level (department null → tak tercakup $manualLoginDepts)
+        // dan manager/leader asli agar bisa diuji login di staging & main.
+        $manualLoginEmails = [
+            'isaac.munandar@gmail.com',       // CEO
+            'tang.torodeveloper@gmail.com',   // CTO
+            'hello.linkdataku.id@gmail.com',  // Manager Ops
+            'jessica.maxy.academy@gmail.com', // Manager Univ Partnership
+            'joseph.maxy.academy@gmail.com',  // SPV Marcom
         ];
 
         $isProduction = app()->isProduction();
