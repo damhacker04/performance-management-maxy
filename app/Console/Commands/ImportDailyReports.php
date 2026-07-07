@@ -50,8 +50,8 @@ class ImportDailyReports extends Command
         'olivia abigail'                 => 'olivia.maxy.academy@gmail.com',
         'olivia abigail silitonga'       => 'olivia.maxy.academy@gmail.com',
         'stefen'                         => 'stefen.maxy.academy@gmail.com',
-        'sydney rosalind'                => 'yua.maxy.academy@gmail.com',
-        'sydney rosaind'                 => 'yua.maxy.academy@gmail.com',
+        'sydney rosalind'                => 'sydneyrosalind.maxy.academy@gmail.com',
+        'sydney rosaind'                 => 'sydneyrosalind.maxy.academy@gmail.com',
         'bryan austin lontoh'            => 'bryan.maxy.academy@gmail.com',
         'bryan lontoh'                   => 'bryan.maxy.academy@gmail.com',
     ];

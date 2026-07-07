@@ -425,6 +425,15 @@ class UserSeeder extends Seeder
                 'is_management' => false,
             ],
             [
+                // Beda orang dengan Sydney Yuanita (roster HR / yua.maxy.academy).
+                'name'          => 'Sydney Rosalind',
+                'email'         => 'sydneyrosalind.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
                 'name'          => 'Jessica Maria P. Waworuntu',
                 'email'         => 'jessicamaria.maxy.academy@gmail.com',
                 'department'    => 'ceo_office',
