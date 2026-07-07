@@ -59,7 +59,7 @@
                         @endforeach
                     </select>
                 </div>
-                <small style="color:var(--fg-3);font-size:11px;">C-Level tidak terikat departemen (akses semua).</small>
+                <small style="color:var(--fg-3);font-size:11px;">Untuk role C-Level, departemen otomatis diisi &quot;C-Level&quot; (jabatan CEO/CTO di kolom Divisi).</small>
             </div>
 
             <div class="field">
@@ -103,9 +103,15 @@
     if (!role || !deptField) return;
 
     function sync() {
-        const hide = role.value === 'c_level';
-        deptField.style.display = hide ? 'none' : '';
-        if (hide && dept) dept.value = '';
+        const isC = role.value === 'c_level';
+        if (!dept) return;
+        if (isC) {
+            dept.value = 'c_level';
+            dept.disabled = true;
+        } else {
+            dept.disabled = false;
+            if (dept.value === 'c_level') dept.value = '';
+        }
     }
     role.addEventListener('change', sync);
     sync();

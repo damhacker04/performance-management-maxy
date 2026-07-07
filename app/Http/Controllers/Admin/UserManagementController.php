@@ -58,8 +58,9 @@ class UserManagementController extends Controller
             'is_management' => 'boolean',
         ]);
 
-        // C-Level tidak terikat departemen (akses semua) → paksa null.
-        $department = $validated['role'] === 'c_level' ? null : ($validated['department'] ?? null);
+        // C-Level punya departemen "C-Level" (berisi jabatan CEO/CTO). Akses tetap
+        // lintas-departemen karena isExecutive() berbasis role, bukan department.
+        $department = $validated['role'] === 'c_level' ? 'c_level' : ($validated['department'] ?? null);
 
         User::create([
             'name'          => $validated['name'],
@@ -102,8 +103,9 @@ class UserManagementController extends Controller
             'is_management' => 'boolean',
         ]);
 
-        // C-Level tidak terikat departemen (akses semua) → paksa null.
-        $department = $validated['role'] === 'c_level' ? null : ($validated['department'] ?? null);
+        // C-Level punya departemen "C-Level" (berisi jabatan CEO/CTO). Akses tetap
+        // lintas-departemen karena isExecutive() berbasis role, bukan department.
+        $department = $validated['role'] === 'c_level' ? 'c_level' : ($validated['department'] ?? null);
 
         $data = [
             'name'          => $validated['name'],

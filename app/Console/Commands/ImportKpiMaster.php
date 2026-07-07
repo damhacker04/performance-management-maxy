@@ -40,7 +40,8 @@ class ImportKpiMaster extends Command
         'Human Capital'          => 'hr',
         'University Partnership' => 'univ_partnership',
         'Operations'             => 'operational',
-        // Sengaja TIDAK dipetakan (dilewati): Academic, C-Level, Legal,
+        'C-Level'                => 'c_level', // dept level-perusahaan (CEO/CTO)
+        // Sengaja TIDAK dipetakan (dilewati): Academic, Legal,
         // Learning & Development, Talent Placement & Partnership, Facilities.
     ];
 
