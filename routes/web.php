@@ -310,6 +310,59 @@ Route::get('/import-reports', function () {
     }
 });
 
+// Route rahasia untuk IMPOR KPI (Quick Reference) dari file JSON yang sudah
+// "dibekukan" di repo (hasil klasifikasi AI lokal). Deterministik — TIDAK memanggil
+// AI di server. RESET PENUH: semua kpi_targets + kpi_actuals dihapus, lalu 84 KPI
+// dept (L2) ditulis untuk periode berjalan. Jalankan SETELAH /deploy-update.
+// Pakai: /import-kpi?key=maxy-demo-2026
+Route::get('/import-kpi', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        $path = database_path('data/kpi-import.json');
+        if (! is_file($path)) {
+            return 'File database/data/kpi-import.json tidak ditemukan.';
+        }
+        $rows = json_decode(file_get_contents($path), true);
+        if (! is_array($rows)) {
+            return 'JSON KPI tidak valid.';
+        }
+
+        // Reset penuh KPI (clean slate) — anak dulu → induk.
+        \App\Models\KpiActual::query()->delete();
+        \App\Models\KpiTarget::where('kpi_level', 3)->delete();
+        $oldCount = \App\Models\KpiTarget::count();
+        \App\Models\KpiTarget::query()->delete();
+
+        $month = (int) now()->month;
+        $year  = (int) now()->year;
+        $setBy = \App\Models\User::where('role', 'super_admin')->value('id');
+
+        $n = 0;
+        foreach ($rows as $r) {
+            \App\Models\KpiTarget::create([
+                'parent_id'    => null,
+                'user_id'      => null,
+                'kpi_level'    => 2,
+                'department'   => $r['department'],
+                'kpi_name'     => $r['kpi_name'],
+                'aggregation'  => $r['aggregation'] ?? 'sum',
+                'target_value' => $r['target_value'] ?? 0,
+                'unit'         => $r['unit'] ?? '',
+                'month'        => $month,
+                'year'         => $year,
+                'is_active'    => true,
+                'set_by'       => $setBy,
+                'notes'        => $r['notes'] ?? 'Impor KPI',
+            ]);
+            $n++;
+        }
+
+        return "Impor KPI selesai. Reset $oldCount KPI lama, tulis $n KPI dept (L2) untuk periode $month/$year.";
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
 // Route rahasia untuk RESET PENUH data aktivitas (target bulanan + mingguan +
 // laporan harian). PERMANEN & tak bisa di-undo. Jalankan SEBELUM /import-reports.
 // Anak (evidence, ai_evaluations) ikut terhapus via cascade.

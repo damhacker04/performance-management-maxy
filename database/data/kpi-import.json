@@ -1,0 +1,674 @@
+[
+    {
+        "department": "c_level",
+        "kpi_name": "Bug Rate (Post-Release)",
+        "aggregation": "average",
+        "target_value": 3,
+        "unit": "bug",
+        "notes": "Impor KPI (posisi: CTO; target asli: ≤ 3 critical bugs)"
+    },
+    {
+        "department": "c_level",
+        "kpi_name": "Feature Delivery On-Time Rate",
+        "aggregation": "average",
+        "target_value": 85,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CTO; target asli: ≥ 85%)"
+    },
+    {
+        "department": "c_level",
+        "kpi_name": "Net Profit Margin",
+        "aggregation": "average",
+        "target_value": 15,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CEO; target asli: ≥ 15%)"
+    },
+    {
+        "department": "c_level",
+        "kpi_name": "Platform Uptime",
+        "aggregation": "shared",
+        "target_value": 99.5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CTO; target asli: ≥ 99.5%)"
+    },
+    {
+        "department": "c_level",
+        "kpi_name": "Revenue Growth Rate",
+        "aggregation": "average",
+        "target_value": 30,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CEO; target asli: ≥ 30%)"
+    },
+    {
+        "department": "c_level",
+        "kpi_name": "Total Students Enrolled",
+        "aggregation": "sum",
+        "target_value": 500,
+        "unit": "siswa",
+        "notes": "Impor KPI (posisi: CEO; target asli: ≥ 500 \/ semester)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Document Turnaround Time",
+        "aggregation": "average",
+        "target_value": 1,
+        "unit": "jam",
+        "notes": "Impor KPI (posisi: Personal Assistant; target asli: ≤ 1 hari kerja)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Funding Secured",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Investor Relation; target asli: Sesuai target)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Grant \/ Funding Applications",
+        "aggregation": "sum",
+        "target_value": 3,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: External International; target asli: ≥ 3 \/ tahun)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "International Partnership MOU",
+        "aggregation": "sum",
+        "target_value": 2,
+        "unit": "MOU",
+        "notes": "Impor KPI (posisi: External International; target asli: ≥ 2 \/ tahun)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "International Program Execution",
+        "aggregation": "sum",
+        "target_value": 1,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: External International; target asli: ≥ 1 aktif)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Investor Report Delivery",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Investor Relation; target asli: 100%)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Meeting & Schedule Accuracy",
+        "aggregation": "average",
+        "target_value": 98,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Personal Assistant; target asli: ≥ 98%)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "New Investor Meetings",
+        "aggregation": "sum",
+        "target_value": 2,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: Investor Relation; target asli: ≥ 2 \/ kuartal)"
+    },
+    {
+        "department": "ceo_office",
+        "kpi_name": "Task Completion Rate",
+        "aggregation": "average",
+        "target_value": 95,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Personal Assistant; target asli: ≥ 95%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Budget Variance",
+        "aggregation": "average",
+        "target_value": 5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance & Accounting (Head); target asli: ≤ 5%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Cash Flow Health",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance & Accounting (Head); target asli: Positif setiap bulan)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Expense Report Accuracy",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Accounting Staff; target asli: ≥ 99%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Financial Report Accuracy",
+        "aggregation": "shared",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance & Accounting (Head); target asli: 100%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Invoice Processing Time",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance Staff; target asli: ≤ 2 hari)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Journal Entry Accuracy",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Accounting Staff; target asli: ≥ 99%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Monthly Close Timeline",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Accounting Staff; target asli: ≤ 5 hari setelah bulan tutup)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Payment Accuracy",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance Staff; target asli: ≥ 99%)"
+    },
+    {
+        "department": "finance",
+        "kpi_name": "Report Submission On-Time",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Finance Staff; target asli: 100%)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Candidate Pipeline Quality",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital Staff; target asli: ≥ 5 kandidat qualified)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Employee Retention Rate",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital (Head); target asli: ≥ 85%)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Employee Satisfaction Score (eNPS)",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital (Head); target asli: ≥ 40)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Job Posting Accuracy",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital Staff; target asli: ≥ 98%)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Onboarding Completion",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital Staff; target asli: ≥ 95%)"
+    },
+    {
+        "department": "hr",
+        "kpi_name": "Time-to-Fill (Vacancies)",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Human Capital (Head); target asli: ≤ 30 hari)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Ad Click-Through Rate (CTR)",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Digital Marketing Staff; target asli: ≥ 2%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Brand Awareness Growth",
+        "aggregation": "average",
+        "target_value": 20,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CMO; target asli: ≥ 20% YoY)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Campaign Performance (CTR)",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Marketing Manager; target asli: ≥ 2%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Content Publishing Rate",
+        "aggregation": "average",
+        "target_value": 95,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Social Media Specialist Staff; target asli: ≥ 95%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Cost Per Lead (CPL)",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Marketing Manager; target asli: Trend turun)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Customer Acquisition Cost (CAC)",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CMO; target asli: Trend turun)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Design Delivery On-Time",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Graphic Designer Staff; target asli: ≥ 90%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Design Output Volume",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Graphic Designer Staff; target asli: Sesuai plan)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Engagement Rate",
+        "aggregation": "average",
+        "target_value": 3,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Social Media Specialist Staff; target asli: ≥ 3%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Follower Growth Rate",
+        "aggregation": "average",
+        "target_value": 5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Social Media Specialist Staff; target asli: ≥ 5%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Lead Generation Volume",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Marketing Manager; target asli: Sesuai target)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Lead Volume from Paid Ads",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Digital Marketing Staff; target asli: Sesuai target)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Paid Campaign ROAS",
+        "aggregation": "average",
+        "target_value": 3,
+        "unit": "x",
+        "notes": "Impor KPI (posisi: Digital Marketing Staff; target asli: ≥ 3x)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Revision Rate",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: Graphic Designer Staff; target asli: ≤ 2)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Total Leads Generated",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: CMO; target asli: Sesuai target)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Video Delivery On-Time",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Videographer Staff; target asli: ≥ 90%)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Video Engagement Rate",
+        "aggregation": "average",
+        "target_value": 50,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Videographer Staff; target asli: ≥ 50% avg watch)"
+    },
+    {
+        "department": "marketing",
+        "kpi_name": "Video Output Volume",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Videographer Staff; target asli: Sesuai plan)"
+    },
+    {
+        "department": "operational",
+        "kpi_name": "Operational Cost Efficiency",
+        "aggregation": "average",
+        "target_value": 5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Operational Manager; target asli: ≤ 5%)"
+    },
+    {
+        "department": "operational",
+        "kpi_name": "Process Compliance Rate",
+        "aggregation": "shared",
+        "target_value": 95,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Operational Manager; target asli: ≥ 95%)"
+    },
+    {
+        "department": "operational",
+        "kpi_name": "SLA Adherence Rate",
+        "aggregation": "shared",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Operational Manager; target asli: ≥ 90%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "API Uptime (for owned services)",
+        "aggregation": "shared",
+        "target_value": 99.5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Full Stack Staff; target asli: ≥ 99.5%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Bug Backlog Reduction",
+        "aggregation": "average",
+        "target_value": 20,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Product Dev Manager; target asli: ≥ 20%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Bug Rate (caused by own code)",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "bug",
+        "notes": "Impor KPI (posisi: Product Dev Staff; target asli: ≤ 2)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Code Quality Score",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Full Stack Staff; target asli: ≥ B grade)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Code Review Pass Rate",
+        "aggregation": "average",
+        "target_value": 80,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Product Dev Staff; target asli: ≥ 80%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Design Delivery On-Time",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: UI\/UX Staff; target asli: ≥ 90%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Design Revision Rate",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "revisi",
+        "notes": "Impor KPI (posisi: UI\/UX Staff; target asli: ≤ 2)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Feature Development Velocity",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Full Stack Staff; target asli: Sesuai baseline)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "IT Ticket Resolution Time",
+        "aggregation": "shared",
+        "target_value": 4,
+        "unit": "jam",
+        "notes": "Impor KPI (posisi: IT Manager; target asli: ≤ 4 jam (priority 1))"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Product Roadmap Adherence",
+        "aggregation": "average",
+        "target_value": 85,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Product Dev Manager; target asli: ≥ 85%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Security Incident Rate",
+        "aggregation": "shared",
+        "target_value": 0,
+        "unit": "incident",
+        "notes": "Impor KPI (posisi: IT Manager; target asli: 0 critical)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Sprint Completion Rate",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Product Dev Manager; target asli: ≥ 90%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "System Uptime",
+        "aggregation": "shared",
+        "target_value": 99.5,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: IT Manager; target asli: ≥ 99.5%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Task Completion Rate",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Product Dev Staff; target asli: ≥ 90%)"
+    },
+    {
+        "department": "product_it",
+        "kpi_name": "Usability Test Score",
+        "aggregation": "average",
+        "target_value": 70,
+        "unit": "skor",
+        "notes": "Impor KPI (posisi: UI\/UX Staff; target asli: ≥ 70)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "B2B Deals Closed",
+        "aggregation": "sum",
+        "target_value": 2,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: Sales B2B; target asli: ≥ 2 \/ bulan)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "B2B Revenue",
+        "aggregation": "sum",
+        "target_value": 100,
+        "unit": "Rp",
+        "notes": "Impor KPI (posisi: Sales B2B; target asli: Sesuai target)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "B2C Revenue",
+        "aggregation": "sum",
+        "target_value": 100,
+        "unit": "Rp",
+        "notes": "Impor KPI (posisi: Sales B2C; target asli: Sesuai target)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "B2G Revenue",
+        "aggregation": "sum",
+        "target_value": 100,
+        "unit": "Rp",
+        "notes": "Impor KPI (posisi: Sales B2G; target asli: Sesuai target)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Government Deals Closed",
+        "aggregation": "sum",
+        "target_value": 1,
+        "unit": "kontrak",
+        "notes": "Impor KPI (posisi: Sales B2G; target asli: ≥ 1 \/ kuartal)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Government Prospect Pipeline",
+        "aggregation": "sum",
+        "target_value": 5,
+        "unit": "MOU",
+        "notes": "Impor KPI (posisi: Sales B2G; target asli: ≥ 5 aktif)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Lead Follow-up Speed",
+        "aggregation": "average",
+        "target_value": 2,
+        "unit": "jam",
+        "notes": "Impor KPI (posisi: Sales B2C; target asli: ≤ 2 jam)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "New Corporate Prospects",
+        "aggregation": "sum",
+        "target_value": 10,
+        "unit": "leads",
+        "notes": "Impor KPI (posisi: Sales B2B; target asli: ≥ 10 \/ bulan)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "New Student Enrollments",
+        "aggregation": "sum",
+        "target_value": 100,
+        "unit": "siswa",
+        "notes": "Impor KPI (posisi: Sales B2C; target asli: Sesuai target)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Sales Pipeline Value",
+        "aggregation": "sum",
+        "target_value": 3,
+        "unit": "Rp",
+        "notes": "Impor KPI (posisi: Sales Manager; target asli: ≥ 3x target bulanan)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Team Quota Attainment",
+        "aggregation": "average",
+        "target_value": 80,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Sales Manager; target asli: ≥ 80%)"
+    },
+    {
+        "department": "sales",
+        "kpi_name": "Total Revenue from Sales",
+        "aggregation": "sum",
+        "target_value": 100,
+        "unit": "Rp",
+        "notes": "Impor KPI (posisi: Sales Manager; target asli: Sesuai target)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "Active University Partners",
+        "aggregation": "sum",
+        "target_value": 10,
+        "unit": "universitas",
+        "notes": "Impor KPI (posisi: Uni Partnership SPV; target asli: ≥ 10 universitas)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "Data & Report Accuracy",
+        "aggregation": "milestone",
+        "target_value": 100,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Uni Partnership Staff; target asli: 100%)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "Event Coordination Success",
+        "aggregation": "average",
+        "target_value": 95,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Uni Partnership Staff; target asli: ≥ 95%)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "MOU Signed per Quarter",
+        "aggregation": "sum",
+        "target_value": 2,
+        "unit": "MOU",
+        "notes": "Impor KPI (posisi: Uni Partnership SPV; target asli: ≥ 2 \/ kuartal)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "Partner Engagement Rate",
+        "aggregation": "average",
+        "target_value": 90,
+        "unit": "%",
+        "notes": "Impor KPI (posisi: Uni Partnership Staff; target asli: ≥ 90%)"
+    },
+    {
+        "department": "univ_partnership",
+        "kpi_name": "Student Referral from Universities",
+        "aggregation": "sum",
+        "target_value": 50,
+        "unit": "siswa",
+        "notes": "Impor KPI (posisi: Uni Partnership SPV; target asli: ≥ 50 \/ semester)"
+    }
+]
