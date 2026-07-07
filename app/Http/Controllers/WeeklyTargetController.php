@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\RedirectsToSafeBack;
 use App\Models\MonthlyTarget;
 use App\Models\WeeklyTarget;
 use Illuminate\Http\Request;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class WeeklyTargetController extends Controller
 {
+    use RedirectsToSafeBack;
+
     /**
      * Redirect ke monthly-targets — weekly target dikelola dari dalam halaman monthly target.
      * Halaman index standalone tidak dipakai agar tidak membingungkan user.
@@ -137,7 +140,7 @@ class WeeklyTargetController extends Controller
         ]);
 
         // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
-        $backUrl = $request->input('back') ?: null;
+        $backUrl = $this->safeBackOrNull($request->input('back'));
         if ($backUrl) {
             $redirectTo = $backUrl;
         } else {
@@ -334,7 +337,7 @@ class WeeklyTargetController extends Controller
         ]);
 
         // Redirect: kembali ke back= jika ada (POST body dari hidden input), else period hierarchy
-        $backUrl = $request->input('back') ?: null;
+        $backUrl = $this->safeBackOrNull($request->input('back'));
         if ($backUrl) {
             $redirectTo = $backUrl;
         } else {

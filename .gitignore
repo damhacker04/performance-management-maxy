@@ -31,3 +31,6 @@ Thumbs.db
 /test_*.php
 /dispatch-jobs.php
 /evaluate_*.php
+
+# Panduan internal untuk AI agent (jangan commit)
+/agents.md

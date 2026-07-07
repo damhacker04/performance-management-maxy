@@ -12,7 +12,7 @@ class DummyStaffMonthlyTargetSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── Ambil staf yang ada ──────────────────────────────────────────────
+
         $staffList = User::where('role', 'staff')->where('is_active', true)->get();
 
         if ($staffList->isEmpty()) {
@@ -34,7 +34,6 @@ class DummyStaffMonthlyTargetSeeder extends Seeder
         $prevMonth = $month === 1 ? 12 : $month - 1;
         $prevYear  = $month === 1 ? $year - 1 : $year;
 
-        // Template per departemen
         $targetTemplates = [
             'sales'           => [['title'=>'Closing Deal Bulanan',      'desc'=>'Target minimal 50 closing deal bulan ini'],
                                   ['title'=>'Follow Up & Nurturing Leads','desc'=>'Follow up semua leads yang belum diproses']],
@@ -83,7 +82,6 @@ class DummyStaffMonthlyTargetSeeder extends Seeder
             foreach ([$month => $year, $prevMonth => $prevYear] as $mo => $yr) {
                 $tmpl = $tmpls[$idx % count($tmpls)];
 
-                // Skip jika sudah ada
                 if (MonthlyTarget::where('assigned_to', $staff->id)->where('month', $mo)->where('year', $yr)->exists()) {
                     $this->command->line("  Skip: {$staff->name} {$mo}/{$yr} sudah ada.");
                     continue;
@@ -99,12 +97,11 @@ class DummyStaffMonthlyTargetSeeder extends Seeder
                     'year'        => $yr,
                 ]);
 
-                // Buat 2–3 weekly targets
                 $weekCount = ($mo === $month) ? 3 : 2;
                 for ($w = 1; $w <= $weekCount; $w++) {
                     $wt = WeeklyTarget::create([
                         'monthly_target_id' => $mt->id,
-                        'user_id'           => $leader->id,   // pembuat = leader
+                        'user_id'           => $leader->id,
                         'assigned_to'       => $staff->id,
                         'title'             => ($weeklyTitles[$w-1] ?? "Minggu $w") . " — " . $tmpl['title'],
                         'description'       => "Target minggu ke-{$w} dalam rangka {$tmpl['title']}.",
@@ -118,7 +115,6 @@ class DummyStaffMonthlyTargetSeeder extends Seeder
                         'impact_level'      => ['low','medium','high'][rand(0,2)],
                     ]);
 
-                    // Buat 2–4 daily task entries
                     $entryCount = rand(2, 4);
                     for ($d = 0; $d < $entryCount; $d++) {
                         $isBulanLalu = ($mo === $prevMonth);

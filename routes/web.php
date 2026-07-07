@@ -50,12 +50,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ceo/targets/leader/{leader}', [CeoTargetController::class, 'showLeader'])->name('ceo.targets.leader');
     });
 
-    // Monthly Target, Weekly Target, KPI — hanya Leader & C-Level
+    // Debug: daftar target mingguan kosong — hanya Super Admin.
     Route::get('/debug/unassigned-targets', function () {
-        if (! app()->environment('production') && ! app()->environment('local')) {
-            // Just a precaution, but we want it available to debug
-        }
-
         $targets = WeeklyTarget::with('monthlyTarget')
             ->whereDoesntHave('dailyTaskEntries')
             ->get(['id', 'title', 'monthly_target_id', 'assigned_to', 'user_id']);
@@ -79,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
         $html .= '</table>';
 
         return $html;
-    });
+    })->middleware('role:super_admin');
 
     // Menu independent sesuai notul 12 Mei 2026: Monthly & Weekly dipisah
     Route::middleware(['role:leader,c_level'])->group(function () {
@@ -264,8 +260,13 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     }
 });
 
-// Route rahasia untuk menjalankan migration & seeder dengan aman di production
+// Route rahasia untuk menjalankan migration & seeder dengan aman di production.
+// Dilindungi token dari .env (DEPLOY_HOOK_TOKEN). Kosong = rute dinonaktifkan.
+// Pakai: GET /deploy-update?token=<DEPLOY_HOOK_TOKEN>
 Route::get('/deploy-update', function () {
+    $token = (string) config('app.deploy_token');
+    abort_if($token === '' || ! hash_equals($token, (string) request('token')), 404);
+
     try {
         Artisan::call('migrate', [
             '--force' => true,
@@ -282,9 +283,11 @@ Route::get('/deploy-update', function () {
 });
 
 // Route rahasia untuk seed DATA DEMO (aman diulang; hapus setelah presentasi).
-// Pakai: /seed-demo?key=maxy-demo-2026
+// Dilindungi token dari .env (DEPLOY_HOOK_TOKEN). Pakai: /seed-demo?token=<DEPLOY_HOOK_TOKEN>
 Route::get('/seed-demo', function () {
-    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    $token = (string) config('app.deploy_token');
+    abort_if($token === '' || ! hash_equals($token, (string) request('token')), 404);
+
     try {
         Artisan::call('db:seed', ['--class' => 'DemoSeeder', '--force' => true]);
 
@@ -339,24 +342,26 @@ Route::get('/wipe-reports', function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/debug/run-migration', function () {
-    Artisan::call('app:migrate-legacy-targets');
+// Rute debug — hanya Super Admin yang sudah login.
+Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::get('/debug/run-migration', function () {
+        Artisan::call('app:migrate-legacy-targets');
 
-    return "<pre style='background:#111; color:#0f0; padding:20px; font-size:14px; border-radius:8px; line-height:1.5; font-family:monospace;'>".
-           "EXECUTING MIGRATION...\n\n".
-           Artisan::output().
-           '</pre>';
-});
+        return "<pre style='background:#111; color:#0f0; padding:20px; font-size:14px; border-radius:8px; line-height:1.5; font-family:monospace;'>".
+               "EXECUTING MIGRATION...\n\n".
+               Artisan::output().
+               '</pre>';
+    });
 
-Route::get('/debug/logs', function () {
-    $logFile = storage_path('logs/laravel.log');
-    if (! file_exists($logFile)) {
-        return 'No log file found.';
-    }
+    Route::get('/debug/logs', function () {
+        $logFile = storage_path('logs/laravel.log');
+        if (! file_exists($logFile)) {
+            return 'No log file found.';
+        }
 
-    // Read last 100 lines
-    $lines = file($logFile);
-    $lastLines = array_slice($lines, -100);
+        $lines = file($logFile);
+        $lastLines = array_slice($lines, -100);
 
-    return "<pre style='background:#111; color:#fff; padding:10px; font-size:12px; white-space:pre-wrap;'>".htmlspecialchars(implode('', $lastLines)).'</pre>';
+        return "<pre style='background:#111; color:#fff; padding:10px; font-size:12px; white-space:pre-wrap;'>".htmlspecialchars(implode('', $lastLines)).'</pre>';
+    });
 });
