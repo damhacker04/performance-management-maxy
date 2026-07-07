@@ -58,11 +58,14 @@ class UserManagementController extends Controller
             'is_management' => 'boolean',
         ]);
 
+        // C-Level tidak terikat departemen (akses semua) → paksa null.
+        $department = $validated['role'] === 'c_level' ? null : ($validated['department'] ?? null);
+
         User::create([
             'name'          => $validated['name'],
             'email'         => $validated['email'],
             'role'          => $validated['role'],
-            'department'    => $validated['department'] ?? null,
+            'department'    => $department,
             'division'      => $validated['division'] ?? null,
             'is_management' => $request->boolean('is_management'),
             // Cast 'hashed' di model akan otomatis hash nilai plain ini.
@@ -99,11 +102,14 @@ class UserManagementController extends Controller
             'is_management' => 'boolean',
         ]);
 
+        // C-Level tidak terikat departemen (akses semua) → paksa null.
+        $department = $validated['role'] === 'c_level' ? null : ($validated['department'] ?? null);
+
         $data = [
             'name'          => $validated['name'],
             'email'         => $validated['email'],
             'role'          => $validated['role'],
-            'department'    => $validated['department'] ?? null,
+            'department'    => $department,
             'division'      => $validated['division'] ?? null,
             'is_management' => $request->boolean('is_management'),
         ];
