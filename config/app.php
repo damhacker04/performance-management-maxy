@@ -43,6 +43,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deploy Hook Token
+    |--------------------------------------------------------------------------
+    |
+    | Token rahasia untuk memicu rute deploy (migrate + seed) & seed demo dari
+    | HTTP. Kosong = rute dinonaktifkan. Isi dengan string acak panjang di .env
+    | produksi, lalu panggil: GET /deploy-update?token=<DEPLOY_HOOK_TOKEN>.
+    |
+    */
+
+    'deploy_token' => env('DEPLOY_HOOK_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |
