@@ -44,9 +44,10 @@ class WorkloadReportGenerateTest extends TestCase
         $this->actingAs($staff)->get(route('workload-report.index'))->assertForbidden();
     }
 
-    public function test_leader_index_lists_staff_from_all_departments(): void
+    public function test_leader_index_is_locked_to_own_department(): void
     {
-
+        // Leader dikunci ke departemennya sendiri (konsisten dengan alur Target &
+        // review laporan). Hanya C-Level/Super Admin yang boleh lihat lintas-dept.
         $leader     = User::factory()->leader()->create(['department' => 'product_it']);
         $ownStaff   = User::factory()->staff()->create(['department' => 'product_it', 'name' => 'Staf Produk']);
         $otherStaff = User::factory()->staff()->create(['department' => 'sales', 'name' => 'Staf Sales']);
@@ -54,7 +55,7 @@ class WorkloadReportGenerateTest extends TestCase
         $this->actingAs($leader)->get(route('workload-report.index'))
             ->assertOk()
             ->assertSee('Staf Produk')
-            ->assertSee('Staf Sales');
+            ->assertDontSee('Staf Sales');
     }
 
     public function test_leader_can_view_workload_report_for_own_dept_staff(): void
@@ -67,15 +68,15 @@ class WorkloadReportGenerateTest extends TestCase
             ->assertOk();
     }
 
-    public function test_leader_can_view_workload_report_for_other_dept_staff(): void
+    public function test_leader_cannot_view_workload_report_for_other_dept_staff(): void
     {
-
+        // Detail staf departemen lain ditolak (403) untuk leader.
         $leader = User::factory()->leader()->create(['department' => 'product_it']);
         $staff  = User::factory()->staff()->create(['department' => 'sales']);
 
         $this->actingAs($leader)
             ->get(route('workload-report.show', [$staff->id, now()->month, now()->year]))
-            ->assertOk();
+            ->assertForbidden();
     }
 
     public function test_leader_can_trigger_single_report_generation(): void
@@ -92,18 +93,19 @@ class WorkloadReportGenerateTest extends TestCase
         ])->assertSuccessful();
     }
 
-    public function test_leader_can_trigger_single_report_generation_for_other_dept(): void
+    public function test_leader_cannot_trigger_single_report_generation_for_other_dept(): void
     {
         $this->fakeGemini();
 
         $leader = User::factory()->leader()->create(['department' => 'product_it']);
         $staff  = User::factory()->staff()->create(['department' => 'sales']);
 
+        // Generate untuk staf departemen lain ditolak (403).
         $this->actingAs($leader)->post(route('workload-report.generate'), [
             'staff_id' => $staff->id,
             'month'    => now()->month,
             'year'     => now()->year,
-        ])->assertSuccessful();
+        ])->assertForbidden();
     }
 
     public function test_staff_cannot_trigger_single_report_generation(): void
