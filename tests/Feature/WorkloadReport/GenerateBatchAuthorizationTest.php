@@ -13,9 +13,10 @@ class GenerateBatchAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_leader_can_batch_generate_for_other_department(): void
+    public function test_leader_batch_generate_is_locked_to_own_department(): void
     {
-
+        // Leader dikunci ke departemennya sendiri: meski meminta 'finance',
+        // controller mengabaikannya dan hanya memproses staf dept leader ('sales').
         Bus::fake();
 
         $leader = User::factory()->leader()->department('sales')->create();
@@ -33,7 +34,7 @@ class GenerateBatchAuthorizationTest extends TestCase
         Bus::assertBatched(function (PendingBatch $batch) use ($salesStaff, $financeStaff) {
             $ids = collect($batch->jobs)->map(fn (GenerateWorkloadReportJob $j) => $j->staffId);
 
-            return $ids->contains($financeStaff->id) && ! $ids->contains($salesStaff->id);
+            return $ids->contains($salesStaff->id) && ! $ids->contains($financeStaff->id);
         });
     }
 
