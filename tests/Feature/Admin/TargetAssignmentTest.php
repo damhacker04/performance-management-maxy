@@ -19,7 +19,7 @@ class TargetAssignmentTest extends TestCase
         $admin = User::factory()->superAdmin()->create();
         $this->actingAs($admin)->get(route('admin.target-assignment.index'))
             ->assertOk()
-            ->assertSee('Assign Target ke Staff');
+            ->assertSee('Distribusi Target Mingguan ke Staf');
     }
 
     public function test_target_assignment_lists_staff_for_selected_department(): void
