@@ -120,32 +120,35 @@ class ImportTargets extends Command
         foreach ($del as $mt) { $mt->delete(); }
         if ($del->count()) { $this->line("Menghapus {$del->count()} target impor sebelumnya."); }
 
+        // Penetap target = Admin HR (super_admin). Halaman staff hanya menampilkan
+        // target yang dibuat leader/super_admin, jadi ini WAJIB (sales tak ada leader).
+        $adminId = User::where('role', 'super_admin')->value('id');
+
         $mtCount = $wtCount = 0;
         foreach ($qualifying as $q) {
             $user = User::find($q['user_id']);
-            $firstMt = null;
 
-            foreach ($q['monthly'] as $text) {
-                $mt = MonthlyTarget::create([
-                    'user_id'     => $user->id,       // self-owned (impor)
-                    'assigned_to' => $user->id,
-                    'department'  => $user->department,
-                    'title'       => \Illuminate\Support\Str::limit($text, 120, '…'),
-                    'description' => $text . ' · [' . self::MARK . ']',
-                    'month'       => self::MONTH,
-                    'year'        => self::YEAR,
-                ]);
-                $firstMt ??= $mt;
-                $mtCount++;
-            }
+            // Satu monthly target "payung" per orang: semua sasaran bulanan disusun di
+            // deskripsi, semua weekly tergantung di sini (staff-view butuh ≥1 weekly).
+            $goals = collect($q['monthly'])->map(fn ($t, $i) => ($i + 1) . '. ' . $t)->implode("\n");
+            $mt = MonthlyTarget::create([
+                'user_id'     => $adminId ?? $user->id,
+                'assigned_to' => $user->id,
+                'department'  => $user->department,
+                'title'       => \Illuminate\Support\Str::limit($q['monthly'][0], 120, '…'),
+                'description' => "Sasaran bulanan Mei 2026:\n" . $goals . "\n\n[" . self::MARK . ']',
+                'month'       => self::MONTH,
+                'year'        => self::YEAR,
+            ]);
+            $mtCount++;
 
             $week = 1;
             foreach ($q['weekly'] as $text) {
                 WeeklyTarget::create([
-                    'monthly_target_id' => $firstMt->id,
+                    'monthly_target_id' => $mt->id,
                     'week_number'       => $week,
                     'title'             => \Illuminate\Support\Str::limit($text, 150, '…'),
-                    'user_id'           => $user->id,
+                    'user_id'           => $adminId ?? $user->id,
                     'assigned_to'       => $user->id,
                     'category'          => 'planned',
                     'impact_level'      => 'medium',
