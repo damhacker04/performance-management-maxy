@@ -80,6 +80,17 @@
                 </div>
             </div>
 
+            {{-- Arah KPI: makin kecil makin baik --}}
+            <div class="field" id="lower-better-row">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400;">
+                    <input type="hidden" name="lower_is_better" value="0">
+                    <input type="checkbox" name="lower_is_better" value="1" {{ old('lower_is_better') ? 'checked' : '' }}
+                           style="width:16px;height:16px;">
+                    <span>Makin kecil makin baik <span style="color:var(--fg-3);">(mis. Dropout Rate, Bug Rate, Turnaround Time, CPL)</span></span>
+                </label>
+                <p class="form-hint" style="color:var(--fg-3);font-size:12px;margin-top:4px;">Kalau dicentang, actual ≤ target dihitung 100%; melebihi target justru menurunkan capaian.</p>
+            </div>
+
             {{-- Berlaku Bulan & Tahun --}}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div class="field">
@@ -155,6 +166,8 @@ function onAggChange(val) {
     if (row) row.style.display = isMile ? 'none' : 'grid';
     if (tv) tv.required = !isMile;
     if (un) un.required = !isMile;
+    const lb = document.getElementById('lower-better-row'); // arah tak relevan utk milestone
+    if (lb) lb.style.display = isMile ? 'none' : '';
     const hints = {
         sum:       'Angka staf dijumlahkan jadi angka dept. Contoh: revenue, jumlah deal, tugas selesai.',
         average:   'Dept = rata-rata pencapaian staf. Contoh: conversion rate, response time.',
