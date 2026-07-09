@@ -83,6 +83,7 @@ class KpiController extends Controller
         KpiTarget::create([
             ...$validated,
             'kpi_level' => 2,
+            'lower_is_better' => $request->boolean('lower_is_better'),
             'set_by' => $user->id,
             'is_active' => true,
         ]);
@@ -104,6 +105,9 @@ class KpiController extends Controller
         // Jenis KPI dikunci setelah dibuat (cegah data L3/actual jadi tak konsisten).
         unset($validated['aggregation']);
 
+        // Arah KPI (lower_is_better) boleh diubah — pengaruhnya hanya ke rumus %.
+        $validated['lower_is_better'] = $request->boolean('lower_is_better');
+
         // Pertahankan konvensi milestone (100 / '%').
         if ($kpiTarget->isMilestone()) {
             $validated['target_value'] = 100;
@@ -111,6 +115,9 @@ class KpiController extends Controller
         }
 
         $kpiTarget->update($validated);
+
+        // KPI L3 anak ikut arah parent agar konsisten.
+        $kpiTarget->children()->update(['lower_is_better' => $validated['lower_is_better']]);
 
         return redirect()->route('kpi')->with('success', 'KPI berhasil diperbarui.');
     }
@@ -166,7 +173,8 @@ class KpiController extends Controller
         KpiTarget::create([
             'parent_id' => $parent->id,
             'kpi_level' => 3,
-            'aggregation' => $parent->aggregation,  // L3 mewarisi jenis dari parent
+            'aggregation' => $parent->aggregation,          // L3 mewarisi jenis
+            'lower_is_better' => $parent->lower_is_better,   // & arah dari parent
             'user_id' => $staff->id,
             'department' => $parent->department,
             'kpi_name' => $parent->kpi_name,

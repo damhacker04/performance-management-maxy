@@ -22,8 +22,9 @@ class KpiTargetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'department'   => 'required|string|in:' . implode(',', array_keys(User::DEPARTMENTS)),
-            'aggregation'  => 'required|in:' . implode(',', array_keys(\App\Models\KpiTarget::AGGREGATIONS)),
+            'department'      => 'required|string|in:' . implode(',', array_keys(User::DEPARTMENTS)),
+            'aggregation'     => 'required|in:' . implode(',', array_keys(\App\Models\KpiTarget::AGGREGATIONS)),
+            'lower_is_better' => 'boolean',
             'kpi_name'     => 'required|string|max:255',
             // Milestone tak butuh target/satuan angka (auto 100 / '%' di controller).
             'target_value' => 'required_unless:aggregation,milestone|nullable|numeric|min:0',
