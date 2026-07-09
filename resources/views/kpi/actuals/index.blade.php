@@ -113,12 +113,11 @@
                                 $target  = $actual->kpiTarget;
                                 $staff   = $actual->staff;
                                 $isMile  = $target?->isMilestone() ?? false;
-                                // Milestone: actual sudah %. Lainnya: actual/target*100.
+                                // Satu pintu: milestone = actual (sudah %); lainnya via
+                                // achievementPct (hormati arah KPI + dibatasi 0–100%).
                                 $capaian = $isMile
                                     ? round(min(100, max(0, $actual->actual_value)), 1)
-                                    : ($target && $target->target_value > 0
-                                        ? round($actual->actual_value / $target->target_value * 100, 1)
-                                        : 0);
+                                    : ($target ? ($target->achievementPct((float) $actual->actual_value) ?? 0) : 0);
 
                                 if ($capaian >= 80) {
                                     $capColor = '#16A34A'; $capBg = '#DCFCE7';
