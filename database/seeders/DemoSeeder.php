@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\DailyTaskEntry;
-use App\Models\KpiActual;
-use App\Models\KpiTarget;
 use App\Models\MonthlyTarget;
 use App\Models\User;
 use App\Models\WeeklyTarget;
@@ -16,7 +14,8 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Data contoh "hidup" untuk DEMO — mencakup seluruh flow yang dipresentasikan:
  * penetapan target (CEO→Leader→Staff) → laporan harian → verifikasi (approved /
- * pending / revisi) → KPI (dept L2 → staff L3 → realisasi).
+ * pending / revisi). Catatan: KPI TIDAK lagi dibuat di sini — sumbernya command
+ * import:kpi (Quick Reference).
  *
  * Aman dijalankan berulang (idempoten via updateOrCreate). Semua data di
  * departemen "operational", periode bulan berjalan. Memakai akun dummy
@@ -41,67 +40,15 @@ class DemoSeeder extends Seeder
         $staffA = $this->actor('staff@maxy.academy',            'Budi Santoso',     'staff',       $dept, 'Talent Placement', false);
         $staffB = $this->actor('staff.testing@maxy.academy',    'Sari Dewi',        'staff',       $dept, 'Finance & Legal',  false);
 
-        // ── 2. KPI Dept (L2) + KPI Staff (L3) + Realisasi ───────────────────
-        $kpiL2 = KpiTarget::updateOrCreate(
-            ['department' => $dept, 'kpi_name' => 'Penyelesaian Tugas Operasional', 'kpi_level' => 2, 'month' => $month, 'year' => $year, 'parent_id' => null],
-            ['target_value' => 100, 'unit' => 'tugas', 'set_by' => $ceo->id, 'is_active' => true, 'notes' => 'Benchmark tim operasional bulan ini.'],
-        );
-
-        $kpiA = KpiTarget::updateOrCreate(
-            ['parent_id' => $kpiL2->id, 'kpi_level' => 3, 'user_id' => $staffA->id, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'kpi_name' => $kpiL2->kpi_name, 'target_value' => 50, 'unit' => 'tugas', 'set_by' => $ceo->id, 'is_active' => true],
-        );
-        $kpiB = KpiTarget::updateOrCreate(
-            ['parent_id' => $kpiL2->id, 'kpi_level' => 3, 'user_id' => $staffB->id, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'kpi_name' => $kpiL2->kpi_name, 'target_value' => 50, 'unit' => 'tugas', 'set_by' => $ceo->id, 'is_active' => true],
-        );
-
-        // Realisasi Budi diisi manual (bar KPI terisi). Sari sengaja DIKOSONGKAN
-        // supaya bisa dipakai demo tombol "✨ AI" (auto-detect dari laporan).
-        KpiActual::updateOrCreate(
-            ['kpi_target_id' => $kpiA->id, 'staff_id' => $staffA->id, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'actual_value' => 42, 'source' => 'manual', 'notes' => 'Input manual HR.', 'created_by' => $ceo->id],
-        );
-
-        // ── 2b. Contoh KPI jenis lain (average / shared / milestone) ─────────
-        // AVERAGE — dept = rata-rata capaian staf (mis. ketepatan waktu %)
-        $kpiAvg = KpiTarget::updateOrCreate(
-            ['department' => $dept, 'kpi_name' => 'Ketepatan Waktu Penyelesaian', 'kpi_level' => 2, 'month' => $month, 'year' => $year, 'parent_id' => null],
-            ['aggregation' => 'average', 'target_value' => 100, 'unit' => '%', 'set_by' => $ceo->id, 'is_active' => true, 'notes' => 'Rata-rata ketepatan waktu tiap staf.'],
-        );
-        $kpiAvgA = KpiTarget::updateOrCreate(
-            ['parent_id' => $kpiAvg->id, 'kpi_level' => 3, 'user_id' => $staffA->id, 'month' => $month, 'year' => $year],
-            ['aggregation' => 'average', 'department' => $dept, 'kpi_name' => $kpiAvg->kpi_name, 'target_value' => 100, 'unit' => '%', 'set_by' => $ceo->id, 'is_active' => true],
-        );
-        $kpiAvgB = KpiTarget::updateOrCreate(
-            ['parent_id' => $kpiAvg->id, 'kpi_level' => 3, 'user_id' => $staffB->id, 'month' => $month, 'year' => $year],
-            ['aggregation' => 'average', 'department' => $dept, 'kpi_name' => $kpiAvg->kpi_name, 'target_value' => 100, 'unit' => '%', 'set_by' => $ceo->id, 'is_active' => true],
-        );
-        KpiActual::updateOrCreate(['kpi_target_id' => $kpiAvgA->id, 'staff_id' => $staffA->id, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'actual_value' => 80, 'source' => 'manual', 'created_by' => $ceo->id]);
-        KpiActual::updateOrCreate(['kpi_target_id' => $kpiAvgB->id, 'staff_id' => $staffB->id, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'actual_value' => 95, 'source' => 'manual', 'created_by' => $ceo->id]);
-
-        // SHARED — target tim bersama (kepatuhan SOP 95%), actual di level dept
-        $kpiShared = KpiTarget::updateOrCreate(
-            ['department' => $dept, 'kpi_name' => 'Kepatuhan SOP Operasional', 'kpi_level' => 2, 'month' => $month, 'year' => $year, 'parent_id' => null],
-            ['aggregation' => 'shared', 'target_value' => 95, 'unit' => '%', 'set_by' => $ceo->id, 'is_active' => true, 'notes' => 'Target tim, tidak dibagi per staf.'],
-        );
-        KpiActual::updateOrCreate(['kpi_target_id' => $kpiShared->id, 'staff_id' => null, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'actual_value' => 90, 'source' => 'manual', 'created_by' => $ceo->id]);
-
-        // MILESTONE — progress 0–100% (digitalisasi arsip), actual di level dept
-        $kpiMile = KpiTarget::updateOrCreate(
-            ['department' => $dept, 'kpi_name' => 'Digitalisasi Arsip 2026', 'kpi_level' => 2, 'month' => $month, 'year' => $year, 'parent_id' => null],
-            ['aggregation' => 'milestone', 'target_value' => 100, 'unit' => '%', 'set_by' => $ceo->id, 'is_active' => true, 'notes' => 'Milestone proyek — progress.'],
-        );
-        KpiActual::updateOrCreate(['kpi_target_id' => $kpiMile->id, 'staff_id' => null, 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'actual_value' => 60, 'source' => 'manual', 'created_by' => $ceo->id]);
+        // ── 2. KPI dihapus dari DemoSeeder ──────────────────────────────────
+        // KPI sekarang berasal dari impor Quick Reference (command import:kpi),
+        // bukan seeder demo. Blok pembuatan KPI dummy (sum/average/shared/
+        // milestone) sengaja dihilangkan agar tidak memunculkan KPI testing.
 
         // ── 3. Target: CEO → Leader ─────────────────────────────────────────
         $mtCeo = MonthlyTarget::updateOrCreate(
             ['user_id' => $ceo->id, 'assigned_to' => $lead->id, 'title' => 'Efisiensi Operasional Bulan Ini', 'month' => $month, 'year' => $year],
-            ['department' => $dept, 'description' => 'Target dari CEO untuk leader operasional.', 'kpi_target_id' => $kpiL2->id],
+            ['department' => $dept, 'description' => 'Target dari CEO untuk leader operasional.'],
         );
         $wtL1 = $this->weekly($mtCeo, $lead, 1, 'Audit 3 proses operasional', 'qualitative');
         $wtL2 = $this->weekly($mtCeo, $lead, 2, 'Susun SOP baru', 'qualitative');
@@ -169,7 +116,7 @@ class DemoSeeder extends Seeder
             ]],
         );
 
-        $this->command?->info('DemoSeeder selesai: 5 aktor, KPI 4 jenis (sum/average/shared/milestone) + realisasi, 3 monthly target, 5 weekly target, 7 laporan harian, 2 workload report AI.');
+        $this->command?->info('DemoSeeder selesai: 5 aktor, 3 monthly target, 5 weekly target, 7 laporan harian, 2 workload report AI. (KPI kini dari import:kpi, bukan seeder.)');
     }
 
     /** Buat/segarkan aktor demo dengan password supaya mudah login. */

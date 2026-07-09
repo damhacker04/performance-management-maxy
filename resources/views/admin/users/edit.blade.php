@@ -49,7 +49,7 @@
                 @error('role')<span class="err">{{ $message }}</span>@enderror
             </div>
 
-            <div class="field">
+            <div class="field" id="department-field">
                 <label for="department">Departemen</label>
                 <div class="select-wrap">
                     <select id="department" name="department" class="m-select">
@@ -59,6 +59,7 @@
                         @endforeach
                     </select>
                 </div>
+                <small style="color:var(--fg-3);font-size:11px;">Untuk role C-Level, departemen otomatis diisi &quot;C-Level&quot; (jabatan CEO/CTO di kolom Divisi).</small>
             </div>
 
             <div class="field">
@@ -93,4 +94,27 @@
         </form>
     </div>
 </div>
+<script>
+// Sembunyikan Departemen saat role C-Level (tidak terikat departemen).
+(function () {
+    const role = document.getElementById('role');
+    const deptField = document.getElementById('department-field');
+    const dept = document.getElementById('department');
+    if (!role || !deptField) return;
+
+    function sync() {
+        const isC = role.value === 'c_level';
+        if (!dept) return;
+        if (isC) {
+            dept.value = 'c_level';
+            dept.disabled = true;
+        } else {
+            dept.disabled = false;
+            if (dept.value === 'c_level') dept.value = '';
+        }
+    }
+    role.addEventListener('change', sync);
+    sync();
+})();
+</script>
 </x-app-layout>

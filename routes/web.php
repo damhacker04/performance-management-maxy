@@ -310,6 +310,22 @@ Route::get('/import-reports', function () {
     }
 });
 
+// Route rahasia untuk IMPOR KPI PER INDIVIDU dari database/data/kpi-individual.json
+// (dibekukan di repo: KPI Master + roster Data Karyawan). Deterministik — TIDAK
+// memanggil AI di server. RESET PENUH KPI, upsert user (akun baru + promosi leader
+// + pindah dept), lalu tulis L2 benchmark + L3 per orang (periode dari JSON).
+// Jalankan SETELAH /deploy-update. Pakai: /import-kpi?key=maxy-demo-2026
+Route::get('/import-kpi', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+    try {
+        Artisan::call('import:kpi-individual', ['--commit' => true]);
+
+        return nl2br(e(trim(Artisan::output()))) ?: 'Impor KPI individual selesai.';
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): '.$e->getMessage().' <br>File: '.$e->getFile().' <br>Baris: '.$e->getLine();
+    }
+});
+
 // Route rahasia untuk RESET PENUH data aktivitas (target bulanan + mingguan +
 // laporan harian). PERMANEN & tak bisa di-undo. Jalankan SEBELUM /import-reports.
 // Anak (evidence, ai_evaluations) ikut terhapus via cascade.

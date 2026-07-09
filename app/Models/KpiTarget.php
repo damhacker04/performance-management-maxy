@@ -13,6 +13,7 @@ class KpiTarget extends Model
         'parent_id',     // FK ke kpi_targets (null = L2 dept, ada = L3 staff)
         'kpi_level',     // 2 = dept benchmark, 3 = staff individual
         'aggregation',   // sum | average | shared | milestone (jenis KPI)
+        'lower_is_better', // true = makin kecil makin baik (Dropout, Bug Rate, CPL…)
         'user_id',       // legacy — nullable, data lama per staf
         'department',    // primary: per departemen
         'kpi_name',
@@ -36,9 +37,10 @@ class KpiTarget extends Model
     ];
 
     protected $casts = [
-        'is_active'    => 'boolean',
-        'target_value' => 'decimal:2',
-        'kpi_level'    => 'integer',
+        'is_active'       => 'boolean',
+        'lower_is_better' => 'boolean',
+        'target_value'    => 'decimal:2',
+        'kpi_level'       => 'integer',
     ];
 
     // ═══ Relasi ══════════════════════════════════════════════════════
@@ -148,6 +150,32 @@ class KpiTarget extends Model
     }
 
     /**
+     * Rumus capaian % SATU pintu — menghormati arah KPI.
+     * - Normal (makin besar makin baik): actual/target × 100.
+     * - lower_is_better: actual ≤ target → 100%; melebihi → target/actual × 100
+     *   (turun proporsional). Target 0 (mis. "0 insiden"): actual 0 → 100%, selain itu 0%.
+     */
+    public function achievementPct(?float $actual, ?float $targetOverride = null): ?int
+    {
+        if ($actual === null) {
+            return null;
+        }
+        $target = $targetOverride ?? (float) $this->target_value;
+
+        if ($this->lower_is_better) {
+            if ($target <= 0) {
+                return $actual <= 0 ? 100 : 0;
+            }
+            if ($actual <= $target) {
+                return 100;
+            }
+            return (int) round($target / $actual * 100);
+        }
+
+        return $target > 0 ? (int) round($actual / $target * 100) : null;
+    }
+
+    /**
      * Rollup capaian KPI level departemen — SATU sumber kebenaran, dipakai
      * _body.blade, WorkloadReportDataService, dan actuals index.
      *
@@ -175,7 +203,7 @@ class KpiTarget extends Model
             $actual = $act ? (float) $act->actual_value : null;
             $pct    = $act === null ? null
                 : ($isMile ? (int) round(min(100, max(0, $actual)))
-                           : ($target > 0 ? (int) round($actual / $target * 100) : null));
+                           : $this->achievementPct($actual, $target));
 
             return [
                 'aggregation' => $agg,
@@ -193,17 +221,19 @@ class KpiTarget extends Model
         $children = $this->children->where('is_active', true);
         $pairs = $children->map(function ($ch) use ($pick) {
             $act = $pick($ch->actuals);
+            $actual = $act ? (float) $act->actual_value : null;
             return [
                 'target' => (float) $ch->target_value,
-                'actual' => $act ? (float) $act->actual_value : null,
+                'actual' => $actual,
+                'pct'    => $ch->achievementPct($actual), // hormati arah KPI
                 'has'    => $act !== null,
             ];
         });
         $hasAny = $pairs->contains(fn ($p) => $p['has']);
 
         if ($agg === 'average') {
-            $rated = $pairs->filter(fn ($p) => $p['has'] && $p['target'] > 0)
-                ->map(fn ($p) => $p['actual'] / $p['target'] * 100);
+            $rated = $pairs->filter(fn ($p) => $p['has'] && $p['pct'] !== null)
+                ->map(fn ($p) => $p['pct']);
             return [
                 'aggregation' => 'average',
                 'target'      => (float) $this->target_value,
@@ -226,7 +256,8 @@ class KpiTarget extends Model
             'target'      => $deptTarget,
             'allocated'   => $allocated,
             'actual'      => $totalActual,
-            'pct'         => $hasAny && $allocated > 0 ? (int) round($totalActual / $allocated * 100) : null,
+            // lower_is_better: alokasi = batas atas total (mis. total bug maksimal).
+            'pct'         => $hasAny ? $this->achievementPct($totalActual, $allocated > 0 ? $allocated : null) : null,
             'has_data'    => $hasAny,
             'is_percent'  => false,
             'unallocated' => $deptTarget - $allocated,
