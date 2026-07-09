@@ -79,6 +79,18 @@
                     @enderror
                 </div>
             </div>
+
+            {{-- Arah KPI: makin kecil makin baik --}}
+            <div class="field">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:400;">
+                    <input type="hidden" name="lower_is_better" value="0">
+                    <input type="checkbox" name="lower_is_better" value="1"
+                           {{ old('lower_is_better', $kpiTarget->lower_is_better) ? 'checked' : '' }}
+                           style="width:16px;height:16px;">
+                    <span>Makin kecil makin baik <span style="color:var(--fg-3);">(Dropout, Bug Rate, Turnaround, CPL)</span></span>
+                </label>
+                <p class="form-hint" style="color:var(--fg-3);font-size:12px;margin-top:4px;">actual ≤ target = 100%; melebihi target menurunkan capaian. Perubahan ini ikut diterapkan ke KPI staf (L3) di bawahnya.</p>
+            </div>
             @endunless
 
             {{-- Berlaku Bulan & Tahun --}}

@@ -150,10 +150,11 @@ class KpiTarget extends Model
     }
 
     /**
-     * Rumus capaian % SATU pintu — menghormati arah KPI.
+     * Rumus capaian % SATU pintu — menghormati arah KPI, DIBATASI 0–100%.
      * - Normal (makin besar makin baik): actual/target × 100.
-     * - lower_is_better: actual ≤ target → 100%; melebihi → target/actual × 100
-     *   (turun proporsional). Target 0 (mis. "0 insiden"): actual 0 → 100%, selain itu 0%.
+     * - lower_is_better: actual ≤ target → 100%; melebihi → target/actual × 100.
+     * - Target 0 (mis. "0 insiden"): actual 0 → 100%, selain itu 0%.
+     * Melebihi target tetap dihitung 100% (kaidah persentase — tak ada >100%).
      */
     public function achievementPct(?float $actual, ?float $targetOverride = null): ?int
     {
@@ -164,15 +165,20 @@ class KpiTarget extends Model
 
         if ($this->lower_is_better) {
             if ($target <= 0) {
-                return $actual <= 0 ? 100 : 0;
+                $raw = $actual <= 0 ? 100.0 : 0.0;
+            } elseif ($actual <= $target) {
+                $raw = 100.0;
+            } else {
+                $raw = $target / $actual * 100;
             }
-            if ($actual <= $target) {
-                return 100;
+        } else {
+            if ($target <= 0) {
+                return null;
             }
-            return (int) round($target / $actual * 100);
+            $raw = $actual / $target * 100;
         }
 
-        return $target > 0 ? (int) round($actual / $target * 100) : null;
+        return (int) round(max(0.0, min(100.0, $raw)));
     }
 
     /**
