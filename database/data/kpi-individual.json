@@ -1,0 +1,1946 @@
+{
+  "month": 5,
+  "year": 2026,
+  "people": [
+    {
+      "name": "Isaac Munandar",
+      "email": "isaac.munandar@gmail.com",
+      "dept": "c_level",
+      "role": "c_level",
+      "position": "CEO",
+      "kpis": [
+        {
+          "dept": "c_level",
+          "name": "Revenue Growth Rate",
+          "unit": "%",
+          "target_value": 30.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Net Profit Margin",
+          "unit": "%",
+          "target_value": 15.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Total Students Enrolled",
+          "unit": "Jumlah",
+          "target_value": 500.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "B2B & B2G Deals Closed",
+          "unit": "Jumlah",
+          "target_value": 5.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Employee Retention Rate",
+          "unit": "%",
+          "target_value": 85.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Graduate Job Placement Rate",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Investor Satisfaction & Funding Secured",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Net Promoter Score (NPS)",
+          "unit": "Skor",
+          "target_value": 50.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Andy Febrico Bintoro",
+      "email": "tang.torodeveloper@gmail.com",
+      "dept": "c_level",
+      "role": "c_level",
+      "position": "CTO",
+      "kpis": [
+        {
+          "dept": "c_level",
+          "name": "Platform Uptime",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Feature Delivery On-Time Rate",
+          "unit": "%",
+          "target_value": 85.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "Bug Rate (Post-Release)",
+          "unit": "Bugs",
+          "target_value": 3.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "c_level",
+          "name": "Tech Team Productivity (Velocity)",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "c_level",
+          "name": "System Security Incidents",
+          "unit": "Jumlah",
+          "target_value": 0.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "c_level",
+          "name": "Product User Satisfaction",
+          "unit": "Skor",
+          "target_value": 4.2,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Maria Marghareta Widhia Putri",
+      "email": "mariamarghareta.maxy.academy@gmail.com",
+      "dept": "ceo_office",
+      "role": "staff",
+      "position": "Personal Assistant",
+      "kpis": [
+        {
+          "dept": "ceo_office",
+          "name": "Task Completion Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "ceo_office",
+          "name": "Meeting & Schedule Accuracy",
+          "unit": "%",
+          "target_value": 98.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "ceo_office",
+          "name": "Document Turnaround Time",
+          "unit": "Hari",
+          "target_value": 1.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "ceo_office",
+          "name": "CEO Satisfaction Score",
+          "unit": "Skor",
+          "target_value": 4.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Jessica Maria P Waworuntu",
+      "email": "jessicamaria.maxy.academy@gmail.com",
+      "dept": "ceo_office",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Olivia Abigail Silitonga",
+      "email": "olivia.maxy.academy@gmail.com",
+      "dept": "ceo_office",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Elroy Pemerena Karosekali",
+      "email": "elroy.maxy.academy@gmail.com",
+      "dept": "ceo_office",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Ghufron Bagaskara",
+      "email": "ghufron.maxy.academy@gmail.com",
+      "dept": "ceo_office",
+      "role": "staff",
+      "position": "Full Stack Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Feature Development Velocity",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Quality Score",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "API Uptime (for owned services)",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Test Coverage",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Ika Noviani",
+      "email": "ika.maxy.academy@gmail.com",
+      "dept": "operational",
+      "role": "leader",
+      "position": "Operational Manager",
+      "kpis": [
+        {
+          "dept": "operational",
+          "name": "Operational Cost Efficiency",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": true
+        },
+        {
+          "dept": "operational",
+          "name": "SLA Adherence Rate",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "operational",
+          "name": "Process Compliance Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "operational",
+          "name": "Cross-Department NPS",
+          "unit": "Skor",
+          "target_value": 40.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "operational",
+          "name": "Team KPI Achievement",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Eka Kurnia",
+      "email": "eka.maxy.academy@gmail.com",
+      "dept": "talent_placement",
+      "role": "leader",
+      "position": "Talent Placement & Company Partnership (Head)",
+      "kpis": [
+        {
+          "dept": "talent_placement",
+          "name": "Graduate Placement Rate",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Active Company Partners",
+          "unit": "Jumlah",
+          "target_value": 30.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Time to Placement",
+          "unit": "Hari",
+          "target_value": 90.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "talent_placement",
+          "name": "New Company Partnership MOU",
+          "unit": "Jumlah",
+          "target_value": 3.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Employer Satisfaction Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Anisa Sukmawati",
+      "email": "anisasukmawati.maxy.academy@gmail.com",
+      "dept": "talent_placement",
+      "role": "leader",
+      "position": "Talent Placement & Company Partnership (Head)",
+      "kpis": [
+        {
+          "dept": "talent_placement",
+          "name": "Graduate Placement Rate",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Active Company Partners",
+          "unit": "Jumlah",
+          "target_value": 30.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Time to Placement",
+          "unit": "Hari",
+          "target_value": 90.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "talent_placement",
+          "name": "New Company Partnership MOU",
+          "unit": "Jumlah",
+          "target_value": 3.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "talent_placement",
+          "name": "Employer Satisfaction Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Fanny Anjelika",
+      "email": "fanny.maxy.academy@gmail.com",
+      "dept": "hr",
+      "role": "leader",
+      "position": "Human Capital (Head)",
+      "kpis": [
+        {
+          "dept": "hr",
+          "name": "Employee Retention Rate",
+          "unit": "%",
+          "target_value": 85.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "hr",
+          "name": "Time-to-Fill (Vacancies)",
+          "unit": "Hari",
+          "target_value": 30.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "hr",
+          "name": "Employee Satisfaction Score (eNPS)",
+          "unit": "eNPS",
+          "target_value": 40.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "hr",
+          "name": "Training Coverage",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "hr",
+          "name": "Recruitment Quality (90-day retention)",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Indah Surroiyah",
+      "email": "indah.maxy.academy@gmail.com",
+      "dept": "finance",
+      "role": "staff",
+      "position": "Finance Staff",
+      "kpis": [
+        {
+          "dept": "finance",
+          "name": "Invoice Processing Time",
+          "unit": "Hari",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "finance",
+          "name": "Payment Accuracy",
+          "unit": "%",
+          "target_value": 99.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "finance",
+          "name": "Report Submission On-Time",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "finance",
+          "name": "Reconciliation Accuracy",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Brigitha Prameswari",
+      "email": "brigithap.maxy.academy@gmail.com",
+      "dept": "legal",
+      "role": "staff",
+      "position": "Legal Staff",
+      "kpis": [
+        {
+          "dept": "legal",
+          "name": "Document Processing Accuracy",
+          "unit": "%",
+          "target_value": 98.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "legal",
+          "name": "Turnaround Time (own tasks)",
+          "unit": "Hari",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "legal",
+          "name": "Contract Database Update",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "legal",
+          "name": "SOP Compliance",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Kaesar Adam Rafano",
+      "email": "kaesaradam.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "staff",
+      "position": "Full Stack Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Feature Development Velocity",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Quality Score",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "API Uptime (for owned services)",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Test Coverage",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Regina Sydney Rosalind",
+      "email": "sydneyrosalind.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "leader",
+      "position": "Sales Manager",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "Total Revenue from Sales",
+          "unit": "Rp",
+          "target_value": 300000000,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Team Quota Attainment",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Sales Pipeline Value",
+          "unit": "Rp",
+          "target_value": 900000000,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Lead-to-Close Conversion Rate",
+          "unit": "%",
+          "target_value": 25.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Average Deal Size",
+          "unit": "Rp",
+          "target_value": 50000000,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "New Customer Acquisition",
+          "unit": "klien",
+          "target_value": 15,
+          "aggregation": "sum",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Sydney Yuanita",
+      "email": "yua.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "staff",
+      "position": "Sales B2G",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "Government Deals Closed",
+          "unit": "Jumlah",
+          "target_value": 1.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "B2G Revenue",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Government Prospect Pipeline",
+          "unit": "Jumlah",
+          "target_value": 5.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Tender / Proposal Win Rate",
+          "unit": "%",
+          "target_value": 25.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Relationship Building Activities",
+          "unit": "Kegiatan",
+          "target_value": 3.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Ruky Dwi Jayanti",
+      "email": "rukydwi.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "staff",
+      "position": "Admin Sales",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "Akurasi Administrasi Penjualan",
+          "unit": "%",
+          "target_value": 99.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Ketepatan Waktu Proses Administrasi",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Pengelolaan Database & Reporting",
+          "unit": "%",
+          "target_value": 1.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Maria Felicia Widyawati",
+      "email": "feli.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "staff",
+      "position": "Sales B2C",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "New Student Enrollments",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "B2C Revenue",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Lead Follow-up Speed",
+          "unit": "Jam",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "sales",
+          "name": "Conversion Rate (Lead to Enroll)",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Upsell / Cross-sell Rate",
+          "unit": "%",
+          "target_value": 15.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Mirfan Affandi",
+      "email": "mirfan.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "staff",
+      "position": "Sales B2C",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "New Student Enrollments",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "B2C Revenue",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Lead Follow-up Speed",
+          "unit": "Jam",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "sales",
+          "name": "Conversion Rate (Lead to Enroll)",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Upsell / Cross-sell Rate",
+          "unit": "%",
+          "target_value": 15.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Matthew Chandra Gregorious Palit",
+      "email": "matthew.maxy.academy@gmail.com",
+      "dept": "sales",
+      "role": "leader",
+      "position": "Project Manager (Alpha Z Project)",
+      "kpis": [
+        {
+          "dept": "sales",
+          "name": "Ketepatan Delivery Project",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Koordinasi & Stakeholder Management",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "sales",
+          "name": "Produktivitas Tim Intern Digital Marketing",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Jessica Charisma Perdana",
+      "email": "jessica.maxy.academy@gmail.com",
+      "dept": "univ_partnership",
+      "role": "leader",
+      "position": "Uni Partnership SPV",
+      "kpis": [
+        {
+          "dept": "univ_partnership",
+          "name": "Active University Partners",
+          "unit": "Jumlah",
+          "target_value": 10.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "MOU Signed per Quarter",
+          "unit": "Jumlah",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Student Referral from Universities",
+          "unit": "Jumlah",
+          "target_value": 50.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Joint Program Execution",
+          "unit": "Jumlah",
+          "target_value": 4.0,
+          "aggregation": "sum",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Elok Sayyidah Muayyin",
+      "email": "elok.maxy.academy@gmail.com",
+      "dept": "univ_partnership",
+      "role": "staff",
+      "position": "Uni Partnership Staff",
+      "kpis": [
+        {
+          "dept": "univ_partnership",
+          "name": "Partner Engagement Rate",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Event Coordination Success",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Data & Report Accuracy",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Response Time to Partners",
+          "unit": "Jam",
+          "target_value": 24.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Andira Putri Farahdila",
+      "email": "andira.maxy.academy@gmail.com",
+      "dept": "univ_partnership",
+      "role": "staff",
+      "position": "Uni Partnership Staff",
+      "kpis": [
+        {
+          "dept": "univ_partnership",
+          "name": "Partner Engagement Rate",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Event Coordination Success",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Data & Report Accuracy",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "univ_partnership",
+          "name": "Response Time to Partners",
+          "unit": "Jam",
+          "target_value": 24.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Joseph Christian Seraf Sasongko",
+      "email": "joseph.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "leader",
+      "position": "Marketing Manager",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Campaign Performance (CTR)",
+          "unit": "%",
+          "target_value": 2.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Lead Generation Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Cost Per Lead (CPL)",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Calendar Adherence",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Team KPI Achievement",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Adam Musthafa Ismail Putra",
+      "email": "adam.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Videographer Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Video Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Video Engagement Rate",
+          "unit": "%",
+          "target_value": 50.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Video Output Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Revision Rate",
+          "unit": "Revisi",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Lingga Canastain Aulia",
+      "email": "lingga.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Vincent Susanto",
+      "email": "vincent.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Neresya Findya Rosalin",
+      "email": "neresya.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Social Media Specialist Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Follower Growth Rate",
+          "unit": "%",
+          "target_value": 5.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Engagement Rate",
+          "unit": "%",
+          "target_value": 3.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Content Publishing Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Organic Reach Growth",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Kemal Bregas Dewantoro",
+      "email": "kemal.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Graphic Designer Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Design Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Revision Rate",
+          "unit": "Revisi",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "marketing",
+          "name": "Design Output Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Brand Consistency Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Muhhamad Rafi",
+      "email": "rafi.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Graphic Designer Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Design Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Revision Rate",
+          "unit": "Revisi",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "marketing",
+          "name": "Design Output Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Brand Consistency Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Muhammad Khalid Ar Rasyid",
+      "email": "khalid.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Graphic Designer Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Design Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Revision Rate",
+          "unit": "Revisi",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "marketing",
+          "name": "Design Output Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Brand Consistency Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Kania Rachmayanti Satiyawira",
+      "email": "kania.maxy.academy@gmail.com",
+      "dept": "marketing",
+      "role": "staff",
+      "position": "Graphic Designer Staff",
+      "kpis": [
+        {
+          "dept": "marketing",
+          "name": "Design Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Revision Rate",
+          "unit": "Revisi",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "marketing",
+          "name": "Design Output Volume",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "marketing",
+          "name": "Brand Consistency Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Stefen Laksana",
+      "email": "stefen.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "leader",
+      "position": "Product Dev Manager",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Sprint Completion Rate",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Product Roadmap Adherence",
+          "unit": "%",
+          "target_value": 85.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Bug Backlog Reduction",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": true
+        },
+        {
+          "dept": "product_it",
+          "name": "Team Capacity Utilization",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Stakeholder Satisfaction",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Nathanael Abellito Leo",
+      "email": "nathanleo.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Mentor",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Session Attendance Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Progress Score",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Satisfaction Rating",
+          "unit": "Skor",
+          "target_value": 4.2,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Module Delivery Completion",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Response Time to Students",
+          "unit": "Jam",
+          "target_value": 24.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Luvena Cornelia",
+      "email": "luve.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Curriculum Developer",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Curriculum Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Industry Relevance Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Learning Outcome Achievement",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Content Revision Cycle",
+          "unit": "Hari",
+          "target_value": 7.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Wahyudi",
+      "email": "wahyudi.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "staff",
+      "position": "Full Stack Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Feature Development Velocity",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Quality Score",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "API Uptime (for owned services)",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Test Coverage",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Nabila Melsyana",
+      "email": "nabila.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "staff",
+      "position": "Full Stack Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Feature Development Velocity",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Quality Score",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "API Uptime (for owned services)",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Test Coverage",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Johan Kevin Kenneth Hutagalung",
+      "email": "johan.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "staff",
+      "position": "Full Stack Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Feature Development Velocity",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Quality Score",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "API Uptime (for owned services)",
+          "unit": "%",
+          "target_value": 99.5,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Test Coverage",
+          "unit": "%",
+          "target_value": 70.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Syabina Nur Pajriyanti",
+      "email": "ina.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Mentor",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Session Attendance Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Progress Score",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Satisfaction Rating",
+          "unit": "Skor",
+          "target_value": 4.2,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Module Delivery Completion",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Response Time to Students",
+          "unit": "Jam",
+          "target_value": 24.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Bryan Austin Lontoh",
+      "email": "bryan.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "staff",
+      "position": "Product Dev Staff",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Task Completion Rate",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Code Review Pass Rate",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Bug Rate (caused by own code)",
+          "unit": "Bugs",
+          "target_value": 2.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        },
+        {
+          "dept": "product_it",
+          "name": "Documentation Quality",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Khusnul Huda",
+      "email": "khusnul.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Curriculum Developer",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Curriculum Delivery On-Time",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Industry Relevance Score",
+          "unit": "Skor",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Learning Outcome Achievement",
+          "unit": "%",
+          "target_value": 80.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Content Revision Cycle",
+          "unit": "Hari",
+          "target_value": 7.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Gama Anom Multi Riyadi",
+      "email": "gamaanom.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Mentor",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Session Attendance Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Progress Score",
+          "unit": "%",
+          "target_value": 20.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Satisfaction Rating",
+          "unit": "Skor",
+          "target_value": 4.2,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Module Delivery Completion",
+          "unit": "%",
+          "target_value": 100.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Response Time to Students",
+          "unit": "Jam",
+          "target_value": 24.0,
+          "aggregation": "sum",
+          "lower_is_better": true
+        }
+      ]
+    },
+    {
+      "name": "Yanuarin Salwa Afranita",
+      "email": "salwa.maxy.academy@gmail.com",
+      "dept": "academic",
+      "role": "staff",
+      "position": "Student Delivery",
+      "kpis": [
+        {
+          "dept": "academic",
+          "name": "Onboarding Completion Rate",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Student Complaint Resolution",
+          "unit": "%",
+          "target_value": 90.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "academic",
+          "name": "Dropout Rate",
+          "unit": "%",
+          "target_value": 10.0,
+          "aggregation": "average",
+          "lower_is_better": true
+        },
+        {
+          "dept": "academic",
+          "name": "Event / Webinar Execution",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    },
+    {
+      "name": "Yardillo Paulus",
+      "email": "yardillo.maxy.academy@gmail.com",
+      "dept": "product_it",
+      "role": "leader",
+      "position": "Project Manager (KADA Project)",
+      "kpis": [
+        {
+          "dept": "product_it",
+          "name": "Ketepatan Pelaksanaan Bootcamp",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Kepuasan Peserta & Stakeholder",
+          "unit": "Rata",
+          "target_value": 4.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        },
+        {
+          "dept": "product_it",
+          "name": "Penyelesaian Program & Administrasi",
+          "unit": "%",
+          "target_value": 95.0,
+          "aggregation": "average",
+          "lower_is_better": false
+        }
+      ]
+    }
+  ]
+}

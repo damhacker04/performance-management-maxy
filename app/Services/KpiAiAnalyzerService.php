@@ -93,8 +93,23 @@ class KpiAiAnalyzerService
         }
 
         $parsed = $this->parseResponse($raw);
+        $parsed['actual_value'] = $this->normalizePercent($kpiL3, (float) $parsed['actual_value']);
 
         return array_merge($parsed, ['reports_analyzed' => $reportsCount]);
+    }
+
+    /**
+     * Model kadang menjawab pecahan (0.92) untuk KPI bersatuan persen bertarget
+     * besar (95). Normalisasi: bila unit %, nilai ≤ 1, dan target > 1 → ×100.
+     */
+    private function normalizePercent(KpiTarget $kpi, float $value): float
+    {
+        if (str_contains((string) $kpi->unit, '%') && $value > 0 && $value <= 1
+            && (float) $kpi->target_value > 1) {
+            return round($value * 100, 2);
+        }
+
+        return $value;
     }
 
     /**

@@ -33,6 +33,12 @@ class User extends Authenticatable
         'customer_support' => 'Customer Support',
         'univ_partnership' => 'Univ Partnership',
         'ceo_office' => 'CEO Office',
+        'academic' => 'Academic',
+        'legal' => 'Legal',
+        'talent_placement' => 'Talent Placement',
+        // Departemen level-perusahaan untuk CEO/CTO. Catatan: key 'c_level' di sini
+        // adalah DEPARTMENT, terpisah dari nilai ROLE 'c_level' (kolom berbeda).
+        'c_level' => 'C-Level',
     ];
 
     public const ROLES = [

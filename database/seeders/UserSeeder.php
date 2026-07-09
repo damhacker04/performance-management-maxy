@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
             [
                 'name'          => 'Ko Isaac',
                 'email'         => 'isaac.maxy.academy@gmail.com',
-                'department'    => null,
+                'department'    => 'c_level',
                 'division'      => 'CEO',
                 'role'          => 'c_level',
                 'is_management' => true,
@@ -129,8 +129,8 @@ class UserSeeder extends Seeder
             ],
             [
                 'name'          => 'C-Level Dummy', 
-                'email'         => 'c_level@maxy.academy', 
-                'department'    => null, 
+                'email'         => 'c_level@maxy.academy',
+                'department'    => 'c_level',
                 'division'      => 'Management',
                 'role'          => 'c_level', 
                 'is_management' => true,
@@ -164,7 +164,7 @@ class UserSeeder extends Seeder
             [
                 'name'          => 'Isaac Munandar',
                 'email'         => 'isaac.munandar@gmail.com',
-                'department'    => null,
+                'department'    => 'c_level',
                 'division'      => 'CEO',
                 'role'          => 'c_level',
                 'is_management' => true,
@@ -172,7 +172,7 @@ class UserSeeder extends Seeder
             [
                 'name'          => 'CTO',
                 'email'         => 'tang.torodeveloper@gmail.com',
-                'department'    => null,
+                'department'    => 'c_level',
                 'division'      => 'CTO',
                 'role'          => 'c_level',
                 'is_management' => true,
@@ -419,6 +419,15 @@ class UserSeeder extends Seeder
             [
                 'name'          => 'Matthew',
                 'email'         => 'matthew.maxy.academy@gmail.com',
+                'department'    => 'sales',
+                'division'      => null,
+                'role'          => 'staff',
+                'is_management' => false,
+            ],
+            [
+                // Beda orang dengan Sydney Yuanita (roster HR / yua.maxy.academy).
+                'name'          => 'Sydney Rosalind',
+                'email'         => 'sydneyrosalind.maxy.academy@gmail.com',
                 'department'    => 'sales',
                 'division'      => null,
                 'role'          => 'staff',
