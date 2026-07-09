@@ -75,7 +75,13 @@ class ImportKpiIndividual extends Command
         foreach ($people as $p) {
             $u = User::where('email', $p['email'])->first();
             if ($u) {
-                $u->update(['name' => $p['name'], 'department' => $p['dept']]); // role/password TAK diubah
+                $upd = ['name' => $p['name'], 'department' => $p['dept'], 'division' => $p['position'] ?? $u->division];
+                // Promosi staff → leader bila jabatannya Head/Manager/SPV (tak pernah
+                // menurunkan c_level/super_admin, password tak diubah).
+                if ($u->role === 'staff' && ($p['role'] ?? '') === 'leader') {
+                    $upd['role'] = 'leader';
+                }
+                $u->update($upd);
                 $updUsers++;
             } else {
                 $u = User::create([
@@ -108,6 +114,7 @@ class ImportKpiIndividual extends Command
                         'department'   => $k['dept'],
                         'kpi_name'     => $k['name'],
                         'aggregation'  => $k['aggregation'],
+                        'lower_is_better' => (bool) ($k['lower_is_better'] ?? false),
                         'target_value' => $k['target_value'],
                         'unit'         => $k['unit'],
                         'month'        => $month,
@@ -126,6 +133,7 @@ class ImportKpiIndividual extends Command
                     'department'   => $k['dept'],
                     'kpi_name'     => $k['name'],
                     'aggregation'  => $k['aggregation'],
+                    'lower_is_better' => (bool) ($k['lower_is_better'] ?? false),
                     'target_value' => $k['target_value'],
                     'unit'         => $k['unit'],
                     'month'        => $month,

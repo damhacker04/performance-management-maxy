@@ -56,11 +56,12 @@ class KpiActual extends Model
         return $this->actual_value - $this->kpiTarget->target_value;
     }
 
-    /** Persentase gap (negatif = di bawah target) */
+    /** Persentase capaian — satu pintu via KpiTarget::achievementPct (hormati arah KPI). */
     public function getGapPercentAttribute(): ?float
     {
-        if (!$this->kpiTarget || $this->kpiTarget->target_value == 0) return null;
-        return round(($this->actual_value / $this->kpiTarget->target_value) * 100, 1);
+        if (!$this->kpiTarget) return null;
+        $pct = $this->kpiTarget->achievementPct((float) $this->actual_value);
+        return $pct === null ? null : (float) $pct;
     }
 
     /** Label sumber data */

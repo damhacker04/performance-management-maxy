@@ -14,56 +14,64 @@
           "name": "Revenue Growth Rate",
           "unit": "%",
           "target_value": 30.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Net Profit Margin",
           "unit": "%",
           "target_value": 15.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Total Students Enrolled",
           "unit": "Jumlah",
           "target_value": 500.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "B2B & B2G Deals Closed",
           "unit": "Jumlah",
           "target_value": 5.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Employee Retention Rate",
           "unit": "%",
           "target_value": 85.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Graduate Job Placement Rate",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Investor Satisfaction & Funding Secured",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Net Promoter Score (NPS)",
           "unit": "Skor",
           "target_value": 50.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -79,42 +87,48 @@
           "name": "Platform Uptime",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Feature Delivery On-Time Rate",
           "unit": "%",
           "target_value": 85.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "Bug Rate (Post-Release)",
           "unit": "Bugs",
           "target_value": 3.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "c_level",
           "name": "Tech Team Productivity (Velocity)",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "c_level",
           "name": "System Security Incidents",
           "unit": "Jumlah",
           "target_value": 0.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "c_level",
           "name": "Product User Satisfaction",
           "unit": "Skor",
           "target_value": 4.2,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -130,28 +144,32 @@
           "name": "Task Completion Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "ceo_office",
           "name": "Meeting & Schedule Accuracy",
           "unit": "%",
           "target_value": 98.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "ceo_office",
           "name": "Document Turnaround Time",
           "unit": "Hari",
           "target_value": 1.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "ceo_office",
           "name": "CEO Satisfaction Score",
           "unit": "Skor",
           "target_value": 4.5,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -167,28 +185,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -204,28 +226,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -241,28 +267,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -278,28 +308,32 @@
           "name": "Feature Development Velocity",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Quality Score",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "API Uptime (for owned services)",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Test Coverage",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -315,35 +349,40 @@
           "name": "Operational Cost Efficiency",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": true
         },
         {
           "dept": "operational",
           "name": "SLA Adherence Rate",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "operational",
           "name": "Process Compliance Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "operational",
           "name": "Cross-Department NPS",
           "unit": "Skor",
           "target_value": 40.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "operational",
           "name": "Team KPI Achievement",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -359,35 +398,40 @@
           "name": "Graduate Placement Rate",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Active Company Partners",
           "unit": "Jumlah",
           "target_value": 30.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Time to Placement",
           "unit": "Hari",
           "target_value": 90.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "talent_placement",
           "name": "New Company Partnership MOU",
           "unit": "Jumlah",
           "target_value": 3.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Employer Satisfaction Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -403,35 +447,40 @@
           "name": "Graduate Placement Rate",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Active Company Partners",
           "unit": "Jumlah",
           "target_value": 30.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Time to Placement",
           "unit": "Hari",
           "target_value": 90.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "talent_placement",
           "name": "New Company Partnership MOU",
           "unit": "Jumlah",
           "target_value": 3.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "talent_placement",
           "name": "Employer Satisfaction Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -447,35 +496,40 @@
           "name": "Employee Retention Rate",
           "unit": "%",
           "target_value": 85.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "hr",
           "name": "Time-to-Fill (Vacancies)",
           "unit": "Hari",
           "target_value": 30.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "hr",
           "name": "Employee Satisfaction Score (eNPS)",
           "unit": "eNPS",
           "target_value": 40.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "hr",
           "name": "Training Coverage",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "hr",
           "name": "Recruitment Quality (90-day retention)",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -491,28 +545,32 @@
           "name": "Invoice Processing Time",
           "unit": "Hari",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "finance",
           "name": "Payment Accuracy",
           "unit": "%",
           "target_value": 99.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "finance",
           "name": "Report Submission On-Time",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "finance",
           "name": "Reconciliation Accuracy",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -528,28 +586,32 @@
           "name": "Document Processing Accuracy",
           "unit": "%",
           "target_value": 98.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "legal",
           "name": "Turnaround Time (own tasks)",
           "unit": "Hari",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "legal",
           "name": "Contract Database Update",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "legal",
           "name": "SOP Compliance",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -565,28 +627,32 @@
           "name": "Feature Development Velocity",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Quality Score",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "API Uptime (for owned services)",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Test Coverage",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -600,44 +666,50 @@
         {
           "dept": "sales",
           "name": "Total Revenue from Sales",
-          "unit": "%",
-          "target_value": 100.0,
-          "aggregation": "average"
+          "unit": "Rp",
+          "target_value": 300000000,
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Team Quota Attainment",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Sales Pipeline Value",
           "unit": "Rp",
-          "target_value": 3.0,
-          "aggregation": "sum"
+          "target_value": 900000000,
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Lead-to-Close Conversion Rate",
           "unit": "%",
           "target_value": 25.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Average Deal Size",
-          "unit": "%",
-          "target_value": 100.0,
-          "aggregation": "average"
+          "unit": "Rp",
+          "target_value": 50000000,
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "New Customer Acquisition",
-          "unit": "%",
-          "target_value": 100.0,
-          "aggregation": "average"
+          "unit": "klien",
+          "target_value": 15,
+          "aggregation": "sum",
+          "lower_is_better": false
         }
       ]
     },
@@ -653,35 +725,40 @@
           "name": "Government Deals Closed",
           "unit": "Jumlah",
           "target_value": 1.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "B2G Revenue",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Government Prospect Pipeline",
           "unit": "Jumlah",
           "target_value": 5.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Tender / Proposal Win Rate",
           "unit": "%",
           "target_value": 25.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Relationship Building Activities",
           "unit": "Kegiatan",
           "target_value": 3.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         }
       ]
     },
@@ -697,21 +774,24 @@
           "name": "Akurasi Administrasi Penjualan",
           "unit": "%",
           "target_value": 99.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Ketepatan Waktu Proses Administrasi",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Pengelolaan Database & Reporting",
           "unit": "%",
           "target_value": 1.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -727,35 +807,40 @@
           "name": "New Student Enrollments",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "B2C Revenue",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Lead Follow-up Speed",
           "unit": "Jam",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "sales",
           "name": "Conversion Rate (Lead to Enroll)",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Upsell / Cross-sell Rate",
           "unit": "%",
           "target_value": 15.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -771,35 +856,40 @@
           "name": "New Student Enrollments",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "B2C Revenue",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Lead Follow-up Speed",
           "unit": "Jam",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "sales",
           "name": "Conversion Rate (Lead to Enroll)",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Upsell / Cross-sell Rate",
           "unit": "%",
           "target_value": 15.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -815,21 +905,24 @@
           "name": "Ketepatan Delivery Project",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Koordinasi & Stakeholder Management",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "sales",
           "name": "Produktivitas Tim Intern Digital Marketing",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -845,28 +938,32 @@
           "name": "Active University Partners",
           "unit": "Jumlah",
           "target_value": 10.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "MOU Signed per Quarter",
           "unit": "Jumlah",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Student Referral from Universities",
           "unit": "Jumlah",
           "target_value": 50.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Joint Program Execution",
           "unit": "Jumlah",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": false
         }
       ]
     },
@@ -882,28 +979,32 @@
           "name": "Partner Engagement Rate",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Event Coordination Success",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Data & Report Accuracy",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Response Time to Partners",
           "unit": "Jam",
           "target_value": 24.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -919,28 +1020,32 @@
           "name": "Partner Engagement Rate",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Event Coordination Success",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Data & Report Accuracy",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "univ_partnership",
           "name": "Response Time to Partners",
           "unit": "Jam",
           "target_value": 24.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -956,35 +1061,40 @@
           "name": "Campaign Performance (CTR)",
           "unit": "%",
           "target_value": 2.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Lead Generation Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Cost Per Lead (CPL)",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Calendar Adherence",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Team KPI Achievement",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1000,28 +1110,32 @@
           "name": "Video Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Video Engagement Rate",
           "unit": "%",
           "target_value": 50.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Video Output Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Revision Rate",
           "unit": "Revisi",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1037,28 +1151,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1074,28 +1192,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1111,28 +1233,32 @@
           "name": "Follower Growth Rate",
           "unit": "%",
           "target_value": 5.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Engagement Rate",
           "unit": "%",
           "target_value": 3.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Content Publishing Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Organic Reach Growth",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1148,28 +1274,32 @@
           "name": "Design Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Revision Rate",
           "unit": "Revisi",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "marketing",
           "name": "Design Output Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Brand Consistency Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1185,28 +1315,32 @@
           "name": "Design Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Revision Rate",
           "unit": "Revisi",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "marketing",
           "name": "Design Output Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Brand Consistency Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1222,28 +1356,32 @@
           "name": "Design Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Revision Rate",
           "unit": "Revisi",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "marketing",
           "name": "Design Output Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Brand Consistency Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1259,28 +1397,32 @@
           "name": "Design Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Revision Rate",
           "unit": "Revisi",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "marketing",
           "name": "Design Output Volume",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "marketing",
           "name": "Brand Consistency Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1296,35 +1438,40 @@
           "name": "Sprint Completion Rate",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Product Roadmap Adherence",
           "unit": "%",
           "target_value": 85.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Bug Backlog Reduction",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": true
         },
         {
           "dept": "product_it",
           "name": "Team Capacity Utilization",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Stakeholder Satisfaction",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1340,35 +1487,40 @@
           "name": "Session Attendance Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Progress Score",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Satisfaction Rating",
           "unit": "Skor",
           "target_value": 4.2,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Module Delivery Completion",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Response Time to Students",
           "unit": "Jam",
           "target_value": 24.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1384,28 +1536,32 @@
           "name": "Curriculum Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Industry Relevance Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Learning Outcome Achievement",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Content Revision Cycle",
           "unit": "Hari",
           "target_value": 7.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1421,28 +1577,32 @@
           "name": "Feature Development Velocity",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Quality Score",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "API Uptime (for owned services)",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Test Coverage",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1458,28 +1618,32 @@
           "name": "Feature Development Velocity",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Quality Score",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "API Uptime (for owned services)",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Test Coverage",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1495,28 +1659,32 @@
           "name": "Feature Development Velocity",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Quality Score",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "API Uptime (for owned services)",
           "unit": "%",
           "target_value": 99.5,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Test Coverage",
           "unit": "%",
           "target_value": 70.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1532,35 +1700,40 @@
           "name": "Session Attendance Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Progress Score",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Satisfaction Rating",
           "unit": "Skor",
           "target_value": 4.2,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Module Delivery Completion",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Response Time to Students",
           "unit": "Jam",
           "target_value": 24.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1576,28 +1749,32 @@
           "name": "Task Completion Rate",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Code Review Pass Rate",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Bug Rate (caused by own code)",
           "unit": "Bugs",
           "target_value": 2.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         },
         {
           "dept": "product_it",
           "name": "Documentation Quality",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1613,28 +1790,32 @@
           "name": "Curriculum Delivery On-Time",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Industry Relevance Score",
           "unit": "Skor",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Learning Outcome Achievement",
           "unit": "%",
           "target_value": 80.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Content Revision Cycle",
           "unit": "Hari",
           "target_value": 7.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1650,35 +1831,40 @@
           "name": "Session Attendance Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Progress Score",
           "unit": "%",
           "target_value": 20.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Satisfaction Rating",
           "unit": "Skor",
           "target_value": 4.2,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Module Delivery Completion",
           "unit": "%",
           "target_value": 100.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Response Time to Students",
           "unit": "Jam",
           "target_value": 24.0,
-          "aggregation": "sum"
+          "aggregation": "sum",
+          "lower_is_better": true
         }
       ]
     },
@@ -1694,28 +1880,32 @@
           "name": "Onboarding Completion Rate",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Student Complaint Resolution",
           "unit": "%",
           "target_value": 90.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "academic",
           "name": "Dropout Rate",
           "unit": "%",
           "target_value": 10.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": true
         },
         {
           "dept": "academic",
           "name": "Event / Webinar Execution",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     },
@@ -1731,21 +1921,24 @@
           "name": "Ketepatan Pelaksanaan Bootcamp",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Kepuasan Peserta & Stakeholder",
           "unit": "Rata",
           "target_value": 4.0,
-          "aggregation": "sum"
+          "aggregation": "average",
+          "lower_is_better": false
         },
         {
           "dept": "product_it",
           "name": "Penyelesaian Program & Administrasi",
           "unit": "%",
           "target_value": 95.0,
-          "aggregation": "average"
+          "aggregation": "average",
+          "lower_is_better": false
         }
       ]
     }

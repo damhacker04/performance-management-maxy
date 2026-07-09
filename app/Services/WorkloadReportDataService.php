@@ -43,8 +43,11 @@ class WorkloadReportDataService
         $pcts = [];
         foreach ($kpiL3 as $k) {
             $act = $actualsByTarget->get($k->id);
-            if ($act && $k->target_value > 0) {
-                $pcts[] = $act->actual_value / $k->target_value * 100;
+            if ($act) {
+                $pct = $k->achievementPct((float) $act->actual_value); // hormati arah KPI
+                if ($pct !== null) {
+                    $pcts[] = $pct;
+                }
             }
         }
         $kpiPct = count($pcts) ? (int) round(array_sum($pcts) / count($pcts)) : null;
