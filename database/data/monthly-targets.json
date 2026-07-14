@@ -1,0 +1,639 @@
+{
+    "targets": [
+        {
+            "creator_email": "ika.maxy.academy@gmail.com",
+            "assigned_email": "ika.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "fanny.maxy.academy@gmail.com",
+            "assigned_email": "fanny.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "adminhr.maxy.academy@gmail.com",
+            "assigned_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "MAXY Digital revenue Rp75jt (3 deal @$1,500 atau equivalent retainer)",
+            "description": "Sasaran bulanan Mei 2026:\n1. MAXY Digital revenue Rp75jt (3 deal @$1,500 atau equivalent retainer)\n2. Team revenue oversight Rp1B total\n3. Outbound prospects (SG/USA) 100 contact baru\n4. Qualified meeting MAXY Digital 12/bulan\n\n[Impor Target HR]",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": [
+                {
+                    "week_number": 1,
+                    "title": "25 outbound LinkedIn/email (SG/USA)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 2,
+                    "title": "3 qualified discovery call",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 3,
+                    "title": "1 proposal/SOW MAXY Digital terkirim",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 4,
+                    "title": "1× weekly review dengan Wempi, Yuanita, Matthew, Jessica",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                }
+            ]
+        },
+        {
+            "creator_email": "adminhr.maxy.academy@gmail.com",
+            "assigned_email": "wempi.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Revenue B2B (Team) Target: Rp300 juta",
+            "description": "Sasaran bulanan Mei 2026:\n1. Revenue B2B (Team) Target: Rp300 juta\n2. Deal closed 6 deal @avg Rp50jt\n3. Pipeline coverage 3× = Rp900jt qualified pipeline\n4. New named accounts opened 15\n5. Personal revenue contribution Rp120jt (2–3 deal sendiri)\n\n[Impor Target HR]",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": [
+                {
+                    "week_number": 1,
+                    "title": "10 discovery calls B2B",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 2,
+                    "title": "5 proposal terkirim H+1 setelah meeting (hard rule)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 3,
+                    "title": "2 deal masuk negotiation stage",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 4,
+                    "title": "Coaching 1-on-1 dengan Maria & Mirfan: 2× per minggu",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                }
+            ]
+        },
+        {
+            "creator_email": "adminhr.maxy.academy@gmail.com",
+            "assigned_email": "yua.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Revenue B2G Rp150jt",
+            "description": "Sasaran bulanan Mei 2026:\n1. Revenue B2G Rp150jt\n2. Deal closed 2–3 (avg Rp50–75jt)\n3. Active proposals in government pipeline 8\n4. Stakeholder mapping completion 5 kementerian/lembaga aktif\n\n[Impor Target HR]",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": [
+                {
+                    "week_number": 1,
+                    "title": "5 stakeholder meeting (Kementerian/BBPVP/BDI)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 2,
+                    "title": "2 proposal/penawaran terkirim",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 3,
+                    "title": "1 kunjungan langsung ke instansi (bila memungkinkan)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 4,
+                    "title": "Monitoring tender/LPSE 3× per minggu",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                }
+            ]
+        },
+        {
+            "creator_email": "adminhr.maxy.academy@gmail.com",
+            "assigned_email": "feli.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Revenue B2C Rp150jt (60 peserta @Rp2,5jt)",
+            "description": "Sasaran bulanan Mei 2026:\n1. Revenue B2C Rp150jt (60 peserta @Rp2,5jt)\n2. Closing ratio ≥18% (naik dari historis 15%)\n3. Active leads handled 350/bulan\n\n[Impor Target HR]",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": [
+                {
+                    "week_number": 1,
+                    "title": "80 lead di-follow-up (warm + hot)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 2,
+                    "title": "15 closing (peserta)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 3,
+                    "title": "30 discovery/qualification call",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 4,
+                    "title": "5 testimonial/referral di-collect dari peserta yang sudah training",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                }
+            ]
+        },
+        {
+            "creator_email": "adminhr.maxy.academy@gmail.com",
+            "assigned_email": "matthew.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Revenue Live Commerce Rp200jt committed (Rp300jt stretch)",
+            "description": "Sasaran bulanan Mei 2026:\n1. Revenue Live Commerce Rp200jt committed (Rp300jt stretch)\n2. Live session days 20 hari/bulan\n3. Avg revenue per live Rp10jt\n4. Cross-sell ke produk MAXY (B2C) 30 peserta/bulan via live\n\n[Impor Target HR]",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": [
+                {
+                    "week_number": 1,
+                    "title": "5 hari live session (minimum)",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 2,
+                    "title": "1 campaign/promo special",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 3,
+                    "title": "Coordination meeting dengan Ray, Fay, Hanif, Aribah",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                },
+                {
+                    "week_number": 4,
+                    "title": "Lead handoff ke sales team: report leads dari komen/DM live",
+                    "description": "[Impor Target HR]",
+                    "category": "planned",
+                    "impact_level": "medium",
+                    "target_type": "qualitative",
+                    "target_label": null,
+                    "month": 5,
+                    "year": 2026
+                }
+            ]
+        },
+        {
+            "creator_email": "eka.maxy.academy@gmail.com",
+            "assigned_email": "eka.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "ghufron.maxy.academy@gmail.com",
+            "assigned_email": "ghufron.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "stefen.maxy.academy@gmail.com",
+            "assigned_email": "stefen.maxy.academy@gmail.com",
+            "department": "product_it",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "jessica.maxy.academy@gmail.com",
+            "assigned_email": "jessica.maxy.academy@gmail.com",
+            "department": "univ_partnership",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "joseph.maxy.academy@gmail.com",
+            "assigned_email": "joseph.maxy.academy@gmail.com",
+            "department": "marketing",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "elroy.maxy.academy@gmail.com",
+            "assigned_email": "elroy.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "olivia.maxy.academy@gmail.com",
+            "assigned_email": "olivia.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "kartika.maxy.academy@gmail.com",
+            "assigned_email": "kartika.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "matthew.maxy.academy@gmail.com",
+            "assigned_email": "matthew.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "jessicamaria.maxy.academy@gmail.com",
+            "assigned_email": "jessicamaria.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "bryan.maxy.academy@gmail.com",
+            "assigned_email": "bryan.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "assigned_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Mei 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 5,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "ika.maxy.academy@gmail.com",
+            "assigned_email": "ika.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "fanny.maxy.academy@gmail.com",
+            "assigned_email": "fanny.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "eka.maxy.academy@gmail.com",
+            "assigned_email": "eka.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "ghufron.maxy.academy@gmail.com",
+            "assigned_email": "ghufron.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "stefen.maxy.academy@gmail.com",
+            "assigned_email": "stefen.maxy.academy@gmail.com",
+            "department": "product_it",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "jessica.maxy.academy@gmail.com",
+            "assigned_email": "jessica.maxy.academy@gmail.com",
+            "department": "univ_partnership",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "joseph.maxy.academy@gmail.com",
+            "assigned_email": "joseph.maxy.academy@gmail.com",
+            "department": "marketing",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "elroy.maxy.academy@gmail.com",
+            "assigned_email": "elroy.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "olivia.maxy.academy@gmail.com",
+            "assigned_email": "olivia.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "kartika.maxy.academy@gmail.com",
+            "assigned_email": "kartika.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "matthew.maxy.academy@gmail.com",
+            "assigned_email": "matthew.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "jessicamaria.maxy.academy@gmail.com",
+            "assigned_email": "jessicamaria.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "assigned_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Juni 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 6,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "ika.maxy.academy@gmail.com",
+            "assigned_email": "ika.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "fanny.maxy.academy@gmail.com",
+            "assigned_email": "fanny.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "eka.maxy.academy@gmail.com",
+            "assigned_email": "eka.maxy.academy@gmail.com",
+            "department": "operational",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "stefen.maxy.academy@gmail.com",
+            "assigned_email": "stefen.maxy.academy@gmail.com",
+            "department": "product_it",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "jessica.maxy.academy@gmail.com",
+            "assigned_email": "jessica.maxy.academy@gmail.com",
+            "department": "univ_partnership",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "joseph.maxy.academy@gmail.com",
+            "assigned_email": "joseph.maxy.academy@gmail.com",
+            "department": "marketing",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "elroy.maxy.academy@gmail.com",
+            "assigned_email": "elroy.maxy.academy@gmail.com",
+            "department": "ceo_office",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "matthew.maxy.academy@gmail.com",
+            "assigned_email": "matthew.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        },
+        {
+            "creator_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "assigned_email": "sydneyrosalind.maxy.academy@gmail.com",
+            "department": "sales",
+            "title": "Aktivitas Harian (Impor) — Juli 2026",
+            "description": "Wadah laporan harian hasil impor dari Google Form.",
+            "month": 7,
+            "year": 2026,
+            "weekly_targets": []
+        }
+    ]
+}
