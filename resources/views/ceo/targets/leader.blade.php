@@ -268,4 +268,85 @@
 
 </div>
 
+    {{-- ── SECTION: LAPORAN HARIAN DARI IMPORT ─────────────────────── --}}
+    @if($importedEntries->isNotEmpty())
+    <div style="margin-top:28px;">
+        <div class="overline-label" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+            <svg class="lucide" style="width:14px;height:14px;color:var(--maxy-amber);" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+            LAPORAN HARIAN {{ strtoupper(explode(' ', $leader->name)[0]) }} ({{ $importedEntries->count() }} laporan dari import)
+        </div>
+
+        <div class="m-card" style="padding:0;overflow:hidden;">
+            <div style="background:#FFFBEB;border-bottom:1px solid #FDE68A;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+                <svg class="lucide" style="width:14px;height:14px;color:#92400E;flex-shrink:0;" viewBox="0 0 24 24">
+                    <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                <span style="font-size:12px;color:#92400E;">
+                    Laporan ini berasal dari import Google Form. Belum terhubung ke target formal dari C-Level.
+                </span>
+            </div>
+
+            @php
+                $monthNamesId2 = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+                $statusColors2 = [
+                    'selesai'      => ['bg'=>'#D1FAE5','color'=>'#065F46','label'=>'Selesai'],
+                    'dalam_proses' => ['bg'=>'#DBEAFE','color'=>'#1E40AF','label'=>'Proses'],
+                    'terhambat'    => ['bg'=>'#FEE2E2','color'=>'#991B1B','label'=>'Terhambat'],
+                    'belum_mulai'  => ['bg'=>'#F3F4F6','color'=>'#4B5563','label'=>'Belum'],
+                ];
+            @endphp
+
+            <div style="max-height:400px;overflow-y:auto;">
+                @foreach($importedEntries as $entry)
+                @php
+                    $d2 = \Carbon\Carbon::parse($entry->task_date);
+                    $sc2 = $statusColors2[$entry->status] ?? ['bg'=>'#F3F4F6','color'=>'#4B5563','label'=>ucfirst($entry->status)];
+                @endphp
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bg-3);{{ $loop->last ? 'border-bottom:none;' : '' }}">
+                    <div style="flex-shrink:0;width:44px;text-align:center;background:var(--bg-2);border-radius:8px;padding:6px 4px;">
+                        <div style="font-size:16px;font-weight:800;color:var(--fg-1);line-height:1;">{{ $d2->format('d') }}</div>
+                        <div style="font-size:10px;color:var(--fg-3);font-weight:600;text-transform:uppercase;">{{ $monthNamesId2[$d2->month] }}</div>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;color:var(--fg-1);line-height:1.5;">
+                            {{ Str::limit($entry->task_description, 120) }}
+                        </div>
+                        @if($entry->notes)
+                        <div style="font-size:11px;color:var(--fg-3);margin-top:4px;line-height:1.4;">
+                            {{ Str::limit($entry->notes, 80) }}
+                        </div>
+                        @endif
+                    </div>
+                    <div style="flex-shrink:0;">
+                        <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:{{ $sc2['bg'] }};color:{{ $sc2['color'] }};">
+                            {{ $sc2['label'] }}
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <div style="background:var(--bg-2);border-top:1px solid var(--bg-3);padding:10px 16px;display:flex;gap:16px;">
+                @php
+                    $done2  = $importedEntries->where('status','selesai')->count();
+                    $total2 = $importedEntries->count();
+                @endphp
+                <span style="font-size:12px;color:var(--fg-3);">
+                    Total: <strong style="color:var(--fg-1);">{{ $total2 }} laporan</strong>
+                </span>
+                <span style="font-size:12px;color:#065F46;">✅ Selesai: <strong>{{ $done2 }}</strong></span>
+                @if($total2 - $done2 > 0)
+                <span style="font-size:12px;color:var(--fg-3);">Lainnya: <strong>{{ $total2 - $done2 }}</strong></span>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+</div>
+
 </x-app-layout>

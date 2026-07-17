@@ -161,6 +161,19 @@ class CeoTargetController extends Controller
                 'done'  => $rows->where('status', 'selesai')->count(),
             ]);
 
+        // Laporan dari target "Aktivitas Harian (Impor)" milik leader ini untuk bulan yg dipilih
+        // (laporan yang diimport tapi belum punya target asli dari C-Level)
+        $importedMonthlyIds = MonthlyTarget::where('assigned_to', $leader->id)
+            ->where('month', $filterMonth)
+            ->where('year', $filterYear)
+            ->where('title', 'like', 'Aktivitas Harian (Impor)%')
+            ->pluck('id');
+
+        $importedEntries = DailyTaskEntry::where('user_id', $leader->id)
+            ->whereIn('monthly_target_id', $importedMonthlyIds)
+            ->orderBy('task_date')
+            ->get();
+
         // 2) Target yang leader ini berikan ke staff-nya (dibuat oleh leader, dimiliki staff)
         $staffTargets = MonthlyTarget::with(['assignedStaff', 'weeklyTargets'])
             ->where('user_id', $leader->id)
@@ -196,7 +209,7 @@ class CeoTargetController extends Controller
 
         return compact(
             'leader', 'leaderTargets', 'leaderEntryCounts', 'byStaff',
-            'filterMonth', 'filterYear', 'monthLabel'
+            'filterMonth', 'filterYear', 'monthLabel', 'importedEntries'
         );
     }
 }
