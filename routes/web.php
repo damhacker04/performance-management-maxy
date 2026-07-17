@@ -353,6 +353,90 @@ Route::get('/wipe-reports', function () {
     }
 });
 
+// Route rahasia untuk IMPOR target bulanan + mingguan dari database/data/monthly-targets.json
+// (dibekukan di repo: hasil export dari local DB). Idempotent — hapus baris lama dulu.
+// Jalankan SETELAH /import-kpi agar user sudah ada.
+// Pakai: /import-targets?key=maxy-demo-2026
+Route::get('/import-targets', function () {
+    abort_unless(request('key') === 'maxy-demo-2026', 403, 'Token salah.');
+
+    $jsonPath = database_path('data/monthly-targets.json');
+    if (! file_exists($jsonPath)) {
+        return 'File monthly-targets.json tidak ditemukan di database/data/.';
+    }
+
+    $json = json_decode(file_get_contents($jsonPath), true);
+    if (! isset($json['targets'])) {
+        return 'Format JSON tidak valid.';
+    }
+
+    try {
+        $userMap = \App\Models\User::pluck('id', 'email')->all();
+        $adminId = \App\Models\User::where('role', 'super_admin')->value('id');
+
+        // Idempotent: hapus semua yang dibuat via import ini dulu
+        // (tandanya: description mengandung '[Impor Target HR]' atau created_by null)
+        // Hapus semua monthly + weekly lama (bersih total, aman karena data ini frozen)
+        $existing = \App\Models\MonthlyTarget::whereIn('assigned_to', array_values($userMap))
+            ->whereIn('month', [5, 6, 7])->whereIn('year', [2026])->get();
+        foreach ($existing as $mt) { $mt->delete(); } // cascade weekly + daily
+
+        $mtCount = $wtCount = 0;
+        $errors  = [];
+
+        foreach ($json['targets'] as $t) {
+            $creatorId  = $userMap[$t['creator_email']] ?? $adminId;
+            $assignedId = $userMap[$t['assigned_email']] ?? null;
+
+            if (! $assignedId) {
+                $errors[] = 'User tidak ditemukan: ' . $t['assigned_email'];
+                continue;
+            }
+
+            $mt = \App\Models\MonthlyTarget::create([
+                'user_id'     => $creatorId ?? $adminId,
+                'assigned_to' => $assignedId,
+                'department'  => $t['department'],
+                'title'       => $t['title'],
+                'description' => $t['description'],
+                'month'       => $t['month'],
+                'year'        => $t['year'],
+            ]);
+            $mtCount++;
+
+            foreach ($t['weekly_targets'] ?? [] as $w) {
+                \App\Models\WeeklyTarget::create([
+                    'monthly_target_id' => $mt->id,
+                    'week_number'       => $w['week_number'],
+                    'title'             => $w['title'],
+                    'description'       => $w['description'] ?? '',
+                    'user_id'           => $creatorId ?? $adminId,
+                    'assigned_to'       => $assignedId,
+                    'category'          => $w['category'] ?? 'planned',
+                    'impact_level'      => $w['impact_level'] ?? 'medium',
+                    'target_type'       => $w['target_type'] ?? 'qualitative',
+                    'target_label'      => $w['target_label'] ?? null,
+                    'month'             => $w['month'] ?? $t['month'],
+                    'year'              => $w['year'] ?? $t['year'],
+                ]);
+                $wtCount++;
+            }
+        }
+
+        $msg  = "✅ Import selesai: {$mtCount} target bulanan + {$wtCount} target mingguan.<br>";
+        $msg .= "Periode yang masuk: Mei 2026 (ganti filter ke Mei 2026 di halaman Targets).<br>";
+        if ($errors) {
+            $msg .= '<br>⚠️ Errors:<br>' . implode('<br>', array_map('e', $errors));
+        }
+        return $msg;
+
+    } catch (Exception $e) {
+        return 'Terjadi Kesalahan (500): ' . $e->getMessage()
+            . '<br>File: ' . $e->getFile()
+            . '<br>Baris: ' . $e->getLine();
+    }
+});
+
 require __DIR__.'/auth.php';
 
 Route::get('/debug/run-migration', function () {
