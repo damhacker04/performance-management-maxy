@@ -69,14 +69,58 @@ class CeoTargetController extends Controller
             ];
         })->sortBy(fn ($g) => $g['leader']?->name ?? '');
 
+        // ── Ringkasan Leader→Staff: berapa staff yang sudah diberi target oleh tiap leader ──
+        $allLeaders = User::where('role', 'leader')
+            ->orderBy('department')
+            ->orderBy('name')
+            ->get();
+
+        $staffSummaryByLeader = $allLeaders->map(function ($leader) use ($filterMonth, $filterYear) {
+            // Target bulanan yang DIBUAT oleh leader ini untuk staff
+            $staffTargets = MonthlyTarget::where('user_id', $leader->id)
+                ->whereHas('assignedStaff', fn ($q) => $q->where('role', 'staff'))
+                ->where('month', $filterMonth)
+                ->where('year', $filterYear)
+                ->with('assignedStaff')
+                ->get();
+
+            // Jumlah staff unik yang punya target
+            $staffCount = $staffTargets->pluck('assigned_to')->unique()->count();
+
+            // Total staff aktif di dept ini
+            $totalStaffInDept = User::where('department', $leader->department)
+                ->where('role', 'staff')
+                ->where('is_active', true)
+                ->count();
+
+            // Entry counts untuk progress
+            $entryRows = DailyTaskEntry::whereIn('monthly_target_id', $staffTargets->pluck('id'))
+                ->get(['monthly_target_id', 'status']);
+            $total = $entryRows->count();
+            $done  = $entryRows->where('status', 'selesai')->count();
+
+            return [
+                'leader'           => $leader,
+                'staff_with_target'=> $staffCount,
+                'total_staff'      => $totalStaffInDept,
+                'target_count'     => $staffTargets->count(),
+                'total_entries'    => $total,
+                'done_entries'     => $done,
+                'progress'         => $total > 0 ? (int) round($done / $total * 100) : 0,
+                'has_targets'      => $staffCount > 0,
+            ];
+        })->groupBy(fn ($g) => $g['leader']->department);
+
         $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         $monthLabel = $monthNames[$filterMonth] . ' ' . $filterYear;
 
         return compact(
-            'byLeader', 'filterMonth', 'filterYear', 'monthLabel'
+            'byLeader', 'filterMonth', 'filterYear', 'monthLabel',
+            'staffSummaryByLeader'
         );
     }
+
 
     /**
      * Detail satu leader: target yang CEO berikan ke leader + target yang leader
@@ -117,6 +161,19 @@ class CeoTargetController extends Controller
                 'done'  => $rows->where('status', 'selesai')->count(),
             ]);
 
+        // Laporan dari target "Aktivitas Harian (Impor)" milik leader ini untuk bulan yg dipilih
+        // (laporan yang diimport tapi belum punya target asli dari C-Level)
+        $importedMonthlyIds = MonthlyTarget::where('assigned_to', $leader->id)
+            ->where('month', $filterMonth)
+            ->where('year', $filterYear)
+            ->where('title', 'like', 'Aktivitas Harian (Impor)%')
+            ->pluck('id');
+
+        $importedEntries = DailyTaskEntry::where('user_id', $leader->id)
+            ->whereIn('monthly_target_id', $importedMonthlyIds)
+            ->orderBy('task_date')
+            ->get();
+
         // 2) Target yang leader ini berikan ke staff-nya (dibuat oleh leader, dimiliki staff)
         $staffTargets = MonthlyTarget::with(['assignedStaff', 'weeklyTargets'])
             ->where('user_id', $leader->id)
@@ -152,7 +209,7 @@ class CeoTargetController extends Controller
 
         return compact(
             'leader', 'leaderTargets', 'leaderEntryCounts', 'byStaff',
-            'filterMonth', 'filterYear', 'monthLabel'
+            'filterMonth', 'filterYear', 'monthLabel', 'importedEntries'
         );
     }
 }
